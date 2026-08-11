@@ -32,6 +32,9 @@ yarn-error.*
 
 # local env files
 .env*.local
+# Expo 기본 .gitignore는 .env*.local만 무시한다.
+# .env 에 네이버 client_id가 들어가므로 명시적으로 추가한다. (.env.example은 커밋한다)
+.env
 
 # typescript
 *.tsbuildinfo
