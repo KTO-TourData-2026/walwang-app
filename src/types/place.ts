@@ -1,0 +1,26 @@
+/**
+ * 백엔드와 확정한 API 응답 스펙.
+ * 임의로 바꾸지 말 것 — 바꾸려면 백엔드 담당과 먼저 합의한다.
+ */
+
+export type SizeKey = 'smallMedium' | 'large';
+export type PlaceStatus = 'allowed' | 'denied' | 'unknown';
+export type Category = 'park' | 'cafe' | 'restaurant';
+
+export interface Place {
+  id: string;
+  name: string;
+  category: Category;
+  latitude: number;
+  longitude: number;
+  sizeStatus: Record<SizeKey, PlaceStatus>;
+  reviewCount: number;
+  lastVerifiedAt: string | null;
+}
+
+export interface Course {
+  places: Place[];
+  path: { latitude: number; longitude: number }[] | null; // null이면 직선 폴백
+  totalDistance: number;
+  totalTime: number;
+}

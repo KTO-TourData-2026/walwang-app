@@ -81,6 +81,31 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         },
       },
     ],
+
+    // [중요] 아래 세 개는 npx expo install 이 자동으로 넣어주지 못한다.
+    // app.config.ts는 "동적 설정"이라 CLI가 파일을 고칠 수 없어서
+    // "Cannot automatically write to dynamic config" 경고만 내고 끝난다.
+    // 여기 직접 안 적으면 네이티브 모듈은 autolink 되지만 권한(permission)이
+    // AndroidManifest에 안 들어가서, 런타임에 카메라/갤러리 요청이 즉시 denied 된다.
+    'expo-secure-store',
+    [
+      'expo-camera',
+      {
+        // 영수증 촬영용. Android는 이 문자열을 안 쓰지만 iOS 대비 채워둔다.
+        cameraPermission: '영수증과 매장 사진을 촬영하기 위해 카메라를 사용합니다.',
+        recordAudioAndroid: false,
+      },
+    ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: '리뷰에 첨부할 사진을 고르기 위해 사진 보관함에 접근합니다.',
+        // expo-image-picker는 기본값으로 RECORD_AUDIO 권한을 넣는다(동영상 촬영 대비).
+        // 우리는 녹음을 안 하는데 이게 남아 있으면 스토어 심사에서 사용 목적을 소명해야 한다.
+        // false로 주면 "차단 목록"에 올라가서 다른 패키지가 다시 넣는 것도 막아준다.
+        microphonePermission: false,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,
