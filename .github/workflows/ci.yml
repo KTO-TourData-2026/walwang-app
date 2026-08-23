@@ -37,5 +37,14 @@ jobs:
       - name: ESLint
         run: npx eslint .
 
+      # expo-env.d.ts는 gitignore된 생성 파일이라 CI 체크아웃엔 없다.
+      # 이 한 줄이 expo/types(*.css 등 모듈 선언)를 tsc에 물려준다.
+      # 없으면 css import에서 TS2307/TS2882가 난다. (expo start류로만 자동 생성됨)
+      - name: Ensure Expo generated types
+        run: |
+          if [ ! -f expo-env.d.ts ]; then
+            printf '/// <reference types="expo/types" />\n' > expo-env.d.ts
+          fi
+
       - name: Typecheck
         run: npx tsc --noEmit
