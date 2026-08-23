@@ -1,0 +1,41 @@
+name: CI
+
+# 품질 게이트: 포맷 / lint / 타입체크.
+# 네이티브 빌드는 무겁고 secret이 필요해서 여기선 돌리지 않는다.
+# (필요해지면 EAS Build 워크플로우를 따로 추가)
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+# 같은 브랜치에서 연속 푸시하면 이전 실행은 취소 (솔로 개발 시 러너 절약)
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      # 아래는 expo가 아니라 도구를 직접 호출한다.
+      # expo lint는 app.config.ts를 평가하면서 NAVER_MAP_CLIENT_ID를 요구하는데,
+      # CI엔 .env가 없으므로 raw eslint/tsc/prettier로 돌려 secret 없이 통과시킨다.
+      - name: Prettier check
+        run: npx prettier --check .
+
+      - name: ESLint
+        run: npx eslint .
+
+      - name: Typecheck
+        run: npx tsc --noEmit

@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit 설정. PR이 열리면 AI가 자동 리뷰한다.
+# ※ 이 파일만으론 동작 안 함 — https://coderabbit.ai 에서 GitHub 앱을 이 레포에 설치해야 함.
+
+language: "ko-KR" # 리뷰 코멘트를 한국어로
+
+# ESLint/Prettier가 포맷을 담당하므로, 리뷰는 스타일 말고 내용에 집중시킨다.
+tone_instructions: "포맷/따옴표/세미콜론 같은 스타일 지적은 하지 말 것 (Prettier가 처리함). 로직 버그, React Native/Expo 특유의 함정, 성능, 타입 안전성 위주로 리뷰할 것."
+
+reviews:
+  # chill: 솔로 개발자용. 사소한 nitpick은 줄이고 중요한 것만.
+  # (더 꼼꼼히 원하면 "assertive"로 변경)
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true # PR 요약 생성
+  poem: false # 시(poem) 코멘트 끄기
+  review_status: true
+  collapse_walkthrough: true
+
+  auto_review:
+    enabled: true
+    drafts: false # Draft PR은 리뷰 안 함
+    base_branches:
+      - "main"
+      - "develop"
+
+  # 생성물/네이티브/락파일은 리뷰 제외
+  path_filters:
+    - "!android/**"
+    - "!ios/**"
+    - "!.expo/**"
+    - "!dist/**"
+    - "!**/package-lock.json"
+    - "!**/*.lock"
+
+  # 경로별 리뷰 관점
+  path_instructions:
+    - path: "src/**/*.{ts,tsx}"
+      instructions: "React Native + Expo SDK 57 코드다. 웹 API(window/document/localStorage) 사용, 네이티브 뷰에 height 미지정, useEffect 내 setState 남용, 미정리 이벤트 리스너, 비동기 SecureStore를 동기처럼 쓰는 실수 등을 중점적으로 본다."
+    - path: "app.config.ts"
+      instructions: "네이티브 설정의 단일 소스다. 여기 바뀌면 prebuild 재생성이 필요함을 리뷰에 상기시킨다."
+
+chat:
+  auto_reply: true
