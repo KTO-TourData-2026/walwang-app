@@ -1,5 +1,9 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
 
+// 스플래시·아이콘 배경색을 JS 쪽 디자인 토큰과 한 소스로 묶는다.
+// (@/ alias는 Metro 전용이라 설정 파일에서는 상대경로로 가져와야 한다)
+import { Palette } from "./src/constants/palette.ts";
+
 /**
  * 네이티브(android/, ios/) 설정의 유일한 소스 오브 트루스.
  *
@@ -29,9 +33,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "walwang",
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./assets/images/logo.png",
   scheme: "walwang",
-  userInterfaceStyle: "automatic",
+  // [라이트 모드 고정] Figma 컬러 가이드가 한 벌뿐이라 다크 팔레트를 만들지 않는다.
+  // "automatic"으로 두면 OS가 다크일 때 네이티브 헤더/탭바만 검게 변해서
+  // 라이트로 그린 화면과 색이 어긋난다.
+  userInterfaceStyle: "light",
 
   // [New Architecture(Fabric) 관련 — 중요]
   // 여기에 newArchEnabled를 쓰지 말 것. SDK 57에서 이 키는 제거됐다.
@@ -48,10 +55,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: "com.walwang.android",
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
-      monochromeImage: "./assets/images/android-icon-monochrome.png",
+      backgroundColor: Palette.main[400],
+      // 안드로이드는 이 이미지를 제조사별 마스크(원·스퀘어클·물방울)로 잘라내고
+      // 가운데 약 66%만 보이는 걸 보장한다. 그래서 여기엔 logo.png를 그대로 쓰면 안 된다.
+      // logo-foreground.png = 배경을 투명하게 걷어내고 강아지를 66% 안으로 축소한 버전.
+      // (logo.png에서 스크립트로 생성. 로고가 바뀌면 다시 만들어야 한다)
+      foregroundImage: "./assets/images/logo-foreground.png",
     },
     predictiveBackGestureEnabled: false,
   },
@@ -61,12 +70,31 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
+    // Pretendard를 빌드 타임에 네이티브로 임베드한다.
+    // useFonts() 런타임 로딩과 달리 첫 프레임부터 적용돼서 폰트가 깜빡이지 않는다.
+    //
+    // [주의] 굵기별로 파일을 따로 등록한다. 안드로이드는 fontWeight으로
+    // 굵기 파일을 골라주지 않고, 패밀리 이름이 곧 "파일명"이다.
+    // 즉 여기 파일명이 constants/typography.ts의 FontFamily 값과 정확히 같아야 한다.
+    // 파일을 추가/교체하면 JS 리로드로는 반영 안 된다 → npx expo run:android
+    [
+      "expo-font",
+      {
+        fonts: [
+          "./assets/fonts/Pretendard-Regular.ttf",
+          "./assets/fonts/Pretendard-Medium.ttf",
+          "./assets/fonts/Pretendard-SemiBold.ttf",
+        ],
+      },
+    ],
     [
       "expo-splash-screen",
       {
-        backgroundColor: "#208AEF",
-        image: "./assets/images/splash-icon.png",
-        imageWidth: 76,
+        // 배경 투명 버전을 쓴다. logo.png는 자체 배경이 #FC8571이라 브랜드색(#FF9A86)
+        // 위에 얹으면 살구색 사각형 경계가 그대로 보인다.
+        backgroundColor: Palette.main[400],
+        image: "./assets/images/logo-splash.png",
+        imageWidth: 220,
       },
     ],
     // AndroidManifest.xml에 네이버 지도 CLIENT_ID meta-data를 주입한다.
