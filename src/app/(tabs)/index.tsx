@@ -1,5 +1,11 @@
-import { NaverMapView } from '@mj-studio/react-native-naver-map';
-import { StyleSheet } from 'react-native';
+import {
+  NaverMapMarkerOverlay,
+  NaverMapPathOverlay,
+  NaverMapView,
+} from "@mj-studio/react-native-naver-map";
+import { StyleSheet } from "react-native";
+
+import { MOCK_PLACES } from "@/mocks/places";
 
 /**
  * 지도 화면 (홈 탭).
@@ -24,8 +30,41 @@ const INITIAL_CAMERA = {
   zoom: 15,
 };
 
+// [임시] 경로선 데모 데이터.
+// 아직 Course(추천 코스) API도 목 데이터도 없어서, 목 장소 몇 곳을 이어
+// 경로선 렌더만 확인하는 용도. 추천 코스 기능이 붙으면 Course.path로 교체할 것.
+// (없는 코스 데이터를 지어내지 않도록 실제 MOCK_PLACES 좌표만 사용한다.)
+const DEMO_COURSE_COORDS = ["p-001", "p-002", "p-014", "p-006"]
+  .map((id) => MOCK_PLACES.find((p) => p.id === id))
+  .filter((p): p is (typeof MOCK_PLACES)[number] => p != null)
+  .map(({ latitude, longitude }) => ({ latitude, longitude }));
+
 export default function MapScreen() {
-  return <NaverMapView style={styles.map} initialCamera={INITIAL_CAMERA} />;
+  // [RN 함정] 마커/경로선은 NaverMapView의 자식으로 넣어야 지도 위에 그려진다.
+  // 형제로 두거나 밖에 두면 렌더는 되지만 지도에 안 붙는다.
+  return (
+    <NaverMapView style={styles.map} initialCamera={INITIAL_CAMERA}>
+      {/* 목 장소들을 마커로 렌더. 실제 API로 갈아탈 땐 MOCK_PLACES만 교체하면 된다.
+          지금은 확인용으로 앞 3개만 표시한다. */}
+      {MOCK_PLACES.slice(0, 3).map((place) => (
+        <NaverMapMarkerOverlay
+          key={place.id}
+          latitude={place.latitude}
+          longitude={place.longitude}
+          caption={{ text: place.name }}
+        />
+      ))}
+
+      {/* [임시] 데모 경로선. Course API 나오면 교체. */}
+      <NaverMapPathOverlay
+        coords={DEMO_COURSE_COORDS}
+        width={8}
+        color="#2DB400"
+        outlineWidth={1}
+        outlineColor="#1B6E00"
+      />
+    </NaverMapView>
+  );
 }
 
 const styles = StyleSheet.create({
