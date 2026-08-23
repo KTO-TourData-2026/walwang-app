@@ -44,3 +44,6 @@ example
 # generated native folders
 /ios
 /android
+
+# Claude Code (개인 로컬 설정만 무시. 공유 설정 .claude/settings.json은 커밋한다)
+.claude/settings.local.json

@@ -1,0 +1,17 @@
+# 줄바꿈을 LF로 고정. (Windows의 autocrlf로 인한 CRLF 충돌 방지)
+# Prettier가 endOfLine: "lf" 이므로 저장소·작업트리 모두 LF로 통일한다.
+* text=auto eol=lf
+
+# 바이너리는 변환 금지
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.jks binary
+*.keystore binary

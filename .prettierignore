@@ -1,0 +1,15 @@
+# 의존성 / 생성물
+node_modules/
+.expo/
+dist/
+web-build/
+
+# 네이티브 생성 폴더 (prebuild 산출물)
+android/
+ios/
+
+# 자동 생성 타입
+expo-env.d.ts
+
+# 락파일
+package-lock.json
