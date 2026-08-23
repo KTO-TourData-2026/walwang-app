@@ -7,7 +7,7 @@ import {
 } from "expo-router/ui";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { MaxContentWidth, Palette, Spacing } from "@/constants/theme";
 
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
@@ -43,7 +43,7 @@ export default function AppTabs() {
 function TabBar({ children, ...props }: { children?: React.ReactNode }) {
   return (
     <View {...props} style={styles.tabBarContainer}>
-      <ThemedView type="backgroundElement" style={styles.tabBarInner}>
+      <ThemedView color={Palette.gray[100]} style={styles.tabBarInner}>
         {children}
       </ThemedView>
     </View>
@@ -54,12 +54,12 @@ function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
   return (
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
-        type={isFocused ? "backgroundSelected" : "backgroundElement"}
+        color={isFocused ? Palette.gray[200] : Palette.gray[100]}
         style={styles.tabButton}
       >
         <ThemedText
-          type="small"
-          themeColor={isFocused ? "text" : "textSecondary"}
+          type="label03"
+          color={isFocused ? Palette.gray[700] : Palette.gray[500]}
         >
           {children}
         </ThemedText>

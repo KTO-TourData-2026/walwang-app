@@ -1,7 +1,6 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
-import { useColorScheme } from "react-native";
 
-import { Colors } from "@/constants/theme";
+import { Palette } from "@/constants/theme";
 
 /**
  * 네이티브 탭바 (Android/iOS).
@@ -13,14 +12,11 @@ import { Colors } from "@/constants/theme";
  * 시스템 폰트에서 가져오므로 에셋 파일이 필요 없고 해상도별 @2x/@3x도 신경 안 써도 된다.
  */
 export default function AppTabs() {
-  const scheme = useColorScheme();
-  const colors = Colors[scheme === "unspecified" ? "light" : scheme];
-
   return (
     <NativeTabs
-      backgroundColor={colors.background}
-      indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}
+      backgroundColor={Palette.background.base}
+      indicatorColor={Palette.gray[100]}
+      labelStyle={{ selected: { color: Palette.gray[700] } }}
     >
       {/* 지도가 첫 탭이자 기본 화면 = (tabs)/index.tsx */}
       <NativeTabs.Trigger name="index">

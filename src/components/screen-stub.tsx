@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
 
-import { Spacing } from "@/constants/theme";
+import { Palette, Spacing } from "@/constants/theme";
 
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
@@ -18,9 +18,9 @@ export function ScreenStub({
 }) {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="subtitle">{name}</ThemedText>
+      <ThemedText type="head02">{name}</ThemedText>
       {detail ? (
-        <ThemedText type="small" themeColor="textSecondary">
+        <ThemedText type="label03" color={Palette.gray[500]}>
           {detail}
         </ThemedText>
       ) : null}

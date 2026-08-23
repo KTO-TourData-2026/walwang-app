@@ -1,12 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { StyleSheet, useColorScheme } from "react-native";
+import { DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-import { AnimatedSplashOverlay } from "@/components/animated-icon";
-
-SplashScreen.preventAutoHideAsync();
 
 /**
  * QueryClient는 반드시 컴포넌트 "바깥"에서 만든다.
@@ -26,8 +21,6 @@ const queryClient = new QueryClient({
 });
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     /**
      * [RN 함정 — 매우 중요] GestureHandlerRootView는 앱 최상단에 있어야 하고,
@@ -39,11 +32,12 @@ export default function RootLayout() {
      */
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <AnimatedSplashOverlay />
-
+        {/*
+          라이트 모드 고정. Figma 컬러 가이드가 한 벌뿐이라 다크 팔레트를
+          지어내지 않기로 했고, app.config.ts의 userInterfaceStyle도 "light"다.
+          네비게이션 헤더 색은 palette.ts hex를 채운 뒤 Colors 토큰으로 교체한다.
+        */}
+        <ThemeProvider value={DefaultTheme}>
           {/*
             루트를 Stack으로 두고 탭을 (tabs) 그룹으로 내렸다.
             이래야 리뷰 작성/로그인 화면이 "탭바 위로 push"되어 뒤로가기가 정상 동작한다.
