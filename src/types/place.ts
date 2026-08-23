@@ -3,9 +3,9 @@
  * 임의로 바꾸지 말 것 — 바꾸려면 백엔드 담당과 먼저 합의한다.
  */
 
-export type SizeKey = 'smallMedium' | 'large';
-export type PlaceStatus = 'allowed' | 'denied' | 'unknown';
-export type Category = 'park' | 'cafe' | 'restaurant';
+export type SizeKey = "smallMedium" | "large";
+export type PlaceStatus = "allowed" | "denied" | "unknown";
+export type Category = "park" | "cafe" | "restaurant";
 
 export interface Place {
   id: string;

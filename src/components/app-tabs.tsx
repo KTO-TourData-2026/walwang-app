@@ -1,7 +1,7 @@
-import { NativeTabs } from 'expo-router/unstable-native-tabs';
-import { useColorScheme } from 'react-native';
+import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { useColorScheme } from "react-native";
 
-import { Colors } from '@/constants/theme';
+import { Colors } from "@/constants/theme";
 
 /**
  * 네이티브 탭바 (Android/iOS).
@@ -14,13 +14,14 @@ import { Colors } from '@/constants/theme';
  */
 export default function AppTabs() {
   const scheme = useColorScheme();
-  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const colors = Colors[scheme === "unspecified" ? "light" : scheme];
 
   return (
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={colors.backgroundElement}
-      labelStyle={{ selected: { color: colors.text } }}>
+      labelStyle={{ selected: { color: colors.text } }}
+    >
       {/* 지도가 첫 탭이자 기본 화면 = (tabs)/index.tsx */}
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>지도</NativeTabs.Trigger.Label>

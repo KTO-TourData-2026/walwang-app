@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from "expo-router";
 
-import { ScreenStub } from '@/components/screen-stub';
+import { ScreenStub } from "@/components/screen-stub";
 
 export default function ReceiptScreen() {
   // [주의] useLocalSearchParams의 값은 항상 string | string[] 이다.

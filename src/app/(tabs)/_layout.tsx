@@ -1,4 +1,4 @@
-import AppTabs from '@/components/app-tabs';
+import AppTabs from "@/components/app-tabs";
 
 /**
  * 탭 네비게이터.

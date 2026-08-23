@@ -1,10 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StyleSheet, useColorScheme } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { StyleSheet, useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AnimatedSplashOverlay } from "@/components/animated-icon";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,7 +39,9 @@ export default function RootLayout() {
      */
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
           <AnimatedSplashOverlay />
 
           {/*
@@ -51,19 +53,37 @@ export default function RootLayout() {
             {/* 탭 화면은 자체 탭바를 그리므로 스택 헤더를 끈다. */}
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
-            <Stack.Screen name="(auth)/login" options={{ title: '로그인' }} />
-            <Stack.Screen name="(auth)/signup" options={{ title: '회원가입' }} />
-
-            <Stack.Screen name="review/[placeId]/receipt" options={{ title: '영수증 인증' }} />
-            <Stack.Screen name="review/[placeId]/photo" options={{ title: '사진 첨부' }} />
-            <Stack.Screen name="review/[placeId]/form" options={{ title: '리뷰 작성' }} />
+            <Stack.Screen name="(auth)/login" options={{ title: "로그인" }} />
             <Stack.Screen
-              name="review/[placeId]/done"
-              options={{ title: '작성 완료', headerBackVisible: false }}
+              name="(auth)/signup"
+              options={{ title: "회원가입" }}
             />
 
-            <Stack.Screen name="recommend/keywords" options={{ title: '키워드 선택' }} />
-            <Stack.Screen name="recommend/result" options={{ title: '추천 코스' }} />
+            <Stack.Screen
+              name="review/[placeId]/receipt"
+              options={{ title: "영수증 인증" }}
+            />
+            <Stack.Screen
+              name="review/[placeId]/photo"
+              options={{ title: "사진 첨부" }}
+            />
+            <Stack.Screen
+              name="review/[placeId]/form"
+              options={{ title: "리뷰 작성" }}
+            />
+            <Stack.Screen
+              name="review/[placeId]/done"
+              options={{ title: "작성 완료", headerBackVisible: false }}
+            />
+
+            <Stack.Screen
+              name="recommend/keywords"
+              options={{ title: "키워드 선택" }}
+            />
+            <Stack.Screen
+              name="recommend/result"
+              options={{ title: "추천 코스" }}
+            />
           </Stack>
         </ThemeProvider>
       </QueryClientProvider>

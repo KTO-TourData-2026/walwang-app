@@ -1,5 +1,5 @@
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 
 /**
  * [환경변수 함정] RN에는 process.env가 없다.
@@ -9,14 +9,17 @@ import * as SecureStore from 'expo-secure-store';
  *
  * 또 .env를 고치면 Metro 캐시 때문에 반영이 안 된다. `npx expo start -c` 로 재시작할 것.
  */
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
-export const ACCESS_TOKEN_KEY = 'walwang.accessToken';
+export const ACCESS_TOKEN_KEY = "walwang.accessToken";
 
+// axios는 default export에 create를 노출하는데, import/no-named-as-default-member가
+// 이를 오탐으로 잡는다. axios.create는 정식 사용법이라 이 줄만 규칙을 끈다.
+// eslint-disable-next-line import/no-named-as-default-member
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10_000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
 });
 
 /**

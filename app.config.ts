@@ -1,4 +1,4 @@
-import type { ConfigContext, ExpoConfig } from 'expo/config';
+import type { ConfigContext, ExpoConfig } from "expo/config";
 
 /**
  * 네이티브(android/, ios/) 설정의 유일한 소스 오브 트루스.
@@ -19,19 +19,19 @@ if (!NAVER_MAP_CLIENT_ID) {
   // 값이 없으면 지도가 "빈 회색 화면"으로만 뜨고 에러는 안 난다.
   // 원인 파악이 매우 어려우므로 설정 단계에서 바로 터뜨린다.
   throw new Error(
-    'NAVER_MAP_CLIENT_ID 가 없습니다. .env.example을 복사해 .env를 만들고 값을 채우세요.'
+    "NAVER_MAP_CLIENT_ID 가 없습니다. .env.example을 복사해 .env를 만들고 값을 채우세요.",
   );
 }
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: 'walwang',
-  slug: 'walwang',
-  version: '1.0.0',
-  orientation: 'portrait',
-  icon: './assets/images/icon.png',
-  scheme: 'walwang',
-  userInterfaceStyle: 'automatic',
+  name: "walwang",
+  slug: "walwang",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/images/icon.png",
+  scheme: "walwang",
+  userInterfaceStyle: "automatic",
 
   // [New Architecture(Fabric) 관련 — 중요]
   // 여기에 newArchEnabled를 쓰지 말 것. SDK 57에서 이 키는 제거됐다.
@@ -43,41 +43,41 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   // 즉 @mj-studio/react-native-naver-map 2.x의 New Arch 요구조건은 항상 충족된다.
 
   ios: {
-    icon: './assets/expo.icon',
+    icon: "./assets/expo.icon",
   },
   android: {
-    package: 'com.walwang.android',
+    package: "com.walwang.android",
     adaptiveIcon: {
-      backgroundColor: '#E6F4FE',
-      foregroundImage: './assets/images/android-icon-foreground.png',
-      backgroundImage: './assets/images/android-icon-background.png',
-      monochromeImage: './assets/images/android-icon-monochrome.png',
+      backgroundColor: "#E6F4FE",
+      foregroundImage: "./assets/images/android-icon-foreground.png",
+      backgroundImage: "./assets/images/android-icon-background.png",
+      monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     predictiveBackGestureEnabled: false,
   },
   web: {
-    output: 'static',
-    favicon: './assets/images/favicon.png',
+    output: "static",
+    favicon: "./assets/images/favicon.png",
   },
   plugins: [
-    'expo-router',
+    "expo-router",
     [
-      'expo-splash-screen',
+      "expo-splash-screen",
       {
-        backgroundColor: '#208AEF',
-        image: './assets/images/splash-icon.png',
+        backgroundColor: "#208AEF",
+        image: "./assets/images/splash-icon.png",
         imageWidth: 76,
       },
     ],
     // AndroidManifest.xml에 네이버 지도 CLIENT_ID meta-data를 주입한다.
-    ['@mj-studio/react-native-naver-map', { client_id: NAVER_MAP_CLIENT_ID }],
+    ["@mj-studio/react-native-naver-map", { client_id: NAVER_MAP_CLIENT_ID }],
     // 네이버 지도 SDK는 mavenCentral에 없다.
     // 이 저장소를 android/gradle.properties에 넣어주지 않으면 gradle 빌드가 실패한다.
     [
-      'expo-build-properties',
+      "expo-build-properties",
       {
         android: {
-          extraMavenRepos: ['https://repository.map.naver.com/archive/maven'],
+          extraMavenRepos: ["https://repository.map.naver.com/archive/maven"],
         },
       },
     ],
@@ -87,19 +87,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // "Cannot automatically write to dynamic config" 경고만 내고 끝난다.
     // 여기 직접 안 적으면 네이티브 모듈은 autolink 되지만 권한(permission)이
     // AndroidManifest에 안 들어가서, 런타임에 카메라/갤러리 요청이 즉시 denied 된다.
-    'expo-secure-store',
+    "expo-secure-store",
     [
-      'expo-camera',
+      "expo-camera",
       {
         // 영수증 촬영용. Android는 이 문자열을 안 쓰지만 iOS 대비 채워둔다.
-        cameraPermission: '영수증과 매장 사진을 촬영하기 위해 카메라를 사용합니다.',
+        cameraPermission:
+          "영수증과 매장 사진을 촬영하기 위해 카메라를 사용합니다.",
         recordAudioAndroid: false,
       },
     ],
     [
-      'expo-image-picker',
+      "expo-image-picker",
       {
-        photosPermission: '리뷰에 첨부할 사진을 고르기 위해 사진 보관함에 접근합니다.',
+        photosPermission:
+          "리뷰에 첨부할 사진을 고르기 위해 사진 보관함에 접근합니다.",
         // expo-image-picker는 기본값으로 RECORD_AUDIO 권한을 넣는다(동영상 촬영 대비).
         // 우리는 녹음을 안 하는데 이게 남아 있으면 스토어 심사에서 사용 목적을 소명해야 한다.
         // false로 주면 "차단 목록"에 올라가서 다른 패키지가 다시 넣는 것도 막아준다.

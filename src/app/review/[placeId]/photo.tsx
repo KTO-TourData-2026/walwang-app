@@ -1,6 +1,6 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from "expo-router";
 
-import { ScreenStub } from '@/components/screen-stub';
+import { ScreenStub } from "@/components/screen-stub";
 
 export default function PhotoScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
