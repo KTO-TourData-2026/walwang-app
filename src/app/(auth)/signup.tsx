@@ -116,7 +116,7 @@ export default function SignupScreen() {
                 rightAccessory={
                   <Button
                     label="중복 확인"
-                    variant="secondary"
+                    variant="main"
                     onPress={() => {}}
                     style={styles.checkButton}
                   />
@@ -145,7 +145,7 @@ export default function SignupScreen() {
                 rightAccessory={
                   <Button
                     label="중복 확인"
-                    variant="secondary"
+                    variant="main"
                     onPress={() => {}}
                     style={styles.checkButton}
                   />
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
   checkButton: {
     minHeight: 0,
     paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
   },
   agreements: {
     gap: Spacing.three,

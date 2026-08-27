@@ -34,11 +34,7 @@ const VARIANT_COLORS: Record<
   },
 };
 
-const DISABLED_COLORS = {
-  background: Palette.gray[300],
-  border: Palette.gray[300],
-  text: Palette.white,
-};
+const DISABLED_OPACITY = 0.4;
 
 export type ButtonProps = Omit<PressableProps, "style" | "children"> & {
   label: string;
@@ -56,7 +52,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const isInactive = disabled || loading;
-  const colors = isInactive ? DISABLED_COLORS : VARIANT_COLORS[variant];
+  const colors = VARIANT_COLORS[variant];
 
   return (
     <Pressable
@@ -66,6 +62,7 @@ export function Button({
       style={({ pressed }) => [
         styles.base,
         { backgroundColor: colors.background, borderColor: colors.border },
+        isInactive && styles.inactive,
         pressed && styles.pressed,
         style,
       ]}
@@ -94,5 +91,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.85,
+    transform: [{ scale: 0.99 }],
+  },
+  inactive: {
+    opacity: DISABLED_OPACITY,
   },
 });
