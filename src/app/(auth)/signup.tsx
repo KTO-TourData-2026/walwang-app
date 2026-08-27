@@ -182,6 +182,7 @@ export default function SignupScreen() {
             render={({ field: { onChange, onBlur, value } }) => (
               <TextField
                 ref={passwordConfirmRef}
+                label="비밀번호 확인"
                 placeholder="비밀번호 확인"
                 value={value}
                 onChangeText={onChange}
