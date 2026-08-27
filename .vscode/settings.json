@@ -4,5 +4,5 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": ["prebuild", "Walwang"]
+  "cSpell.words": ["codegen", "prebuild", "Pressable", "Pretendard", "Walwang"]
 }

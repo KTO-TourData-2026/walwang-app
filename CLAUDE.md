@@ -45,10 +45,11 @@ src/
   api/          API 클라이언트 (axios 인스턴스, 인터셉터)
   app/          expo-router 라우트 (= 화면)
     (auth)/       login, signup                → S-02, S-03
-    (tabs)/       index(지도), saved, my       → S-04, S-15, S-16  (+ _layout: 하단 탭)
+    (main)/       map(지도), saved, my         → S-04, S-15, S-16  (+ _layout: 하단 탭)
     recommend/    keywords, result             → S-10, S-11
     review/[placeId]/  receipt, photo, form, done → S-06, S-07, S-08, S-09
-    _layout.tsx   루트 레이아웃
+    _layout.tsx   루트 레이아웃 (Provider + Stack, 스플래시 자동 숨김 차단)
+    index.tsx     S-01 게이트 — 토큰 확인 후 /map 또는 /login으로 보냄
   components/   재사용 UI (+ ui/ 하위)
   constants/    theme 등
   hooks/        커스텀 훅

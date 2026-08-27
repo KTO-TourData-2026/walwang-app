@@ -12,20 +12,13 @@ import { MaxContentWidth, Palette, Spacing } from "@/constants/theme";
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
 
-/**
- * 웹용 탭바.
- *
- * 웹에는 네이티브 탭바가 없어서 expo-router/ui의 조립형 Tabs로 직접 그린다.
- * app-tabs.tsx와 탭 구성(지도/저장/마이)을 항상 맞춰줄 것.
- * 이 프로젝트는 Android 우선이라 웹은 개발 편의용 정도로만 유지한다.
- */
 export default function AppTabs() {
   return (
     <Tabs>
       <TabSlot style={styles.slot} />
       <TabList asChild>
         <TabBar>
-          <TabTrigger name="map" href="/" asChild>
+          <TabTrigger name="map" href="/map" asChild>
             <TabButton>지도</TabButton>
           </TabTrigger>
           <TabTrigger name="saved" href="/saved" asChild>

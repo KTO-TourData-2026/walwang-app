@@ -27,6 +27,8 @@ export const Palette = {
 
   black: "#222222",
   white: "#FFFFFF",
+  error: "#FF6E64",
+  success: "#26DF33",
 
   background: {
     base: "#FEFEFE",
