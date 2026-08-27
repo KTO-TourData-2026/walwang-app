@@ -253,9 +253,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
-    justifyContent: "center",
     gap: Spacing.four,
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.six,
+    paddingBottom: Spacing.four,
     width: "100%",
     maxWidth: MaxContentWidth,
     alignSelf: "center",
