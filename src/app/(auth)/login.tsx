@@ -2,12 +2,13 @@ import { useRef } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { ScrollView, StyleSheet, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
+import { setAccessToken } from "@/api/client";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
@@ -27,6 +28,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 const LOGO = require("@/assets/images/logo.png");
 
 export default function LoginScreen() {
+  const router = useRouter();
   const passwordRef = useRef<TextInput>(null);
 
   const {
@@ -39,7 +41,12 @@ export default function LoginScreen() {
     mode: "onTouched",
   });
 
-  const onSubmit = handleSubmit(async () => {});
+  // TODO(auth): 실제 로그인 API 배선 전까지 쓰는 임시 dev 우회.
+  // 더미 토큰을 저장하고 지도로 이동한다(다음 실행부터 게이트가 자동으로 /map).
+  const onSubmit = handleSubmit(async () => {
+    await setAccessToken("dev-token");
+    router.replace("/map");
+  });
 
   return (
     <SafeAreaView style={styles.screen}>

@@ -11,6 +11,8 @@ export interface Place {
   id: string;
   name: string;
   category: Category;
+  /** 도로명주소. 백엔드 `location` 필드(가게 상세·검색 응답). */
+  location: string;
   latitude: number;
   longitude: number;
   sizeStatus: Record<SizeKey, PlaceStatus>;

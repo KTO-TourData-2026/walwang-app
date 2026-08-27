@@ -18,11 +18,11 @@ export default function AppTabs() {
       <TabSlot style={styles.slot} />
       <TabList asChild>
         <TabBar>
-          <TabTrigger name="map" href="/map" asChild>
-            <TabButton>지도</TabButton>
-          </TabTrigger>
           <TabTrigger name="saved" href="/saved" asChild>
             <TabButton>저장</TabButton>
+          </TabTrigger>
+          <TabTrigger name="map" href="/map" asChild>
+            <TabButton>지도</TabButton>
           </TabTrigger>
           <TabTrigger name="my" href="/my" asChild>
             <TabButton>마이</TabButton>
