@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { Keyboard, Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { PlaceDetailSheetStub } from "@/components/map/place-detail-sheet-stub";
 import PlaceMap from "@/components/map/place-map";
 import { RecommendFab } from "@/components/map/recommend-fab";
 import { SearchResultList } from "@/components/map/search-result-list";
@@ -24,7 +23,6 @@ export default function MapScreen() {
 
   const [query, setQuery] = useState("");
   const [sizeFilter, setSizeFilter] = useState<SizeFilter>("all");
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
 
   const keyword = query.trim();
   const isSearching = keyword.length > 0;
@@ -49,7 +47,10 @@ export default function MapScreen() {
 
   const selectPlace = (place: Place) => {
     Keyboard.dismiss();
-    setSelectedPlace(place);
+    router.push({
+      pathname: "/store/[placeId]",
+      params: { placeId: place.id },
+    });
   };
 
   const closeSearch = () => {
@@ -100,11 +101,6 @@ export default function MapScreen() {
           </View>
         )}
       </View>
-
-      <PlaceDetailSheetStub
-        place={selectedPlace}
-        onClose={() => setSelectedPlace(null)}
-      />
     </View>
   );
 }
