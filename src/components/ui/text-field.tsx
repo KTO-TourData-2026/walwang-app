@@ -13,7 +13,7 @@ import { Palette, Radius, Spacing, Typography } from "@/constants/theme";
 
 import { ThemedText } from "../themed-text";
 
-const ERROR_COLOR = Palette.error;
+const ERROR_COLOR = Palette.error[300];
 
 export type TextFieldProps = TextInputProps & {
   label?: string;

@@ -52,6 +52,15 @@ export default function RootLayout() {
             />
 
             <Stack.Screen
+              name="store/[placeId]/index"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="store/[placeId]/reviews"
+              options={{ title: "리뷰" }}
+            />
+
+            <Stack.Screen
               name="recommend/keywords"
               options={{ title: "키워드 선택" }}
             />
