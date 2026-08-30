@@ -62,11 +62,11 @@ export default function RootLayout() {
 
             <Stack.Screen
               name="recommend/keywords"
-              options={{ title: "키워드 선택" }}
+              options={{ title: "코스 추천받기" }}
             />
             <Stack.Screen
               name="recommend/result"
-              options={{ title: "추천 코스" }}
+              options={{ headerShown: false }}
             />
           </Stack>
         </ThemeProvider>
