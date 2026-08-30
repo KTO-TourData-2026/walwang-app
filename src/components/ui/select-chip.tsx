@@ -12,6 +12,7 @@ export type SelectChipProps = {
   label: string;
   selected: boolean;
   onPress: () => void;
+  disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -20,17 +21,20 @@ export function SelectChip({
   label,
   selected,
   onPress,
+  disabled = false,
   style,
 }: SelectChipProps) {
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
       hitSlop={6}
       accessibilityRole="button"
-      accessibilityState={{ selected }}
+      accessibilityState={{ selected, disabled }}
       style={({ pressed }) => [
         styles.chip,
         selected ? styles.chipSelected : styles.chipDefault,
+        disabled && styles.chipDisabled,
         pressed && styles.pressed,
         style,
       ]}
@@ -57,6 +61,9 @@ const styles = StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: Palette.main[400],
+  },
+  chipDisabled: {
+    opacity: 0.4,
   },
   pressed: {
     opacity: 0.85,

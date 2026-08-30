@@ -177,7 +177,7 @@ export default function KeywordsScreen() {
                   label={`#${tag}`}
                   selected={selected}
                   onPress={() => toggleTag(tag)}
-                  style={blocked && styles.chipBlocked}
+                  disabled={blocked}
                 />
               );
             })}
@@ -276,9 +276,6 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     rowGap: 12,
     columnGap: Spacing.two,
-  },
-  chipBlocked: {
-    opacity: 0.4,
   },
   hintCard: {
     gap: Spacing.two,
