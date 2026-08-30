@@ -19,10 +19,3 @@ export interface Place {
   reviewCount: number;
   lastVerifiedAt: string | null;
 }
-
-export interface Course {
-  places: Place[];
-  path: { latitude: number; longitude: number }[] | null; // null이면 직선 폴백
-  totalDistance: number;
-  totalTime: number;
-}
