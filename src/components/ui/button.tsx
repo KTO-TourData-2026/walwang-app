@@ -34,7 +34,7 @@ const VARIANT_COLORS: Record<
   },
 };
 
-const DISABLED_OPACITY = 0.4;
+const DISABLED_OPACITY = 0.7;
 
 export type ButtonProps = Omit<PressableProps, "style" | "children"> & {
   label: string;
@@ -61,7 +61,11 @@ export function Button({
       disabled={isInactive}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor: colors.background, borderColor: colors.border },
+        {
+          backgroundColor: colors.background,
+          // 비활성 상태에는 stroke 색을 따로 지정하지 않는다(테두리 없이 dim만).
+          borderColor: isInactive ? "transparent" : colors.border,
+        },
         isInactive && styles.inactive,
         pressed && styles.pressed,
         style,

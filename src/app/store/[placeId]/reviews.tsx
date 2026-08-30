@@ -1,9 +1,10 @@
-import { Stack, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { FlatList, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ReviewCard } from "@/components/review/review-card";
 import { ThemedText } from "@/components/themed-text";
+import { ScreenHeader } from "@/components/ui/screen-header";
 import { Palette, Spacing } from "@/constants/theme";
 import { MOCK_PLACES } from "@/mocks/places";
 import { getPlaceReviews } from "@/mocks/reviews";
@@ -22,15 +23,7 @@ export default function StoreReviewsScreen() {
 
   return (
     <View style={styles.root}>
-      <Stack.Screen
-        options={{
-          title: place?.name ?? "리뷰",
-          headerTitleAlign: "center",
-          headerShadowVisible: false,
-        }}
-      />
-
-      <View style={styles.topLine} />
+      <ScreenHeader title={place?.name ?? "리뷰"} />
 
       <FlatList
         data={reviews}
@@ -75,10 +68,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: Palette.background.base,
-  },
-  topLine: {
-    height: 1,
-    backgroundColor: Palette.border.disabled,
   },
   list: {
     paddingTop: Spacing.three,
