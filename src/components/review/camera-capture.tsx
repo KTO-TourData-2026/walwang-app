@@ -32,13 +32,20 @@ export function CameraCapture({
   const capture = async () => {
     if (!permission?.granted) {
       const next = await requestPermission();
-      if (!next.granted) {
+      // 권한 거부 시엔 진행하지 않고 화면에 머문다.
+      // (에뮬레이터·데모용 폴백은 개발 빌드에서만)
+      if (!next.granted && __DEV__) {
         onCapture(fallbackUri);
       }
       return;
     }
     const shot = await cameraRef.current?.takePictureAsync({ quality: 0.7 });
-    onCapture(shot?.uri ?? fallbackUri);
+    // 촬영 실패로 uri가 없으면 진행하지 않는다(개발 빌드만 폴백).
+    if (shot?.uri) {
+      onCapture(shot.uri);
+    } else if (__DEV__) {
+      onCapture(fallbackUri);
+    }
   };
 
   return (

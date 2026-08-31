@@ -30,6 +30,7 @@ export default function ReviewFormScreen() {
   const insets = useSafeAreaInsets();
 
   const result = useReviewDraft((state) => state.result);
+  const receipt = useReviewDraft((state) => state.receipt);
   const photoUri = useReviewDraft((state) => state.photoUri);
   const size = useReviewDraft((state) => state.size);
   const tags = useReviewDraft((state) => state.tags);
@@ -41,7 +42,12 @@ export default function ReviewFormScreen() {
   const place = MOCK_PLACES.find((item) => item.id === placeId);
   const placeName = place?.name ?? "이 가게";
   const allowed = result === "allowed";
-  const canSubmit = size !== null && content.trim().length >= MIN_CONTENT;
+  // 들어갔어요는 영수증 인증·사진까지 끝난 경우에만 등록 가능(선행 단계 검증).
+  const prerequisitesMet =
+    result === "denied" ||
+    (result === "allowed" && receipt.verified && photoUri !== null);
+  const canSubmit =
+    prerequisitesMet && size !== null && content.trim().length >= MIN_CONTENT;
 
   const submit = () => {
     if (!canSubmit) {
