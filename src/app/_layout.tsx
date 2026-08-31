@@ -35,20 +35,36 @@ export default function RootLayout() {
             />
 
             <Stack.Screen
+              name="review/[placeId]/result"
+              options={{
+                headerShown: false,
+                presentation: "transparentModal",
+                animation: "fade",
+              }}
+            />
+            <Stack.Screen
               name="review/[placeId]/receipt"
-              options={{ title: "영수증 인증" }}
+              options={{
+                title: "1 / 3",
+                headerTitleAlign: "center",
+                headerShadowVisible: false,
+              }}
             />
             <Stack.Screen
               name="review/[placeId]/photo"
-              options={{ title: "사진 첨부" }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="review/[placeId]/form"
-              options={{ title: "리뷰 작성" }}
+              options={{
+                title: "3 / 3",
+                headerTitleAlign: "center",
+                headerShadowVisible: false,
+              }}
             />
             <Stack.Screen
               name="review/[placeId]/done"
-              options={{ title: "작성 완료", headerBackVisible: false }}
+              options={{ headerShown: false }}
             />
 
             <Stack.Screen
