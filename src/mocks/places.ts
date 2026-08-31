@@ -1,4 +1,4 @@
-import type { Place } from "@/types/place";
+import type { Place, SizeKey } from "@/types/place";
 
 /**
  * 백엔드 API가 나오기 전까지 화면 개발용으로 쓰는 목 데이터.
@@ -175,7 +175,50 @@ export const MOCK_PLACES: Place[] = [
     reviewCount: 31,
     lastVerifiedAt: "2026-05-08T13:50:00Z",
   },
+  {
+    id: "p-016",
+    name: "멍카페 성수",
+    category: "cafe",
+    location: "서울 성동구 아차산로 7",
+    latitude: 37.5468,
+    longitude: 127.0409,
+    sizeStatus: { smallMedium: "allowed", large: "allowed" },
+    reviewCount: 58,
+    lastVerifiedAt: "2026-08-11T05:35:00Z",
+  },
+  {
+    id: "p-017",
+    name: "서울숲 로스터리",
+    category: "cafe",
+    location: "서울 성동구 왕십리로 83",
+    latitude: 37.5433,
+    longitude: 127.0348,
+    sizeStatus: { smallMedium: "allowed", large: "allowed" },
+    reviewCount: 45,
+    lastVerifiedAt: "2026-08-07T09:00:00Z",
+  },
 ];
+
+/**
+ * 거절 완료(S-12) 대안 카드. 실제로는 PostGIS 반경+상태 조인이지만 목에선
+ * 업종·상태 필터만 쓴다. 후보 0개 가능 — 호출부에서 폴백 처리.
+ */
+export function getAlternativePlaces(
+  placeId: string,
+  size: SizeKey,
+  limit = 3,
+): Place[] {
+  const origin = MOCK_PLACES.find((place) => place.id === placeId);
+  if (!origin) {
+    return [];
+  }
+  return MOCK_PLACES.filter(
+    (place) =>
+      place.id !== origin.id &&
+      place.category === origin.category &&
+      place.sizeStatus[size] === "allowed",
+  ).slice(0, limit);
+}
 
 /**
  * [DEV 전용] 영어 검색 키워드. 에뮬레이터에 한글 자판이 없어도 영어로
@@ -198,4 +241,6 @@ export const MOCK_PLACE_KEYWORDS: Record<string, string> = {
   "p-013": "seoul forest wetland park",
   "p-014": "bakery walk cafe",
   "p-015": "seongsu noodle",
+  "p-016": "mung cafe seongsu",
+  "p-017": "seoul forest roastery",
 };

@@ -52,7 +52,7 @@ export default function StoreDetailScreen() {
 
   const goWrite = () =>
     router.push({
-      pathname: "/review/[placeId]/receipt",
+      pathname: "/review/[placeId]/result",
       params: { placeId: place.id },
     });
 

@@ -20,6 +20,7 @@ export type TextFieldProps = TextInputProps & {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
   rightAccessory?: ReactNode;
+  focusColor?: string;
   ref?: Ref<TextInput>;
 };
 
@@ -28,6 +29,7 @@ export function TextField({
   error,
   containerStyle,
   rightAccessory,
+  focusColor = Palette.black,
   style,
   onFocus,
   onBlur,
@@ -39,7 +41,7 @@ export function TextField({
   const borderColor = error
     ? ERROR_COLOR
     : focused
-      ? Palette.black
+      ? focusColor
       : Palette.border.default;
 
   const input = (
