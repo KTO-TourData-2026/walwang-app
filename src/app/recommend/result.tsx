@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { Footprints } from "lucide-react-native";
 import { Modal, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -11,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import { DURATION_LABEL, PURPOSE_LABEL } from "@/constants/course";
 import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { MOCK_COURSE, MOCK_COURSE_FALLBACK } from "@/mocks/courses";
+import {
+  getCourseById,
+  MOCK_COURSE,
+  MOCK_COURSE_FALLBACK,
+} from "@/mocks/courses";
 import type { CourseDuration, CoursePurpose } from "@/types/course";
 import type { SizeKey } from "@/types/place";
 import { formatDistance, formatWalkTime } from "@/utils/format";
@@ -24,6 +29,8 @@ export default function RecommendResultScreen() {
     purposes?: string;
     duration?: string;
     variant?: string;
+    /** 저장 코스(S-15)에서 열 때 id 재사용 — 재계산 없이 같은 코스를 재현한다. */
+    courseId?: string;
   }>();
 
   const [saved, setSaved] = useState(false);
@@ -40,9 +47,15 @@ export default function RecommendResultScreen() {
     router.navigate("/saved");
   };
 
-  // 경로 API 실패·조건 완화 상태 확인용 폴백 코스(?variant=fallback).
-  const course =
-    params.variant === "fallback" ? MOCK_COURSE_FALLBACK : MOCK_COURSE;
+  // 저장 코스에서 열면 id로 재현하고, 아니면 폴백 확인용 variant(추천 플로우)로 고른다.
+  const course = params.courseId
+    ? getCourseById(params.courseId)
+    : params.variant === "fallback"
+      ? MOCK_COURSE_FALLBACK
+      : MOCK_COURSE;
+
+  // 저장 코스에서 들어온 경우 이미 저장된 상태 → 저장 버튼 없이 닫기만 노출.
+  const fromSaved = Boolean(params.courseId);
 
   const title = buildTitle(params, course);
 
@@ -71,25 +84,27 @@ export default function RecommendResultScreen() {
               {course.waypoints.length}지점 · 총{" "}
               {formatDistance(course.totalDistance)}
             </ThemedText>
-            <ThemedText type="label04" color={Palette.gray[500]}>
-              도보 약 {formatWalkTime(course.totalTime)}
-            </ThemedText>
+            <View style={styles.walkMeta}>
+              <Footprints size={14} color={Palette.gray[500]} strokeWidth={2} />
+              <ThemedText type="label04" color={Palette.gray[500]}>
+                도보 약 {formatWalkTime(course.totalTime)}
+              </ThemedText>
+            </View>
           </View>
         </View>
 
-        {course.relaxed ? (
-          <View style={styles.banner}>
-            <ThemedText type="label05" color={Palette.main[500]}>
-              조건에 딱 맞는 곳이 적어 조건을 조금 넓혔어요
-            </ThemedText>
-          </View>
-        ) : null}
-
-        {course.walkPath === null ? (
-          <View style={styles.noteRow}>
-            <ThemedText type="label06" color={Palette.gray[400]}>
-              경로를 불러오지 못해 지점을 직선으로 이었어요
-            </ThemedText>
+        {course.relaxed || course.walkPath === null ? (
+          <View style={styles.noticeBox}>
+            {course.relaxed ? (
+              <ThemedText type="subtitle05" color={Palette.main[500]}>
+                조건에 딱 맞는 곳이 적어 조건을 조금 넓혔어요
+              </ThemedText>
+            ) : null}
+            {course.walkPath === null ? (
+              <ThemedText type="label06" color={Palette.gray[400]}>
+                경로를 불러오지 못해 지점을 직선으로 이었어요
+              </ThemedText>
+            ) : null}
           </View>
         ) : null}
 
@@ -123,13 +138,15 @@ export default function RecommendResultScreen() {
             onPress={() => router.dismissAll()}
             style={styles.footerButton}
           />
-          <Button
-            label={saved ? "저장됨" : "코스 저장"}
-            variant="main"
-            disabled={saved}
-            onPress={save}
-            style={styles.footerButton}
-          />
+          {fromSaved ? null : (
+            <Button
+              label={saved ? "저장됨" : "코스 저장"}
+              variant="main"
+              disabled={saved}
+              onPress={save}
+              style={styles.footerButton}
+            />
+          )}
         </View>
       </View>
 
@@ -225,16 +242,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  banner: {
+  walkMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.one,
+  },
+  noticeBox: {
     marginHorizontal: Spacing.four,
     marginBottom: Spacing.two,
     padding: Spacing.three,
+    gap: Spacing.one,
     borderRadius: Radius.medium,
     backgroundColor: "rgba(255, 154, 134, 0.12)",
-  },
-  noteRow: {
-    paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.two,
   },
   listDivider: {
     height: 1,
