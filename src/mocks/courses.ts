@@ -76,3 +76,10 @@ export const MOCK_COURSE_FALLBACK: Course = {
   walkPath: null,
   relaxed: true,
 };
+
+// 저장 코스(S-15)를 id로 재현(실제로는 GET /courses/{id}). 미매칭 시 기본 코스 폴백.
+export function getCourseById(id: string): Course {
+  return (
+    [MOCK_COURSE, MOCK_COURSE_FALLBACK].find((c) => c.id === id) ?? MOCK_COURSE
+  );
+}

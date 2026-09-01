@@ -9,3 +9,14 @@ export function formatReviewDate(iso: string): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}.${month}.${day}`;
 }
+
+/** ISO 8601 문자열을 "MM.DD"로 짧게 표시한다(내 리뷰 목록·도장 등 좁은 영역). */
+export function formatMonthDay(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${month}.${day}`;
+}

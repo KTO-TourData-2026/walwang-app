@@ -84,6 +84,19 @@ export default function RootLayout() {
               name="recommend/result"
               options={{ headerShown: false }}
             />
+
+            <Stack.Screen
+              name="my/reviews"
+              options={{ title: "내가 쓴 리뷰" }}
+            />
+            <Stack.Screen
+              name="my/stamp/[stampId]"
+              options={{
+                headerShown: false,
+                presentation: "transparentModal",
+                animation: "fade",
+              }}
+            />
           </Stack>
         </ThemeProvider>
       </QueryClientProvider>
