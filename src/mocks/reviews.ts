@@ -323,6 +323,29 @@ export const MOCK_REVIEWS: Review[] = [
   },
 ];
 
+// [목] 로그인 사용자가 쓴 리뷰 id — 마이 리뷰수·S-17·여권 도장이 공유하는 단일 출처.
+const MY_REVIEW_IDS = [
+  "r-001",
+  "r-005",
+  "r-013",
+  "r-019",
+  "r-021",
+  "r-010",
+  "r-016",
+  "r-007",
+  "r-011",
+  "r-023",
+  "r-015",
+  "r-022",
+] as const;
+
+export function getMyReviews(): Review[] {
+  const mine = new Set<string>(MY_REVIEW_IDS);
+  return MOCK_REVIEWS.filter((r) => mine.has(r.id)).sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
+  );
+}
+
 /** 특정 가게의 리뷰를 최신순으로 반환한다. */
 export function getPlaceReviews(placeId: string): Review[] {
   return MOCK_REVIEWS.filter((r) => r.placeId === placeId).sort((a, b) =>

@@ -54,6 +54,19 @@ export interface CourseWaypoint {
   } | null;
 }
 
+// 저장 목록(S-15 코스 탭)용 요약(`GET /user/me/saved-courses`).
+// 탭 시 이 id를 재사용해 S-11을 재현한다(재계산 없음).
+export interface SavedCoursePreview {
+  id: string;
+  title: string;
+  size: SizeKey;
+  storeCount: number;
+  storeNames: string[];
+  totalDistance: number;
+  totalTime: number;
+  createdAt: string;
+}
+
 /**
  * 추천된 코스. 저장(`POST /courses`) 시에도 이 id를 재사용한다.
  */
