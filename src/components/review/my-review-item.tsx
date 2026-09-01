@@ -1,0 +1,85 @@
+import { Image } from "expo-image";
+import { Pressable, StyleSheet, View } from "react-native";
+
+import { ReviewResultBadge } from "@/components/review/review-result-badge";
+import { ThemedText } from "@/components/themed-text";
+import { CATEGORY_LABEL } from "@/constants/category";
+import { SIZE_LABEL } from "@/constants/status";
+import { Palette, Radius, Spacing } from "@/constants/theme";
+import type { Place } from "@/types/place";
+import type { Review } from "@/types/review";
+import { formatMonthDay } from "@/utils/date";
+
+export function MyReviewItem({
+  review,
+  place,
+  onPress,
+}: {
+  review: Review;
+  place: Place;
+  onPress: (placeId: string) => void;
+}) {
+  const thumbnail = review.thumbnailUrl ?? review.photoUrl;
+
+  return (
+    <Pressable
+      onPress={() => onPress(place.id)}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.item, pressed && styles.pressed]}
+    >
+      {thumbnail ? (
+        <Image
+          source={{ uri: thumbnail }}
+          style={styles.thumbnail}
+          contentFit="cover"
+          transition={150}
+          accessibilityLabel={`${place.name} 리뷰 사진`}
+        />
+      ) : null}
+
+      <View style={styles.content}>
+        <View style={styles.topRow}>
+          <ReviewResultBadge allowed={review.dogAllowed} />
+          <ThemedText type="label05" color={Palette.gray[400]}>
+            {formatMonthDay(review.createdAt)}
+          </ThemedText>
+        </View>
+
+        <ThemedText type="subtitle03" color={Palette.gray[700]}>
+          {place.name}
+        </ThemedText>
+        <ThemedText type="label05" color={Palette.gray[400]}>
+          {CATEGORY_LABEL[place.category]} · {SIZE_LABEL[review.dogSize]}
+        </ThemedText>
+      </View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.three,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
+  },
+  pressed: {
+    backgroundColor: Palette.background.subtle,
+  },
+  content: {
+    flex: 1,
+    gap: 6,
+  },
+  topRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  thumbnail: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.medium,
+    backgroundColor: Palette.gray[100],
+  },
+});
