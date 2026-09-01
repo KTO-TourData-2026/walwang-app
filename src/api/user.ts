@@ -6,6 +6,7 @@ import {
   setRefreshToken,
 } from "@/api/client";
 import { API_ENDPOINTS } from "@/api/endpoints";
+import { ApiHttpError } from "@/api/http-error";
 import type {
   UserInfoResponse,
   UserLoginRequest,
@@ -23,12 +24,15 @@ export async function login(body: UserLoginRequest): Promise<void> {
   const auth = res.headers.authorization ?? res.headers.Authorization;
   const access =
     typeof auth === "string" ? auth.replace(/^Bearer\s+/i, "") : null;
-  if (access) {
-    await setAccessToken(access);
+  const refreshToken = res.data?.refreshToken;
+
+  // access(헤더)·refresh(바디) 둘 다 있어야 로그인 성공 — 하나라도 없으면 실패 처리.
+  if (!access || !refreshToken) {
+    throw new ApiHttpError(0, "로그인 응답에 토큰이 없어요.");
   }
-  if (res.data?.refreshToken) {
-    await setRefreshToken(res.data.refreshToken);
-  }
+
+  await setAccessToken(access);
+  await setRefreshToken(refreshToken);
 }
 
 // 내 정보: 서버 snake_case → UserSummary(camel) 매핑.
@@ -52,9 +56,7 @@ export async function logout(): Promise<void> {
 }
 
 export async function deleteUser(): Promise<void> {
-  try {
-    await apiClient.delete(API_ENDPOINTS.user.me);
-  } finally {
-    await clearTokens();
-  }
+  // 탈퇴가 성공한 뒤에만 토큰을 지운다(실패 시 계정은 남아있으므로 로그인 유지).
+  await apiClient.delete(API_ENDPOINTS.user.me);
+  await clearTokens();
 }
