@@ -85,8 +85,9 @@ export async function getMyProfile(): Promise<UserSummary> {
 }
 
 export async function logout(): Promise<void> {
-  const refreshToken = await getRefreshToken();
+  // refresh 읽기 실패까지 포함해 어떤 경로로 끝나도 토큰은 정리한다(남은 토큰으로 자동 로그인 방지).
   try {
+    const refreshToken = await getRefreshToken();
     await apiClient.post(API_ENDPOINTS.user.logout, { refreshToken });
   } finally {
     await clearTokens();
