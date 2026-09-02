@@ -5,7 +5,7 @@
 
 export type SizeKey = "smallMedium" | "large";
 export type PlaceStatus = "allowed" | "denied" | "unknown";
-export type Category = "park" | "cafe" | "restaurant";
+export type Category = "park" | "cafe" | "restaurant" | "shopping";
 
 export interface Place {
   id: string;
