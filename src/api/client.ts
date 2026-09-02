@@ -42,6 +42,11 @@ apiClient.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // dev 전용 요청 로깅. adb logcat -s ReactNativeJS:V 로 확인. 프로덕션 번들엔 포함되지 않음.
+  if (__DEV__) {
+    console.info(`[API →] ${config.method?.toUpperCase()} ${config.url}`);
+  }
+
   return config;
 });
 
@@ -82,12 +87,25 @@ let refreshPromise: Promise<void> | null = null;
  * 그 외 에러는 공통 ApiHttpError로 정규화한다.
  */
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // dev 전용 응답 로깅.
+    if (__DEV__) {
+      console.info(`[API ←] ${response.status} ${response.config.url}`);
+    }
+    return response;
+  },
   async (error) => {
     const config = error?.config as
       (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
     const status = error?.response?.status;
     const url = config?.url ?? "";
+
+    // dev 전용 에러 로깅(status·경로·서버 메시지).
+    if (__DEV__) {
+      const body = error?.response?.data as { message?: string } | undefined;
+      console.info(`[API ✗] ${status ?? "-"} ${url}`, body?.message ?? "");
+    }
+
     const skip = url.includes("/user/reissue") || url.includes("/user/login");
 
     if (status === 401 && config && !config._retry && !skip) {
