@@ -1,18 +1,26 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
-import { ScrollView, StyleSheet, TextInput, View } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  ToastAndroid,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
-import { setAccessToken } from "@/api/client";
+import { ApiHttpError } from "@/api/http-error";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
+import { useLoginMutation } from "@/hooks/use-login-mutation";
 
 const loginSchema = z.object({
   email: z
@@ -30,22 +38,38 @@ const LOGO = require("@/assets/images/logo.png");
 export default function LoginScreen() {
   const router = useRouter();
   const passwordRef = useRef<TextInput>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const loginMutation = useLoginMutation();
 
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
     mode: "onTouched",
   });
 
-  // TODO(auth): 실제 로그인 API 배선 전까지 쓰는 임시 dev 우회.
-  // 더미 토큰을 저장하고 지도로 이동한다(다음 실행부터 게이트가 자동으로 /map).
-  const onSubmit = handleSubmit(async () => {
-    await setAccessToken("dev-token");
-    router.replace("/map");
+  // 로그인 성공 시 토큰이 저장되고 지도로 이동. 자격증명 오류(401)는 인라인, 그 외는 Alert(입력값 유지).
+  const onSubmit = handleSubmit(async (values) => {
+    setSubmitError(null);
+    try {
+      await loginMutation.mutateAsync(values);
+      ToastAndroid.show("로그인됐어요!", ToastAndroid.SHORT);
+      router.replace("/map");
+    } catch (error) {
+      if (error instanceof ApiHttpError && error.status === 401) {
+        setSubmitError("이메일 또는 비밀번호가 올바르지 않아요.");
+        return;
+      }
+      Alert.alert(
+        "로그인 실패",
+        error instanceof ApiHttpError
+          ? error.message
+          : "네트워크 상태를 확인한 뒤 다시 시도해주세요.",
+      );
+    }
   });
 
   return (
@@ -66,6 +90,7 @@ export default function LoginScreen() {
             render={({ field: { onChange, onBlur, value } }) => (
               <TextField
                 label="이메일"
+                focusColor={Palette.border.default}
                 placeholder="name@email.com"
                 value={value}
                 onChangeText={onChange}
@@ -89,6 +114,7 @@ export default function LoginScreen() {
               <TextField
                 ref={passwordRef}
                 label="비밀번호"
+                focusColor={Palette.border.default}
                 placeholder="비밀번호를 입력해주세요"
                 value={value}
                 onChangeText={onChange}
@@ -104,7 +130,17 @@ export default function LoginScreen() {
           />
         </View>
 
-        <Button label="로그인" onPress={onSubmit} loading={isSubmitting} />
+        {submitError ? (
+          <ThemedText type="label05" color={Palette.error[300]}>
+            {submitError}
+          </ThemedText>
+        ) : null}
+
+        <Button
+          label="로그인"
+          onPress={onSubmit}
+          loading={loginMutation.isPending}
+        />
 
         <View style={styles.signupRow}>
           <ThemedText type="label04" color={Palette.gray[500]}>
