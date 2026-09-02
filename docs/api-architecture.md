@@ -61,14 +61,14 @@ src/mocks/         연동되면 도메인별로 삭제
 4. `queryKeys`에 키 추가 → `src/hooks`에 훅 작성.
 5. 화면의 목 호출을 훅으로 교체 → 해당 `src/mocks` 파일 삭제.
 
-## 🔧 백엔드 확인 필요
+## ✅ 백엔드 확인 완료 (#19)
 
-프론트 설계 기준으로 구현하고, 매핑으로 못 메우는 항목만 아래로 추적한다.
+#19에서 요청했던 항목은 swagger(`/v3/api-docs`) 기준 모두 반영됨. 프론트는 경계에서 camelCase·enum만 매핑한다.
 
-- `GET /user/store` 응답에 `address` 추가 — 저장 장소 카드 도로명주소(현재 응답에 없음)
-- `GET /user/me`에 `stamp_count` 추가 — "모은 도장 수"(현재 파생 불가)
-- 여권 preview(`GET /user/me/passport`) 응답 형태 확정(배열/래핑)
-- 상태 등급 5↔3단계 표기 정책 합의
-- `GET /user/me/reviews` 응답에 `store_name`·`type`(업종) 포함 여부 확인(S-17 표시용)
-
-해결됨: 본인 리뷰 목록(`GET /user/me/reviews`)·토큰 재발급(`POST /user/reissue`)은 서버에 존재 확인 → 반영 완료.
+- ✅ `GET /user/me/reviews` — `storeName`·`type` 포함, `page/size`
+- ✅ `GET /user/store` — `address` 포함
+- ✅ `GET /user/me` — `stampCount` 포함
+- ✅ 여권 preview(`GET /user/me/passport`) — 정상 배열(`id`·`stampUrl`·`status`·`createdAt`)
+- ✅ 토큰 재발급 `POST /user/reissue`
+- ✅ `DELETE /course/{courseId}` (단수 경로 실재)
+- ✅ 상태 등급 — 서버 3단계(`POSSIBLE`/`IMPOSSIBLE`/`UNKNOWN`) → 앱 `allowed`/`denied`/`unknown`과 1:1(이름만 매핑, 5→3 접기 불필요)

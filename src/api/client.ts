@@ -62,14 +62,15 @@ async function reissueTokens() {
   const auth = res.headers.authorization ?? res.headers.Authorization;
   const access =
     typeof auth === "string" ? auth.replace(/^Bearer\s+/i, "") : null;
-  if (!access) {
-    throw new Error("재발급 응답에 access 토큰 없음");
-  }
-  await setAccessToken(access);
   const newRefresh = (res.data as { refreshToken?: string })?.refreshToken;
-  if (newRefresh) {
-    await setRefreshToken(newRefresh);
+
+  // 서버가 refresh를 회전하므로 access·refresh 둘 다 온 경우만 성공 처리(옛 토큰 유지 방지).
+  if (!access || !newRefresh) {
+    throw new Error("재발급 응답에 토큰이 없음");
   }
+
+  await setAccessToken(access);
+  await setRefreshToken(newRefresh);
 }
 
 // 동시 401이 여러 번 재발급을 부르지 않도록 진행 중 Promise를 공유(single-flight).
