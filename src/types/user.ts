@@ -13,6 +13,22 @@ export interface UserLoginRequest {
   password: string;
 }
 
+// 약관 코드(swagger AgreementRequest.termCode enum).
+export type TermCode = "TERMS_OF_SERVICE" | "PRIVACY" | "AGE_14";
+
+export interface AgreementRequest {
+  termCode: TermCode;
+  agreed: boolean;
+}
+
+// 회원가입 요청(swagger SignUpRequest). 성공 시 바디·토큰 없음(200) → 이어서 login 호출.
+export interface UserSignUpRequest {
+  email: string;
+  nickname: string;
+  password: string;
+  agreements: AgreementRequest[];
+}
+
 // `GET /user/me` 서버 응답(swagger UserProfileResponse, camelCase).
 export interface UserProfileResponse {
   userId: number;

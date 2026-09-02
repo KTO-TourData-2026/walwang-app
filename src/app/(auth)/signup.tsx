@@ -2,23 +2,29 @@ import { useRef, useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
-import { Link } from "expo-router";
-import { Controller, useForm } from "react-hook-form";
+import { Link, useRouter } from "expo-router";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
+  ToastAndroid,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { z } from "zod";
 
+import { ApiHttpError } from "@/api/http-error";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField } from "@/components/ui/text-field";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
+import { useCheckEmailMutation } from "@/hooks/use-check-email-mutation";
+import { useCheckNicknameMutation } from "@/hooks/use-check-nickname-mutation";
+import { useSignupMutation } from "@/hooks/use-signup-mutation";
 
 const AGREEMENTS = [
   { code: "TERMS_OF_SERVICE", label: "(필수) 이용약관 동의", more: true },
@@ -52,7 +58,14 @@ type SignupForm = z.infer<typeof signupSchema>;
 
 const LOGO = require("@/assets/images/logo.png");
 
+function errorMessage(error: unknown): string {
+  return error instanceof ApiHttpError
+    ? error.message
+    : "네트워크 상태를 확인한 뒤 다시 시도해주세요.";
+}
+
 export default function SignupScreen() {
+  const router = useRouter();
   const nicknameRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const passwordConfirmRef = useRef<TextInput>(null);
@@ -63,10 +76,21 @@ export default function SignupScreen() {
     AGE_14: false,
   });
 
+  // 마지막으로 "사용 가능"을 확인한 값. 입력을 바꾸면 현재 값과 달라져 재확인이 필요해진다.
+  const [checkedEmail, setCheckedEmail] = useState<string | null>(null);
+  const [checkedNickname, setCheckedNickname] = useState<string | null>(null);
+
+  const checkEmailMutation = useCheckEmailMutation();
+  const checkNicknameMutation = useCheckNicknameMutation();
+  const signupMutation = useSignupMutation();
+
   const {
     control,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    trigger,
+    setError,
+    clearErrors,
+    formState: { errors, isValid },
   } = useForm<SignupForm>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -78,10 +102,84 @@ export default function SignupScreen() {
     mode: "onTouched",
   });
 
-  const onSubmit = handleSubmit(async () => {});
+  // useWatch는 watch()와 달리 메모이제이션에 안전(React Compiler 경고 없음).
+  const emailValue = useWatch({ control, name: "email" }).trim();
+  const nicknameValue = useWatch({ control, name: "nickname" }).trim();
+  const emailChecked = checkedEmail !== null && checkedEmail === emailValue;
+  const nicknameChecked =
+    checkedNickname !== null && checkedNickname === nicknameValue;
+
+  // [중복 확인] 이메일: 형식 검증 통과 후 조회. 409면 인라인 에러, 200이면 확인 상태로.
+  const handleCheckEmail = async () => {
+    if (!(await trigger("email"))) {
+      return;
+    }
+    try {
+      const available = await checkEmailMutation.mutateAsync(emailValue);
+      if (available) {
+        clearErrors("email");
+        setCheckedEmail(emailValue);
+      } else {
+        setError("email", { message: "이미 사용 중인 이메일이에요." });
+        setCheckedEmail(null);
+      }
+    } catch (error) {
+      Alert.alert("확인 실패", errorMessage(error));
+    }
+  };
+
+  const handleCheckNickname = async () => {
+    if (!(await trigger("nickname"))) {
+      return;
+    }
+    try {
+      const available = await checkNicknameMutation.mutateAsync(nicknameValue);
+      if (available) {
+        clearErrors("nickname");
+        setCheckedNickname(nicknameValue);
+      } else {
+        setError("nickname", { message: "이미 사용 중인 닉네임이에요." });
+        setCheckedNickname(null);
+      }
+    } catch (error) {
+      Alert.alert("확인 실패", errorMessage(error));
+    }
+  };
 
   const allAgreed = Object.values(agreements).every(Boolean);
-  const canSubmit = isValid && allAgreed;
+
+  // 가입 → 자동 로그인 → 지도. 가입 직전 사이에 선점되면 409 → 이메일 재확인 유도.
+  const onSubmit = handleSubmit(async (values) => {
+    // 키보드 '완료'는 버튼 disabled를 거치지 않으므로, 약관·중복확인·진행중 상태를 여기서 재확인한다.
+    if (!allAgreed || !emailChecked || !nicknameChecked) {
+      return;
+    }
+    if (signupMutation.isPending) {
+      return;
+    }
+    try {
+      await signupMutation.mutateAsync({
+        email: values.email,
+        nickname: values.nickname,
+        password: values.password,
+        agreements: AGREEMENTS.map((item) => ({
+          termCode: item.code,
+          agreed: agreements[item.code],
+        })),
+      });
+      ToastAndroid.show("회원가입이 완료됐어요!", ToastAndroid.SHORT);
+      router.replace("/map");
+    } catch (error) {
+      if (error instanceof ApiHttpError && error.status === 409) {
+        setError("email", { message: "이미 사용 중인 이메일이에요." });
+        setCheckedEmail(null);
+        return;
+      }
+      Alert.alert("회원가입 실패", errorMessage(error));
+    }
+  });
+
+  const canSubmit = isValid && allAgreed && emailChecked && nicknameChecked;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -99,29 +197,43 @@ export default function SignupScreen() {
             control={control}
             name="email"
             render={({ field: { onChange, onBlur, value } }) => (
-              <TextField
-                label="이메일"
-                placeholder="name@email.com"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.email?.message}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                keyboardType="email-address"
-                returnKeyType="next"
-                onSubmitEditing={() => nicknameRef.current?.focus()}
-                submitBehavior="submit"
-                rightAccessory={
-                  <Button
-                    label="중복 확인"
-                    variant="main"
-                    onPress={() => {}}
-                    style={styles.checkButton}
-                  />
-                }
-              />
+              <View>
+                <TextField
+                  label="이메일"
+                  focusColor={Palette.border.default}
+                  placeholder="name@email.com"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.email?.message}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  keyboardType="email-address"
+                  returnKeyType="next"
+                  onSubmitEditing={() => nicknameRef.current?.focus()}
+                  submitBehavior="submit"
+                  rightAccessory={
+                    <Button
+                      label="중복 확인"
+                      variant="main"
+                      onPress={handleCheckEmail}
+                      loading={checkEmailMutation.isPending}
+                      disabled={emailChecked}
+                      style={styles.checkButton}
+                    />
+                  }
+                />
+                {emailChecked && !errors.email ? (
+                  <ThemedText
+                    type="label06"
+                    color={Palette.success[300]}
+                    style={styles.successText}
+                  >
+                    사용 가능한 이메일이에요.
+                  </ThemedText>
+                ) : null}
+              </View>
             )}
           />
 
@@ -129,28 +241,42 @@ export default function SignupScreen() {
             control={control}
             name="nickname"
             render={({ field: { onChange, onBlur, value } }) => (
-              <TextField
-                ref={nicknameRef}
-                label="닉네임"
-                placeholder="2~10자"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.nickname?.message}
-                autoCapitalize="none"
-                autoCorrect={false}
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                submitBehavior="submit"
-                rightAccessory={
-                  <Button
-                    label="중복 확인"
-                    variant="main"
-                    onPress={() => {}}
-                    style={styles.checkButton}
-                  />
-                }
-              />
+              <View>
+                <TextField
+                  ref={nicknameRef}
+                  label="닉네임"
+                  focusColor={Palette.border.default}
+                  placeholder="2~10자"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.nickname?.message}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                  submitBehavior="submit"
+                  rightAccessory={
+                    <Button
+                      label="중복 확인"
+                      variant="main"
+                      onPress={handleCheckNickname}
+                      loading={checkNicknameMutation.isPending}
+                      disabled={nicknameChecked}
+                      style={styles.checkButton}
+                    />
+                  }
+                />
+                {nicknameChecked && !errors.nickname ? (
+                  <ThemedText
+                    type="label06"
+                    color={Palette.success[300]}
+                    style={styles.successText}
+                  >
+                    사용 가능한 닉네임이에요.
+                  </ThemedText>
+                ) : null}
+              </View>
             )}
           />
 
@@ -161,6 +287,7 @@ export default function SignupScreen() {
               <TextField
                 ref={passwordRef}
                 label="비밀번호"
+                focusColor={Palette.border.default}
                 placeholder="8자 이상"
                 value={value}
                 onChangeText={onChange}
@@ -183,6 +310,7 @@ export default function SignupScreen() {
               <TextField
                 ref={passwordConfirmRef}
                 label="비밀번호 확인"
+                focusColor={Palette.border.default}
                 placeholder="비밀번호 확인"
                 value={value}
                 onChangeText={onChange}
@@ -223,7 +351,7 @@ export default function SignupScreen() {
         <Button
           label="가입하기"
           onPress={onSubmit}
-          loading={isSubmitting}
+          loading={signupMutation.isPending}
           disabled={!canSubmit}
         />
 
@@ -277,6 +405,9 @@ const styles = StyleSheet.create({
     minHeight: 0,
     paddingVertical: Spacing.two,
     paddingHorizontal: Spacing.two,
+  },
+  successText: {
+    marginTop: Spacing.one,
   },
   agreements: {
     gap: Spacing.three,

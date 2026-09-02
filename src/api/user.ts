@@ -10,10 +10,47 @@ import { ApiHttpError } from "@/api/http-error";
 import type {
   UserLoginRequest,
   UserProfileResponse,
+  UserSignUpRequest,
   UserSummary,
 } from "@/types/user";
 
 // user 도메인 단일 호출 함수. 다른 도메인(store/review/course)도 이 파일을 본떠 추가한다.
+
+// 회원가입: 성공(200) 시 바디·토큰이 없다 → 화면에서 이어서 login을 호출해 자동 로그인한다.
+// 이메일/닉네임이 이미 있으면 409가 온다(경계는 그대로 던지고 화면에서 인라인 처리).
+export async function signUp(body: UserSignUpRequest): Promise<void> {
+  await apiClient.post(API_ENDPOINTS.user.signUp, body);
+}
+
+// 이메일 중복 확인: 사용 가능이면 true, 중복(409)이면 false. 그 외 에러는 그대로 던진다.
+export async function checkEmailAvailable(email: string): Promise<boolean> {
+  try {
+    await apiClient.get(API_ENDPOINTS.user.checkEmail, { params: { email } });
+    return true;
+  } catch (error) {
+    if (error instanceof ApiHttpError && error.status === 409) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+// 닉네임 중복 확인: 사용 가능이면 true, 중복(409)이면 false.
+export async function checkNicknameAvailable(
+  nickname: string,
+): Promise<boolean> {
+  try {
+    await apiClient.get(API_ENDPOINTS.user.checkNickname, {
+      params: { nickname },
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof ApiHttpError && error.status === 409) {
+      return false;
+    }
+    throw error;
+  }
+}
 
 // 로그인: access는 응답 헤더(Authorization), refresh는 바디로 온다.
 export async function login(body: UserLoginRequest): Promise<void> {
@@ -48,8 +85,9 @@ export async function getMyProfile(): Promise<UserSummary> {
 }
 
 export async function logout(): Promise<void> {
-  const refreshToken = await getRefreshToken();
+  // refresh 읽기 실패까지 포함해 어떤 경로로 끝나도 토큰은 정리한다(남은 토큰으로 자동 로그인 방지).
   try {
+    const refreshToken = await getRefreshToken();
     await apiClient.post(API_ENDPOINTS.user.logout, { refreshToken });
   } finally {
     await clearTokens();
