@@ -1,17 +1,26 @@
 import { useRouter } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  ToastAndroid,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Passport } from "@/components/my/passport";
 import { ProfileSummaryCard } from "@/components/my/profile-summary-card";
 import { ThemedText } from "@/components/themed-text";
 import { Palette, Spacing } from "@/constants/theme";
+import { useLogoutMutation } from "@/hooks/use-logout-mutation";
 import { MOCK_PASSPORT, MOCK_USER } from "@/mocks/user";
 import type { PassportStamp } from "@/types/user";
 
 export default function MyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const logoutMutation = useLogoutMutation();
 
   const openReviews = () => router.push("/my/reviews");
 
@@ -27,7 +36,16 @@ export default function MyScreen() {
       {
         text: "로그아웃",
         style: "destructive",
-        onPress: () => router.replace("/login"),
+        onPress: async () => {
+          // 서버 호출이 실패해도 토큰은 정리되므로(logout()의 finally) 로그인으로 보낸다.
+          try {
+            await logoutMutation.mutateAsync();
+          } catch {
+            // 네트워크 실패는 무시 — 로컬 세션은 이미 정리됨.
+          }
+          ToastAndroid.show("로그아웃됐어요!", ToastAndroid.SHORT);
+          router.replace("/login");
+        },
       },
     ]);
 
