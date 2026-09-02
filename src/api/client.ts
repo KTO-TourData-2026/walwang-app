@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 import * as SecureStore from "expo-secure-store";
 
 import { toApiHttpError } from "@/api/http-error";
@@ -46,13 +46,64 @@ apiClient.interceptors.request.use(async (config) => {
 });
 
 /**
- * 응답 에러를 공통 ApiHttpError로 정규화한다. 화면/훅은 이 타입만 보고 분기한다.
- * [TODO] 401 시 refreshToken으로 access 재발급 후 재시도 — 재발급 엔드포인트 미정이라
- * 백엔드 확정 후 이 인터셉터에 추가한다(백엔드 확인 목록 참고).
+ * refreshToken으로 access를 재발급한다(POST /user/reissue).
+ * 인터셉터 재귀를 피하려고 raw axios를 쓴다. 새 access=응답 헤더, 새 refresh=바디(14일 슬라이딩).
+ */
+async function reissueTokens() {
+  const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    throw new Error("refreshToken 없음");
+  }
+  const res = await axios.post(
+    `${API_BASE_URL}/user/reissue`,
+    { refreshToken },
+    { headers: { "Content-Type": "application/json" } },
+  );
+  const auth = res.headers.authorization ?? res.headers.Authorization;
+  const access =
+    typeof auth === "string" ? auth.replace(/^Bearer\s+/i, "") : null;
+  if (!access) {
+    throw new Error("재발급 응답에 access 토큰 없음");
+  }
+  await setAccessToken(access);
+  const newRefresh = (res.data as { refreshToken?: string })?.refreshToken;
+  if (newRefresh) {
+    await setRefreshToken(newRefresh);
+  }
+}
+
+// 동시 401이 여러 번 재발급을 부르지 않도록 진행 중 Promise를 공유(single-flight).
+let refreshPromise: Promise<void> | null = null;
+
+/**
+ * 응답 인터셉터: 401이면 refreshToken으로 1회 재발급 후 원 요청을 재시도한다.
+ * 재발급 실패 시 토큰을 정리하고 에러를 던진다(화면에서 로그인으로 유도).
+ * 그 외 에러는 공통 ApiHttpError로 정규화한다.
  */
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(toApiHttpError(error)),
+  async (error) => {
+    const config = error?.config as
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const status = error?.response?.status;
+    const url = config?.url ?? "";
+    const skip = url.includes("/user/reissue") || url.includes("/user/login");
+
+    if (status === 401 && config && !config._retry && !skip) {
+      config._retry = true;
+      try {
+        refreshPromise = refreshPromise ?? reissueTokens();
+        await refreshPromise;
+        refreshPromise = null;
+        return apiClient(config);
+      } catch {
+        refreshPromise = null;
+        await clearTokens();
+      }
+    }
+
+    return Promise.reject(toApiHttpError(error));
+  },
 );
 
 export async function setAccessToken(token: string) {
