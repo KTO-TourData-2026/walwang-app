@@ -5,7 +5,7 @@
 
 export type SizeKey = "smallMedium" | "large";
 export type PlaceStatus = "allowed" | "denied" | "unknown";
-export type Category = "park" | "cafe" | "restaurant";
+export type Category = "park" | "cafe" | "restaurant" | "shopping";
 
 export interface Place {
   id: string;
@@ -16,6 +16,7 @@ export interface Place {
   latitude: number;
   longitude: number;
   sizeStatus: Record<SizeKey, PlaceStatus>;
-  reviewCount: number;
-  lastVerifiedAt: string | null;
+  /** 카드(목록·검색) 응답엔 없다 — 상세(StoreDetail)에서만 채운다. */
+  reviewCount?: number;
+  lastVerifiedAt?: string | null;
 }

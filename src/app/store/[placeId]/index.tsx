@@ -9,7 +9,13 @@ import {
   MessageCircleDashed,
   PawPrint,
 } from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HashtagChipList } from "@/components/place/hashtag-chip";
@@ -19,12 +25,12 @@ import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { CATEGORY_LABEL } from "@/constants/category";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { MOCK_PLACES } from "@/mocks/places";
-import { getPlaceTags, getRecentReviews } from "@/mocks/reviews";
+import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
+import { useStoreReviewsQuery } from "@/hooks/use-store-reviews-query";
 
 /**
  * 가게 상세(S-05) — 전체 화면 페이지. 지도 핀/검색 결과에서 진입한다.
- * 리뷰 쓰기 플로우(플로우 A)의 시작점. 데이터는 목(src/mocks).
+ * 리뷰 쓰기 플로우(플로우 A)의 시작점.
  */
 export default function StoreDetailScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -32,9 +38,19 @@ export default function StoreDetailScreen() {
   const insets = useSafeAreaInsets();
   const [saved, setSaved] = useState(false);
 
-  const place = MOCK_PLACES.find((item) => item.id === placeId);
+  const { data: place, isLoading, isError } = useStoreDetailQuery(placeId);
+  const reviewsQuery = useStoreReviewsQuery(placeId);
 
-  if (!place) {
+  if (isLoading) {
+    return (
+      <View style={[styles.root, styles.center]}>
+        <Stack.Screen options={{ headerShown: false }} />
+        <ActivityIndicator color={Palette.main[500]} />
+      </View>
+    );
+  }
+
+  if (isError || !place) {
     return (
       <View style={[styles.root, styles.center]}>
         <Stack.Screen options={{ headerShown: false }} />
@@ -45,8 +61,8 @@ export default function StoreDetailScreen() {
     );
   }
 
-  const reviews = getRecentReviews(place.id, 3);
-  const tags = getPlaceTags(place.id);
+  const reviews = (reviewsQuery.data ?? []).slice(0, 3);
+  const tags = place.tags;
   const coverUri = reviews.find((review) => review.photoUrl)?.photoUrl ?? null;
   const hasReviews = reviews.length > 0;
 
@@ -129,8 +145,11 @@ export default function StoreDetailScreen() {
             </View>
 
             <SizeStatusSection
-              placeId={place.id}
               sizeStatus={place.sizeStatus}
+              counts={{
+                smallMedium: place.sizeCounts.smallMedium.possible,
+                large: place.sizeCounts.large.possible,
+              }}
             />
           </View>
 

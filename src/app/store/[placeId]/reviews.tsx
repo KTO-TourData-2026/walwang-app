@@ -6,8 +6,8 @@ import { ReviewCard } from "@/components/review/review-card";
 import { ThemedText } from "@/components/themed-text";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Palette, Spacing } from "@/constants/theme";
-import { MOCK_PLACES } from "@/mocks/places";
-import { getPlaceReviews } from "@/mocks/reviews";
+import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
+import { useStoreReviewsQuery } from "@/hooks/use-store-reviews-query";
 
 /**
  * 리뷰 전체보기(NEW). 상세 시트의 [전체보기 >]로 진입하는 별도 화면.
@@ -18,8 +18,8 @@ export default function StoreReviewsScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const insets = useSafeAreaInsets();
 
-  const place = MOCK_PLACES.find((item) => item.id === placeId);
-  const reviews = getPlaceReviews(placeId ?? "");
+  const { data: place } = useStoreDetailQuery(placeId);
+  const reviews = useStoreReviewsQuery(placeId).data ?? [];
 
   return (
     <View style={styles.root}>
