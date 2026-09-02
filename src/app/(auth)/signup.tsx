@@ -146,8 +146,17 @@ export default function SignupScreen() {
     }
   };
 
+  const allAgreed = Object.values(agreements).every(Boolean);
+
   // 가입 → 자동 로그인 → 지도. 가입 직전 사이에 선점되면 409 → 이메일 재확인 유도.
   const onSubmit = handleSubmit(async (values) => {
+    // 키보드 '완료'는 버튼 disabled를 거치지 않으므로, 약관·중복확인·진행중 상태를 여기서 재확인한다.
+    if (!allAgreed || !emailChecked || !nicknameChecked) {
+      return;
+    }
+    if (signupMutation.isPending) {
+      return;
+    }
     try {
       await signupMutation.mutateAsync({
         email: values.email,
@@ -170,7 +179,6 @@ export default function SignupScreen() {
     }
   });
 
-  const allAgreed = Object.values(agreements).every(Boolean);
   const canSubmit = isValid && allAgreed && emailChecked && nicknameChecked;
 
   return (
