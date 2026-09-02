@@ -5,7 +5,9 @@ export const API_ENDPOINTS = {
     signUp: "/user/signUp",
     login: "/user/login",
     logout: "/user/logout",
+    reissue: "/user/reissue", // refreshToken으로 access 재발급(14일 슬라이딩)
     me: "/user/me", // GET(내 정보) · PATCH(수정) · DELETE(탈퇴)
+    myReviews: "/user/me/reviews", // 본인 리뷰 목록(page,size)
     checkEmail: "/user/check-email",
     checkNickname: "/user/check-nickname",
     savedStores: "/user/store",

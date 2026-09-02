@@ -32,7 +32,7 @@ src/mocks/         연동되면 도메인별로 삭제
 - **access token**: 요청 인터셉터가 SecureStore에서 읽어 `Authorization: Bearer`로 자동 주입.
 - **로그인**: access는 응답 **헤더**(`Authorization`), refresh는 **바디**로 온다 → `setAccessToken` / `setRefreshToken`.
 - **로그아웃/탈퇴**: `clearTokens()`로 둘 다 삭제. 로그아웃은 바디에 `refreshToken` 동봉.
-- **401 재발급**: refresh로 access 재발급 후 재시도하는 로직은 `client.ts` 응답 인터셉터에 TODO로 남겨둠 — **재발급 엔드포인트가 명세에 없어** 백엔드 확정 후 추가(아래 목록).
+- **401 재발급**: `POST /user/reissue`(바디 `{ refreshToken }`)로 access 재발급 후 원 요청 1회 재시도(`client.ts` 응답 인터셉터, single-flight). 새 access=응답 헤더·새 refresh=바디(14일 슬라이딩). 재발급 실패 시 `clearTokens()` 후 에러 → 화면에서 로그인 유도.
 
 ## 에러 처리
 
@@ -61,14 +61,14 @@ src/mocks/         연동되면 도메인별로 삭제
 4. `queryKeys`에 키 추가 → `src/hooks`에 훅 작성.
 5. 화면의 목 호출을 훅으로 교체 → 해당 `src/mocks` 파일 삭제.
 
-## 🔧 백엔드 확인 필요
+## ✅ 백엔드 확인 완료 (#19)
 
-프론트 설계 기준으로 구현하고, 매핑으로 못 메우는 항목만 아래로 추적한다.
+#19에서 요청했던 항목은 swagger(`/v3/api-docs`) 기준 모두 반영됨. 프론트는 경계에서 camelCase·enum만 매핑한다.
 
-- `GET /user/me/reviews` 신설 — 본인 리뷰 목록(S-17), `store_name`·`type` 포함
-- `GET /user/store` 응답에 `address` 추가 — 저장 장소 카드 도로명주소
-- `GET /user/me`에 `stamp_count` 추가 — "모은 도장 수"(현재 파생 불가)
-- 여권 preview(`GET /user/me/passport`) 응답 형태 확정(배열/래핑)
-- 상태 등급 5↔3단계 표기 정책 합의
-- 401 access **재발급 엔드포인트** 명세 필요(refresh 흐름 완성용)
-- `DELETE /course/{courseId}` 경로 단수/복수 확인
+- ✅ `GET /user/me/reviews` — `storeName`·`type` 포함, `page/size`
+- ✅ `GET /user/store` — `address` 포함
+- ✅ `GET /user/me` — `stampCount` 포함
+- ✅ 여권 preview(`GET /user/me/passport`) — 정상 배열(`id`·`stampUrl`·`status`·`createdAt`)
+- ✅ 토큰 재발급 `POST /user/reissue`
+- ✅ `DELETE /course/{courseId}` (단수 경로 실재)
+- ✅ 상태 등급 — 서버 3단계(`POSSIBLE`/`IMPOSSIBLE`/`UNKNOWN`) → 앱 `allowed`/`denied`/`unknown`과 1:1(이름만 매핑, 5→3 접기 불필요)

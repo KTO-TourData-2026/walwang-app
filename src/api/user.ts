@@ -8,8 +8,8 @@ import {
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { ApiHttpError } from "@/api/http-error";
 import type {
-  UserInfoResponse,
   UserLoginRequest,
+  UserProfileResponse,
   UserSummary,
 } from "@/types/user";
 
@@ -35,14 +35,15 @@ export async function login(body: UserLoginRequest): Promise<void> {
   await setRefreshToken(refreshToken);
 }
 
-// 내 정보: 서버 snake_case → UserSummary(camel) 매핑.
-// stampCount는 명세에 없어 0으로 둔다(백엔드 stamp_count 추가 시 반영 — 백엔드 확인 목록).
+// 내 정보. swagger 응답이 camelCase(UserProfileResponse)라 필요한 필드만 추린다.
 export async function getMyProfile(): Promise<UserSummary> {
-  const { data } = await apiClient.get<UserInfoResponse>(API_ENDPOINTS.user.me);
+  const { data } = await apiClient.get<UserProfileResponse>(
+    API_ENDPOINTS.user.me,
+  );
   return {
     nickname: data.nickname,
-    reviewCount: data.review_count,
-    stampCount: 0,
+    reviewCount: data.reviewCount,
+    stampCount: data.stampCount,
   };
 }
 
