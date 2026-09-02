@@ -6,18 +6,17 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { SIZE_LABEL, STATUS_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { getConfirmedCounts } from "@/mocks/reviews";
 import type { PlaceStatus, SizeKey } from "@/types/place";
 
 export function SizeStatusSection({
-  placeId,
   sizeStatus,
+  counts,
 }: {
-  placeId: string;
   sizeStatus: Record<SizeKey, PlaceStatus>;
+  /** 크기별 "동반 확인(가능)" 리뷰 수. 상세 응답 sizeCounts.possible에서 온다. */
+  counts: Record<SizeKey, number>;
 }) {
   const [open, setOpen] = useState(false);
-  const counts = getConfirmedCounts(placeId);
 
   const statusColor = (status: PlaceStatus) => Palette.status[status][300];
 
