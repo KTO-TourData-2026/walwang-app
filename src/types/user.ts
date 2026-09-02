@@ -13,11 +13,14 @@ export interface UserLoginRequest {
   password: string;
 }
 
-// `GET /user/me` 서버 원본(snake_case). api 함수 경계에서 UserSummary로 매핑한다.
-export interface UserInfoResponse {
-  nickname: string;
+// `GET /user/me` 서버 응답(swagger UserProfileResponse, camelCase).
+export interface UserProfileResponse {
+  userId: number;
   email: string;
-  review_count: number;
+  nickname: string;
+  reviewCount: number;
+  stampCount: number;
+  savedStoreCount: number;
 }
 
 // 목록(`/user/me/passport`)·상세(`/{id}`) 응답에서 UI가 쓰는 필드를 합친 형태.
