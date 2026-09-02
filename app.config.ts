@@ -106,6 +106,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         android: {
           extraMavenRepos: ["https://repository.map.naver.com/archive/maven"],
+          // 백엔드가 아직 HTTP(비-HTTPS)라 안드로이드 기본 cleartext 차단을 풀어준다.
+          // 운영에서 HTTPS로 바뀌면 제거할 것. 변경 후 네이티브 재빌드 필요(expo run:android).
+          usesCleartextTraffic: true,
         },
       },
     ],
