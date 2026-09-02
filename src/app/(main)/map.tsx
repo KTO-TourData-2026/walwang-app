@@ -14,8 +14,13 @@ import {
 } from "@/components/map/size-filter-dropdown";
 import { SearchBar } from "@/components/ui/search-bar";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { MOCK_PLACES, MOCK_PLACE_KEYWORDS } from "@/mocks/places";
+import { useStoreSearchQuery } from "@/hooks/use-store-search-query";
+import { useStoresQuery } from "@/hooks/use-stores-query";
 import type { Place } from "@/types/place";
+
+// 핀 조회 중심점(서울숲) — place-map 초기 카메라와 맞춘다. 반경으로 핀 밀도 조절(MVP 고정).
+const MAP_CENTER = { lat: 37.5445, lng: 127.0374 };
+const MAP_RADIUS = 1000;
 
 export default function MapScreen() {
   const router = useRouter();
@@ -27,23 +32,16 @@ export default function MapScreen() {
   const keyword = query.trim();
   const isSearching = keyword.length > 0;
 
+  const storesQuery = useStoresQuery({ ...MAP_CENTER, radius: MAP_RADIUS });
+  const searchQuery = useStoreSearchQuery(query);
+
+  // 크기 필터는 클라에서 건다(서버 size 미사용) — 필터 규칙은 filterPlacesBySize 한 곳.
   const pins = useMemo(
-    () => filterPlacesBySize(MOCK_PLACES, sizeFilter),
-    [sizeFilter],
+    () => filterPlacesBySize(storesQuery.data ?? [], sizeFilter),
+    [storesQuery.data, sizeFilter],
   );
 
-  const results = useMemo(() => {
-    if (!isSearching) {
-      return [];
-    }
-    const lowered = keyword.toLowerCase();
-    return MOCK_PLACES.filter(
-      (place) =>
-        place.name.toLowerCase().includes(lowered) ||
-        // [DEV] 한글 자판 없이 영어로도 검색되게 하는 임시 매칭
-        (MOCK_PLACE_KEYWORDS[place.id] ?? "").includes(lowered),
-    );
-  }, [isSearching, keyword]);
+  const results = isSearching ? (searchQuery.data ?? []) : [];
 
   const selectPlace = (place: Place) => {
     Keyboard.dismiss();
