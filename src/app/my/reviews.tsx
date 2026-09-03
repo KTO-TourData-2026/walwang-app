@@ -48,7 +48,11 @@ export default function MyReviewsScreen() {
     }
     const { reviewId } = menu;
     setMenu(null);
-    // 낙관적 제거: 성공 응답 전에 목록에서 먼저 지운다. 실패 시 onError에서 되돌린다.
+    // 낙관적 제거: 성공 응답 전에 목록에서 먼저 지운다.
+    // 실패하면 재조회가 아니라 이 스냅샷으로 정확히 되돌린다(재조회도 실패하는 경우 대비).
+    const previous = queryClient.getQueryData<InfiniteData<MyReview[], number>>(
+      queryKeys.user.myReviews(),
+    );
     queryClient.setQueryData<InfiniteData<MyReview[], number>>(
       queryKeys.user.myReviews(),
       (old) =>
@@ -68,9 +72,9 @@ export default function MyReviewsScreen() {
           ToastAndroid.show("리뷰를 삭제했어요", ToastAndroid.SHORT),
         onError: () => {
           ToastAndroid.show("삭제하지 못했어요", ToastAndroid.SHORT);
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.user.myReviews(),
-          });
+          if (previous) {
+            queryClient.setQueryData(queryKeys.user.myReviews(), previous);
+          }
         },
       },
     );
