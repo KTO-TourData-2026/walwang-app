@@ -34,7 +34,7 @@ export default function StoreDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [saved, setSaved] = useState(false);
-  const [coverFailed, setCoverFailed] = useState(false);
+  const [failedCoverUri, setFailedCoverUri] = useState<string | null>(null);
 
   const detailQuery = useStoreDetailQuery(placeId);
   const reviewsQuery = useStoreReviewsQuery(placeId);
@@ -91,14 +91,14 @@ export default function StoreDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.cover}>
-          {coverUri && !coverFailed ? (
+          {coverUri && failedCoverUri !== coverUri ? (
             <Image
               source={{ uri: coverUri }}
               style={styles.coverImage}
               contentFit="cover"
               transition={150}
               accessibilityLabel="가게 대표 사진"
-              onError={() => setCoverFailed(true)}
+              onError={() => setFailedCoverUri(coverUri)}
             />
           ) : (
             <View style={styles.coverPlaceholder}>

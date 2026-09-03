@@ -21,6 +21,21 @@ export type PopoverMenuItem = {
 };
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
+const SCREEN_HEIGHT = Dimensions.get("window").height;
+const ITEM_HEIGHT = 44; // 팝오버 항목 1개의 대략 높이(px)
+
+// 앵커 기준 메뉴 위치. 아래 공간이 부족하면 앵커 위로 뒤집는다.
+function getMenuPosition(anchor: MenuAnchor, itemCount: number) {
+  const height = itemCount * ITEM_HEIGHT;
+  const below = anchor.y + anchor.height + Spacing.one;
+  const openUpward = below + height > SCREEN_HEIGHT - Spacing.two;
+  return {
+    top: openUpward
+      ? Math.max(Spacing.two, anchor.y - height - Spacing.one)
+      : below,
+    right: Math.max(Spacing.two, SCREEN_WIDTH - (anchor.x + anchor.width)),
+  };
+}
 
 /**
  * ⋯ 버튼 앵커에 붙는 공용 팝오버 메뉴(저장·마이리뷰 공용).
@@ -44,18 +59,7 @@ export function PopoverMenu({
     >
       <Pressable style={styles.backdrop} onPress={onClose}>
         {anchor ? (
-          <View
-            style={[
-              styles.menu,
-              {
-                top: anchor.y + anchor.height + Spacing.one,
-                right: Math.max(
-                  Spacing.two,
-                  SCREEN_WIDTH - (anchor.x + anchor.width),
-                ),
-              },
-            ]}
-          >
+          <View style={[styles.menu, getMenuPosition(anchor, items.length)]}>
             {items.map((item) => {
               const color = item.destructive
                 ? Palette.error[300]
