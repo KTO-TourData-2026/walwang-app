@@ -19,7 +19,9 @@ export function useDeleteReviewMutation() {
 
   return useMutation({
     mutationFn: ({ reviewId }: DeleteReviewVariables) => deleteReview(reviewId),
-    onSuccess: (_data, { storeId }) => {
+    // onSettled로 성공·실패 모두 재동기화한다. 동시 삭제 중 하나가 실패해 목록·총계가
+    // 이전 스냅샷으로 롤백된 뒤에도 서버 기준값으로 맞춰지도록(성공 때만 무효화하면 stale).
+    onSettled: (_data, _error, { storeId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.myReviews() });
       // 총 리뷰수(GET /user/me)도 함께 갱신 — 마이 리뷰 상단·프로필 카드가 이 값을 쓴다.
       queryClient.invalidateQueries({ queryKey: queryKeys.user.me() });

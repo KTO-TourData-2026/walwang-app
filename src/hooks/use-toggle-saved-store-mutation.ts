@@ -52,7 +52,11 @@ export function useToggleSavedStoreMutation() {
       );
     },
     onError: (_error, { nextSaved }, context) => {
-      if (context?.previous) {
+      // 조회 전 토글이라 캐시가 없던 경우(previous가 undefined)엔 낙관적으로 써넣은 값을
+      // 지워 원상복구한다. 캐시가 있었으면 그 스냅샷으로 되돌린다.
+      if (context?.previous === undefined) {
+        queryClient.removeQueries({ queryKey: queryKeys.user.savedStores() });
+      } else {
         queryClient.setQueryData(
           queryKeys.user.savedStores(),
           context.previous,
