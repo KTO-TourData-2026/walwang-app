@@ -22,8 +22,10 @@ import { PopoverMenu, type MenuAnchor } from "@/components/ui/popover-menu";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Palette, Spacing } from "@/constants/theme";
 import { useDeleteReviewMutation } from "@/hooks/use-delete-review-mutation";
+import { useMyProfileQuery } from "@/hooks/use-my-profile-query";
 import { useMyReviewsQuery } from "@/hooks/use-my-reviews-query";
 import type { MyReview } from "@/types/review";
+import type { UserSummary } from "@/types/user";
 
 type DeleteMenu = { anchor: MenuAnchor; reviewId: string };
 
@@ -35,9 +37,12 @@ export default function MyReviewsScreen() {
   const [menu, setMenu] = useState<DeleteMenu | null>(null);
 
   const reviewsQuery = useMyReviewsQuery();
+  const profileQuery = useMyProfileQuery();
   const deleteMutation = useDeleteReviewMutation();
 
   const reviews = reviewsQuery.data?.pages.flat() ?? [];
+  // 총 리뷰수는 GET /user/me 기준(무한스크롤로 로드된 개수가 아님). 미로드 시 로드분으로 폴백.
+  const totalCount = profileQuery.data?.reviewCount ?? reviews.length;
 
   const openStore = (storeId: string) =>
     router.push({ pathname: "/store/[placeId]", params: { placeId: storeId } });
@@ -53,6 +58,10 @@ export default function MyReviewsScreen() {
     const previous = queryClient.getQueryData<InfiniteData<MyReview[], number>>(
       queryKeys.user.myReviews(),
     );
+    // 상단 총 리뷰수(GET /user/me)도 즉시 -1 반영하고, 실패 시 함께 되돌린다.
+    const previousProfile = queryClient.getQueryData<UserSummary>(
+      queryKeys.user.me(),
+    );
     queryClient.setQueryData<InfiniteData<MyReview[], number>>(
       queryKeys.user.myReviews(),
       (old) =>
@@ -65,6 +74,9 @@ export default function MyReviewsScreen() {
             }
           : old,
     );
+    queryClient.setQueryData<UserSummary>(queryKeys.user.me(), (old) =>
+      old ? { ...old, reviewCount: Math.max(0, old.reviewCount - 1) } : old,
+    );
     deleteMutation.mutate(
       { reviewId },
       {
@@ -74,6 +86,9 @@ export default function MyReviewsScreen() {
           ToastAndroid.show("삭제하지 못했어요", ToastAndroid.SHORT);
           if (previous) {
             queryClient.setQueryData(queryKeys.user.myReviews(), previous);
+          }
+          if (previousProfile) {
+            queryClient.setQueryData(queryKeys.user.me(), previousProfile);
           }
         },
       },
@@ -127,7 +142,7 @@ export default function MyReviewsScreen() {
               color={Palette.gray[400]}
               style={styles.summary}
             >
-              최신순 · {reviews.length}건
+              최신순 · {totalCount}건
             </ThemedText>
           ) : null
         }

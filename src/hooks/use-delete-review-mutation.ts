@@ -21,6 +21,8 @@ export function useDeleteReviewMutation() {
     mutationFn: ({ reviewId }: DeleteReviewVariables) => deleteReview(reviewId),
     onSuccess: (_data, { storeId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.myReviews() });
+      // 총 리뷰수(GET /user/me)도 함께 갱신 — 마이 리뷰 상단·프로필 카드가 이 값을 쓴다.
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.me() });
       if (storeId) {
         queryClient.invalidateQueries({
           queryKey: queryKeys.store.reviews(storeId),
