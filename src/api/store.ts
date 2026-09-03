@@ -154,6 +154,7 @@ function mapReview(res: ReviewResponse, storeId: string): Review {
     content: res.content ?? null,
     tags: res.tags ?? [],
     createdAt: res.createdAt,
+    mine: res.mine ?? false,
   };
 }
 

@@ -10,7 +10,7 @@ import type { SizeKey } from "@/types/place";
 // 서버 응답 DTO(`GET /stores/{storeId}/reviews`의 ReviewResponse). 경계에서 Review로 매핑한다.
 // placeId는 응답에 없어 경로 파라미터(storeId)로 채운다.
 export interface ReviewResponse {
-  reviewId: number;
+  reviewId: string;
   nickname: string;
   dogAllowed: boolean;
   dogSize: "SMALL_MEDIUM" | "LARGE";
@@ -19,6 +19,7 @@ export interface ReviewResponse {
   tags: string[];
   content: string | null;
   createdAt: string;
+  mine: boolean;
 }
 
 export interface Review {
@@ -37,4 +38,5 @@ export interface Review {
   tags: string[];
   /** ISO 8601 */
   createdAt: string;
+  mine: boolean;
 }
