@@ -1,10 +1,6 @@
 import { useState } from "react";
 
-import {
-  useInfiniteQuery,
-  useQueryClient,
-  type InfiniteData,
-} from "@tanstack/react-query";
+import { useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { MessageCircleDashed, Trash2 } from "lucide-react-native";
 import {
@@ -25,19 +21,9 @@ import { LoadingView } from "@/components/ui/loading-view";
 import { PopoverMenu, type MenuAnchor } from "@/components/ui/popover-menu";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Palette, Spacing } from "@/constants/theme";
-import { MOCK_PLACES } from "@/mocks/places";
-import { getMyReviews } from "@/mocks/reviews";
-import type { Review } from "@/types/review";
-
-const PLACE_BY_ID = new Map(MOCK_PLACES.map((place) => [place.id, place]));
-
-// TODO(api): 백엔드 `GET /user/me/reviews` 연동 시 이 목 페이저를 실제 호출로 교체한다.
-const PAGE_SIZE = 10;
-
-function fetchMyReviewsPage(page: number): Review[] {
-  const all = getMyReviews();
-  return all.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-}
+import { useDeleteReviewMutation } from "@/hooks/use-delete-review-mutation";
+import { useMyReviewsQuery } from "@/hooks/use-my-reviews-query";
+import type { MyReview } from "@/types/review";
 
 type DeleteMenu = { anchor: MenuAnchor; reviewId: string };
 
@@ -48,18 +34,13 @@ export default function MyReviewsScreen() {
 
   const [menu, setMenu] = useState<DeleteMenu | null>(null);
 
-  const reviewsQuery = useInfiniteQuery({
-    queryKey: queryKeys.user.myReviews(),
-    queryFn: ({ pageParam }) => fetchMyReviewsPage(pageParam),
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length === PAGE_SIZE ? allPages.length : undefined,
-  });
+  const reviewsQuery = useMyReviewsQuery();
+  const deleteMutation = useDeleteReviewMutation();
 
   const reviews = reviewsQuery.data?.pages.flat() ?? [];
 
-  const openStore = (placeId: string) =>
-    router.push({ pathname: "/store/[placeId]", params: { placeId } });
+  const openStore = (storeId: string) =>
+    router.push({ pathname: "/store/[placeId]", params: { placeId: storeId } });
 
   const deleteActive = () => {
     if (!menu) {
@@ -67,7 +48,12 @@ export default function MyReviewsScreen() {
     }
     const { reviewId } = menu;
     setMenu(null);
-    queryClient.setQueryData<InfiniteData<Review[], number>>(
+    // 낙관적 제거: 성공 응답 전에 목록에서 먼저 지운다.
+    // 실패하면 재조회가 아니라 이 스냅샷으로 정확히 되돌린다(재조회도 실패하는 경우 대비).
+    const previous = queryClient.getQueryData<InfiniteData<MyReview[], number>>(
+      queryKeys.user.myReviews(),
+    );
+    queryClient.setQueryData<InfiniteData<MyReview[], number>>(
       queryKeys.user.myReviews(),
       (old) =>
         old
@@ -79,7 +65,19 @@ export default function MyReviewsScreen() {
             }
           : old,
     );
-    ToastAndroid.show("리뷰를 삭제했어요", ToastAndroid.SHORT);
+    deleteMutation.mutate(
+      { reviewId },
+      {
+        onSuccess: () =>
+          ToastAndroid.show("리뷰를 삭제했어요", ToastAndroid.SHORT),
+        onError: () => {
+          ToastAndroid.show("삭제하지 못했어요", ToastAndroid.SHORT);
+          if (previous) {
+            queryClient.setQueryData(queryKeys.user.myReviews(), previous);
+          }
+        },
+      },
+    );
   };
 
   if (reviewsQuery.isLoading) {
@@ -141,22 +139,15 @@ export default function MyReviewsScreen() {
             />
           ) : null
         }
-        renderItem={({ item }) => {
-          const place = PLACE_BY_ID.get(item.placeId);
-          if (!place) {
-            return null;
-          }
-          return (
-            <MyReviewItem
-              review={item}
-              place={place}
-              onPress={openStore}
-              onMenu={(review, anchor) =>
-                setMenu({ anchor, reviewId: review.id })
-              }
-            />
-          );
-        }}
+        renderItem={({ item }) => (
+          <MyReviewItem
+            review={item}
+            onPress={openStore}
+            onMenu={(review, anchor) =>
+              setMenu({ anchor, reviewId: review.id })
+            }
+          />
+        )}
         ListEmptyComponent={
           <EmptyState
             Icon={MessageCircleDashed}

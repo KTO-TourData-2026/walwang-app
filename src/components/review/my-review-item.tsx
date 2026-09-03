@@ -10,20 +10,17 @@ import { type MenuAnchor } from "@/components/ui/popover-menu";
 import { CATEGORY_LABEL } from "@/constants/category";
 import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import type { Place } from "@/types/place";
-import type { Review } from "@/types/review";
+import type { MyReview } from "@/types/review";
 import { formatMonthDay } from "@/utils/date";
 
 export function MyReviewItem({
   review,
-  place,
   onPress,
   onMenu,
 }: {
-  review: Review;
-  place: Place;
-  onPress: (placeId: string) => void;
-  onMenu?: (review: Review, anchor: MenuAnchor) => void;
+  review: MyReview;
+  onPress: (storeId: string) => void;
+  onMenu?: (review: MyReview, anchor: MenuAnchor) => void;
 }) {
   const thumbnail = review.thumbnailUrl ?? review.photoUrl;
   const menuRef = useRef<View>(null);
@@ -36,7 +33,7 @@ export function MyReviewItem({
 
   return (
     <Pressable
-      onPress={() => onPress(place.id)}
+      onPress={() => onPress(review.storeId)}
       accessibilityRole="button"
       style={({ pressed }) => [styles.item, pressed && styles.pressed]}
     >
@@ -46,7 +43,7 @@ export function MyReviewItem({
           style={styles.thumbnail}
           contentFit="cover"
           transition={150}
-          accessibilityLabel={`${place.name} 리뷰 사진`}
+          accessibilityLabel={`${review.storeName} 리뷰 사진`}
         />
       ) : null}
 
@@ -59,10 +56,10 @@ export function MyReviewItem({
         </View>
 
         <ThemedText type="subtitle03" color={Palette.gray[700]}>
-          {place.name}
+          {review.storeName}
         </ThemedText>
         <ThemedText type="label05" color={Palette.gray[400]}>
-          {CATEGORY_LABEL[place.category]} · {SIZE_LABEL[review.dogSize]}
+          {CATEGORY_LABEL[review.category]} · {SIZE_LABEL[review.dogSize]}
         </ThemedText>
       </View>
 
@@ -72,7 +69,7 @@ export function MyReviewItem({
           onPress={openMenu}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`${place.name} 리뷰 더보기`}
+          accessibilityLabel={`${review.storeName} 리뷰 더보기`}
           style={styles.menuButton}
         >
           <MoreVertical
