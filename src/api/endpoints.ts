@@ -26,6 +26,7 @@ export const API_ENDPOINTS = {
     base: "/reviews", // POST 등록
     receiptVerify: "/reviews/receipt-verify",
     detail: (reviewId: string) => `/reviews/${reviewId}`, // DELETE
+    reports: (reviewId: string) => `/reviews/${reviewId}/reports`, // POST 신고
     tags: "/tags",
   },
   course: {

@@ -20,6 +20,8 @@ import { LoadingView } from "@/components/ui/loading-view";
 import { PopoverMenu, type MenuAnchor } from "@/components/ui/popover-menu";
 import { ScreenHeader } from "@/components/ui/screen-header";
 import { Palette, Spacing } from "@/constants/theme";
+import { useDeleteReviewMutation } from "@/hooks/use-delete-review-mutation";
+import { useReportReviewMutation } from "@/hooks/use-report-review-mutation";
 import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useStoreReviewsQuery } from "@/hooks/use-store-reviews-query";
 
@@ -28,7 +30,7 @@ type ReviewMenu = { anchor: MenuAnchor; reviewId: string; mine: boolean };
 /**
  * 리뷰 전체보기(NEW). 상세 시트의 [전체보기 >]로 진입하는 별도 화면.
  * 무한스크롤로 모든 리뷰를 이어붙여 보여준다.
- * 각 리뷰의 ⋯ → 본인 리뷰면 삭제, 남의 리뷰면 신고(신고 API 미구현: 접수 안내만).
+ * 각 리뷰의 ⋯ → 본인 리뷰(mine)면 삭제, 남의 리뷰면 신고. 둘 다 실 API 연동.
  */
 export default function StoreReviewsScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
@@ -36,24 +38,58 @@ export default function StoreReviewsScreen() {
 
   const { data: place } = useStoreDetailQuery(placeId);
   const reviewsQuery = useStoreReviewsQuery(placeId);
+  const deleteMutation = useDeleteReviewMutation();
+  const reportMutation = useReportReviewMutation();
 
   const [menu, setMenu] = useState<ReviewMenu | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  // 신고 대상 reviewId — 메뉴를 닫은 뒤 모달 제출까지 유지해야 하므로 별도 보관.
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
   const reviews = reviewsQuery.data?.pages.flat() ?? [];
 
   const openReport = () => {
+    if (!menu) {
+      return;
+    }
+    setReportTarget(menu.reviewId);
     setMenu(null);
     setReportOpen(true);
   };
 
-  const submitReport = () => {
+  const submitReport = (reason: string) => {
+    if (!reportTarget) {
+      return;
+    }
+    const reviewId = reportTarget;
     setReportOpen(false);
-    ToastAndroid.show("신고가 접수됐어요", ToastAndroid.SHORT);
+    setReportTarget(null);
+    reportMutation.mutate(
+      { reviewId, reason },
+      {
+        onSuccess: () =>
+          ToastAndroid.show("신고가 접수됐어요", ToastAndroid.SHORT),
+        onError: () =>
+          ToastAndroid.show("신고하지 못했어요", ToastAndroid.SHORT),
+      },
+    );
   };
 
   const openDelete = () => {
+    if (!menu) {
+      return;
+    }
+    const { reviewId } = menu;
     setMenu(null);
+    deleteMutation.mutate(
+      { reviewId, storeId: placeId },
+      {
+        onSuccess: () =>
+          ToastAndroid.show("리뷰를 삭제했어요", ToastAndroid.SHORT),
+        onError: () =>
+          ToastAndroid.show("삭제하지 못했어요", ToastAndroid.SHORT),
+      },
+    );
   };
 
   if (reviewsQuery.isLoading) {
@@ -165,7 +201,10 @@ export default function StoreReviewsScreen() {
 
       <ReportModal
         visible={reportOpen}
-        onClose={() => setReportOpen(false)}
+        onClose={() => {
+          setReportOpen(false);
+          setReportTarget(null);
+        }}
         onSubmit={submitReport}
       />
     </View>
