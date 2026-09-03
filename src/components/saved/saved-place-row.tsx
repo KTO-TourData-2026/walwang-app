@@ -4,17 +4,13 @@ import { MoreVertical } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
+import { type MenuAnchor } from "@/components/ui/popover-menu";
 import { CATEGORY_LABEL } from "@/constants/category";
 import { STATUS_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import type { Place, PlaceStatus } from "@/types/place";
 
-export type MenuAnchor = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
+export type { MenuAnchor };
 
 const statusColor = (status: PlaceStatus) => Palette.status[status][300];
 
