@@ -114,7 +114,7 @@ export default function StoreReviewsScreen() {
                 color={Palette.gray[700]}
                 style={styles.rowPad}
               >
-                전체 리뷰 {reviews.length}건
+                전체 리뷰 {place?.reviewCount ?? reviews.length}건
                 <ThemedText type="label03" color={Palette.gray[400]}>
                   {"  ·  최신순"}
                 </ThemedText>
