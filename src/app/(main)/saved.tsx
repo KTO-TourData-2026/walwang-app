@@ -11,10 +11,14 @@ import {
   type MenuAnchor,
 } from "@/components/saved/saved-place-row";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingView } from "@/components/ui/loading-view";
 import { PopoverMenu } from "@/components/ui/popover-menu";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Palette, Spacing } from "@/constants/theme";
-import { MOCK_SAVED_COURSES, MOCK_SAVED_PLACES } from "@/mocks/saved";
+import { useSavedStoresQuery } from "@/hooks/use-saved-stores-query";
+import { useToggleSavedStoreMutation } from "@/hooks/use-toggle-saved-store-mutation";
+import { MOCK_SAVED_COURSES } from "@/mocks/saved";
 import type { SavedCoursePreview } from "@/types/course";
 import type { Place } from "@/types/place";
 
@@ -32,7 +36,9 @@ export default function SavedScreen() {
   const insets = useSafeAreaInsets();
 
   const [segment, setSegment] = useState<Segment>("place");
-  const [places, setPlaces] = useState<Place[]>(MOCK_SAVED_PLACES);
+  const savedStoresQuery = useSavedStoresQuery();
+  const toggleSaved = useToggleSavedStoreMutation();
+  const places = savedStoresQuery.data ?? [];
   const [courses, setCourses] =
     useState<SavedCoursePreview[]>(MOCK_SAVED_COURSES);
   const [menu, setMenu] = useState<ActiveMenu | null>(null);
@@ -54,7 +60,8 @@ export default function SavedScreen() {
       return;
     }
     if (menu.type === "place") {
-      setPlaces((prev) => prev.filter((item) => item.id !== menu.id));
+      // 저장 해제 — 목록 캐시는 뮤테이션이 낙관적으로 갱신한다.
+      toggleSaved.mutate({ storeId: menu.id, nextSaved: false });
     } else {
       setCourses((prev) => prev.filter((item) => item.id !== menu.id));
     }
@@ -77,7 +84,14 @@ export default function SavedScreen() {
       </View>
 
       {segment === "place" ? (
-        places.length > 0 ? (
+        savedStoresQuery.isLoading ? (
+          <LoadingView />
+        ) : savedStoresQuery.isError ? (
+          <ErrorState
+            message="저장한 장소를 불러오지 못했어요"
+            onRetry={() => savedStoresQuery.refetch()}
+          />
+        ) : places.length > 0 ? (
           <FlatList
             data={places}
             keyExtractor={(item) => item.id}
