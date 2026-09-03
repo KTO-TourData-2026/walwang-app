@@ -25,7 +25,8 @@ const TYPE_TO_CATEGORY: Record<string, Category> = {
 // 이미 경고한 type은 다시 안 찍는다(가게 수백 개면 같은 경고가 도배됨).
 const warnedTypes = new Set<string>();
 
-function mapCategory(type: string): Category {
+// 서버 store type → 앱 Category. review 도메인(마이 리뷰)에서도 재사용한다.
+export function mapCategory(type: string): Category {
   const category = TYPE_TO_CATEGORY[type?.toUpperCase?.() ?? ""];
   if (category) {
     return category;
