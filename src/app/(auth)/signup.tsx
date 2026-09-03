@@ -20,7 +20,9 @@ import { ApiHttpError } from "@/api/http-error";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TermsModal } from "@/components/ui/terms-modal";
 import { TextField } from "@/components/ui/text-field";
+import { TERMS, type TermContentCode } from "@/constants/terms";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 import { useCheckEmailMutation } from "@/hooks/use-check-email-mutation";
 import { useCheckNicknameMutation } from "@/hooks/use-check-nickname-mutation";
@@ -75,6 +77,9 @@ export default function SignupScreen() {
     PRIVACY: false,
     AGE_14: false,
   });
+
+  // 전문 보기 모달에 띄울 약관 코드(없으면 닫힘).
+  const [termModal, setTermModal] = useState<TermContentCode | null>(null);
 
   // 마지막으로 "사용 가능"을 확인한 값. 입력을 바꾸면 현재 값과 달라져 재확인이 필요해진다.
   const [checkedEmail, setCheckedEmail] = useState<string | null>(null);
@@ -338,9 +343,14 @@ export default function SignupScreen() {
                 style={styles.agreementCheckbox}
               />
               {item.more ? (
-                <Pressable onPress={() => {}} hitSlop={8}>
+                <Pressable
+                  onPress={() => setTermModal(item.code as TermContentCode)}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.label} 전문 보기`}
+                >
                   <ThemedText type="label05" color={Palette.gray[500]}>
-                    더보기 ›
+                    상세보기 ›
                   </ThemedText>
                 </Pressable>
               ) : null}
@@ -370,6 +380,13 @@ export default function SignupScreen() {
           </Link>
         </View>
       </ScrollView>
+
+      <TermsModal
+        visible={termModal !== null}
+        title={termModal ? TERMS[termModal].title : ""}
+        body={termModal ? TERMS[termModal].body : ""}
+        onClose={() => setTermModal(null)}
+      />
     </SafeAreaView>
   );
 }
