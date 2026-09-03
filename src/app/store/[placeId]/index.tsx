@@ -9,13 +9,7 @@ import {
   MessageCircleDashed,
   PawPrint,
 } from "lucide-react-native";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { HashtagChipList } from "@/components/place/hashtag-chip";
@@ -23,6 +17,9 @@ import { SizeStatusSection } from "@/components/place/size-status-section";
 import { ReviewSummaryRow } from "@/components/review/review-summary-row";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingView } from "@/components/ui/loading-view";
 import { CATEGORY_LABEL } from "@/constants/category";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
@@ -37,31 +34,35 @@ export default function StoreDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [saved, setSaved] = useState(false);
+  const [failedCoverUri, setFailedCoverUri] = useState<string | null>(null);
 
-  const { data: place, isLoading, isError } = useStoreDetailQuery(placeId);
+  const detailQuery = useStoreDetailQuery(placeId);
   const reviewsQuery = useStoreReviewsQuery(placeId);
+  const place = detailQuery.data;
 
-  if (isLoading) {
+  if (detailQuery.isLoading) {
     return (
-      <View style={[styles.root, styles.center]}>
+      <View style={styles.root}>
         <Stack.Screen options={{ headerShown: false }} />
-        <ActivityIndicator color={Palette.main[500]} />
+        <LoadingView />
       </View>
     );
   }
 
-  if (isError || !place) {
+  if (detailQuery.isError || !place) {
     return (
-      <View style={[styles.root, styles.center]}>
+      <View style={styles.root}>
         <Stack.Screen options={{ headerShown: false }} />
-        <ThemedText type="label03" color={Palette.gray[500]}>
-          가게 정보를 찾을 수 없어요
-        </ThemedText>
+        <ErrorState
+          message="가게 정보를 불러오지 못했어요"
+          onRetry={() => detailQuery.refetch()}
+          onBack={() => router.back()}
+        />
       </View>
     );
   }
 
-  const reviews = (reviewsQuery.data ?? []).slice(0, 3);
+  const reviews = (reviewsQuery.data?.pages.flat() ?? []).slice(0, 3);
   const tags = place.tags;
   const coverUri = reviews.find((review) => review.photoUrl)?.photoUrl ?? null;
   const hasReviews = reviews.length > 0;
@@ -90,13 +91,14 @@ export default function StoreDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.cover}>
-          {coverUri ? (
+          {coverUri && failedCoverUri !== coverUri ? (
             <Image
               source={{ uri: coverUri }}
               style={styles.coverImage}
               contentFit="cover"
               transition={150}
               accessibilityLabel="가게 대표 사진"
+              onError={() => setFailedCoverUri(coverUri)}
             />
           ) : (
             <View style={styles.coverPlaceholder}>
@@ -164,7 +166,15 @@ export default function StoreDetailScreen() {
             </View>
           ) : null}
 
-          {hasReviews ? (
+          {reviewsQuery.isLoading ? (
+            <LoadingView style={styles.reviewState} />
+          ) : reviewsQuery.isError ? (
+            <ErrorState
+              message="리뷰를 불러오지 못했어요"
+              onRetry={() => reviewsQuery.refetch()}
+              style={styles.reviewState}
+            />
+          ) : hasReviews ? (
             <View style={styles.reviewSection}>
               <View style={styles.reviewSectionHeader}>
                 <ThemedText type="subtitle02" color={Palette.gray[700]}>
@@ -194,19 +204,13 @@ export default function StoreDetailScreen() {
               </View>
             </View>
           ) : (
-            <View style={styles.empty}>
-              <View style={styles.emptyIcon}>
-                <MessageCircleDashed size={30} color={Palette.main[500]} />
-              </View>
-              <View style={styles.emptyText}>
-                <ThemedText type="label03" color={Palette.gray[600]}>
-                  아직 리뷰가 없어요
-                </ThemedText>
-                <ThemedText type="label04" color={Palette.gray[400]}>
-                  첫 리뷰를 남겨보세요!
-                </ThemedText>
-              </View>
-            </View>
+            <EmptyState
+              Icon={MessageCircleDashed}
+              title="아직 리뷰가 없어요"
+              subtitle="첫 리뷰를 남겨보세요!"
+              actionLabel={null}
+              style={styles.reviewState}
+            />
           )}
         </View>
       </ScrollView>
@@ -224,10 +228,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: Palette.background.base,
-  },
-  center: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   cover: {
     height: 220,
@@ -302,23 +302,8 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.three,
     backgroundColor: Palette.border.disabled,
   },
-  empty: {
-    flex: 1,
-    gap: Spacing.three,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  emptyIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: Radius.pill,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(255, 154, 134, 0.12)",
-  },
-  emptyText: {
-    alignItems: "center",
-    gap: Spacing.half,
+  reviewState: {
+    minHeight: 220,
   },
   footer: {
     position: "absolute",

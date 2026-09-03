@@ -78,7 +78,7 @@ function foldSizeCounts(list: SizeStatusResponse[] | undefined): SizeCounts {
 function mapStoreCard(res: StoreCardResponse): Place {
   return {
     id: String(res.storeId),
-    name: res.storeName,
+    name: res.displayName ?? res.storeName,
     category: mapCategory(res.type),
     location: res.address,
     latitude: res.geog?.lat ?? 0,
@@ -107,6 +107,10 @@ function mapStoreDetail(res: StoreDetailResponse): StoreDetail {
   };
 }
 
+// 데모 기간에는 모든 store 조회에 demo=true를 붙여 시연용 데이터를 받는다.
+// 데모가 끝나면 이 한 줄만 false로 끄면 된다(courses 등 다른 도메인은 별도).
+const DEMO_MODE = true;
+
 export interface StoresQueryParams {
   lat: number;
   lng: number;
@@ -116,7 +120,7 @@ export interface StoresQueryParams {
 export async function getStores(params: StoresQueryParams): Promise<Place[]> {
   const { data } = await apiClient.get<StoreCardResponse[]>(
     API_ENDPOINTS.store.list,
-    { params },
+    { params: { ...params, demo: DEMO_MODE } },
   );
   return data.map(mapStoreCard);
 }
@@ -124,7 +128,7 @@ export async function getStores(params: StoresQueryParams): Promise<Place[]> {
 export async function searchStores(keyword: string): Promise<Place[]> {
   const { data } = await apiClient.get<StoreCardResponse[]>(
     API_ENDPOINTS.store.search,
-    { params: { keyword } },
+    { params: { keyword, demo: DEMO_MODE } },
   );
   return data.map(mapStoreCard);
 }
@@ -132,6 +136,7 @@ export async function searchStores(keyword: string): Promise<Place[]> {
 export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
   const { data } = await apiClient.get<StoreDetailResponse>(
     API_ENDPOINTS.store.detail(storeId),
+    { params: { demo: DEMO_MODE } },
   );
   return mapStoreDetail(data);
 }
@@ -149,6 +154,7 @@ function mapReview(res: ReviewResponse, storeId: string): Review {
     content: res.content ?? null,
     tags: res.tags ?? [],
     createdAt: res.createdAt,
+    mine: res.mine ?? false,
   };
 }
 
@@ -160,7 +166,7 @@ export async function getStoreReviews(
 ): Promise<Review[]> {
   const { data } = await apiClient.get<ReviewResponse[]>(
     API_ENDPOINTS.store.reviews(storeId),
-    { params: { page, size } },
+    { params: { page, size, demo: DEMO_MODE } },
   );
   return data.map((review) => mapReview(review, storeId));
 }

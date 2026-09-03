@@ -1,10 +1,13 @@
+import { useRef } from "react";
+
 import { Image } from "expo-image";
-import { Dog } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { Dog, MoreVertical } from "lucide-react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { HashtagChipList } from "@/components/place/hashtag-chip";
 import { ReviewResultBadge } from "@/components/review/review-result-badge";
 import { ThemedText } from "@/components/themed-text";
+import { type MenuAnchor } from "@/components/ui/popover-menu";
 import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import type { Review } from "@/types/review";
@@ -14,8 +17,23 @@ import { formatReviewDate } from "@/utils/date";
  * 리뷰 전체보기 화면의 리뷰 카드(전체 내용).
  * 상단: 프사 · 닉네임 · 크기 ⋯ 결과 배지(우측) / 인증 사진 / 내용 / 해시태그 / 날짜(하단 우측).
  * 거절 리뷰는 사진이 없어(photoUrl null) 텍스트만 렌더한다.
+ * onMenu를 주면 우상단에 ⋯(신고 등) 버튼을 노출한다.
  */
-export function ReviewCard({ review }: { review: Review }) {
+export function ReviewCard({
+  review,
+  onMenu,
+}: {
+  review: Review;
+  onMenu?: (anchor: MenuAnchor) => void;
+}) {
+  const menuRef = useRef<View>(null);
+
+  const openMenu = () => {
+    menuRef.current?.measureInWindow((x, y, width, height) =>
+      onMenu?.({ x, y, width, height }),
+    );
+  };
+
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
@@ -39,12 +57,30 @@ export function ReviewCard({ review }: { review: Review }) {
           </ThemedText>
         </View>
 
-        <ReviewResultBadge
-          allowed={review.dogAllowed}
-          textType="subtitle04"
-          paddingVertical={6}
-          paddingHorizontal={10}
-        />
+        <View style={styles.rightCluster}>
+          <ReviewResultBadge
+            allowed={review.dogAllowed}
+            textType="subtitle04"
+            paddingVertical={6}
+            paddingHorizontal={10}
+          />
+          {onMenu ? (
+            <Pressable
+              ref={menuRef}
+              onPress={openMenu}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="리뷰 더보기"
+              style={styles.menuButton}
+            >
+              <MoreVertical
+                size={18}
+                color={Palette.gray[300]}
+                strokeWidth={1.75}
+              />
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       {review.photoUrl ? (
@@ -93,6 +129,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: Spacing.two,
     flexShrink: 1,
+  },
+  rightCluster: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.one,
+  },
+  menuButton: {
+    padding: Spacing.half,
   },
   avatar: {
     width: 40,

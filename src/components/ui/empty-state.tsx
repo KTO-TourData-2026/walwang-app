@@ -1,36 +1,51 @@
 import { Map, type LucideIcon } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 
 export type EmptyStateProps = {
-  message: string;
+  title: string;
+  subtitle?: string;
   Icon?: LucideIcon;
-  /** null이면 액션 버튼 숨김. */
   actionLabel?: string | null;
   onAction?: () => void;
+  style?: StyleProp<ViewStyle>;
 };
 
+/** 공용 빈 상태 — 원형 아이콘 + 제목·부제(2줄) + 선택 액션. */
 export function EmptyState({
-  message,
+  title,
+  subtitle,
   Icon = Map,
   actionLabel = "지도로 가기",
   onAction,
+  style,
 }: EmptyStateProps) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       <View style={styles.iconWrap}>
         <Icon size={30} color={Palette.main[500]} />
       </View>
-      <ThemedText
-        type="label03"
-        color={Palette.gray[500]}
-        style={styles.message}
-      >
-        {message}
-      </ThemedText>
+      <View style={styles.text}>
+        <ThemedText
+          type="label03"
+          color={Palette.gray[600]}
+          style={styles.line}
+        >
+          {title}
+        </ThemedText>
+        {subtitle ? (
+          <ThemedText
+            type="label04"
+            color={Palette.gray[400]}
+            style={styles.line}
+          >
+            {subtitle}
+          </ThemedText>
+        ) : null}
+      </View>
       {actionLabel && onAction ? (
         <Button
           label={actionLabel}
@@ -59,7 +74,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     backgroundColor: "rgba(255, 154, 134, 0.12)",
   },
-  message: {
+  text: {
+    alignItems: "center",
+    gap: Spacing.half,
+  },
+  line: {
     textAlign: "center",
   },
   button: {

@@ -17,7 +17,7 @@ const photo = (seed: string) =>
 const thumb = (seed: string) =>
   `https://picsum.photos/seed/walwang-${seed}/300/200`;
 
-export const MOCK_REVIEWS: Review[] = [
+const RAW_REVIEWS: Omit<Review, "mine">[] = [
   // p-001 서울숲 반려견 놀이터 (소·중형 가능 / 대형 가능)
   {
     id: "r-001",
@@ -338,6 +338,11 @@ const MY_REVIEW_IDS = [
   "r-015",
   "r-022",
 ] as const;
+
+export const MOCK_REVIEWS: Review[] = RAW_REVIEWS.map((review) => ({
+  ...review,
+  mine: (MY_REVIEW_IDS as readonly string[]).includes(review.id),
+}));
 
 export function getMyReviews(): Review[] {
   const mine = new Set<string>(MY_REVIEW_IDS);

@@ -1,8 +1,12 @@
+import { useRef } from "react";
+
 import { Image } from "expo-image";
+import { MoreVertical } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ReviewResultBadge } from "@/components/review/review-result-badge";
 import { ThemedText } from "@/components/themed-text";
+import { type MenuAnchor } from "@/components/ui/popover-menu";
 import { CATEGORY_LABEL } from "@/constants/category";
 import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
@@ -14,12 +18,21 @@ export function MyReviewItem({
   review,
   place,
   onPress,
+  onMenu,
 }: {
   review: Review;
   place: Place;
   onPress: (placeId: string) => void;
+  onMenu?: (review: Review, anchor: MenuAnchor) => void;
 }) {
   const thumbnail = review.thumbnailUrl ?? review.photoUrl;
+  const menuRef = useRef<View>(null);
+
+  const openMenu = () => {
+    menuRef.current?.measureInWindow((x, y, width, height) =>
+      onMenu?.(review, { x, y, width, height }),
+    );
+  };
 
   return (
     <Pressable
@@ -52,6 +65,23 @@ export function MyReviewItem({
           {CATEGORY_LABEL[place.category]} · {SIZE_LABEL[review.dogSize]}
         </ThemedText>
       </View>
+
+      {onMenu ? (
+        <Pressable
+          ref={menuRef}
+          onPress={openMenu}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`${place.name} 리뷰 더보기`}
+          style={styles.menuButton}
+        >
+          <MoreVertical
+            size={20}
+            color={Palette.gray[300]}
+            strokeWidth={1.75}
+          />
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }
@@ -63,6 +93,12 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.four,
+  },
+  menuButton: {
+    alignSelf: "flex-start",
+    marginTop: -Spacing.one,
+    marginRight: -Spacing.two,
+    padding: Spacing.one,
   },
   pressed: {
     backgroundColor: Palette.background.subtle,

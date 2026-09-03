@@ -26,8 +26,10 @@ export interface SizeStatusResponse {
 
 /** `GET /stores`·`GET /stores/search`의 카드 응답. */
 export interface StoreCardResponse {
-  storeId: number;
+  storeId: string;
   storeName: string;
+  /** 데모용 가짜 상호명. 표시에는 이 값을 우선 쓰고, 없으면 storeName. */
+  displayName: string | null;
   geog: GeoPoint;
   address: string;
   type: string;
@@ -36,7 +38,7 @@ export interface StoreCardResponse {
 
 /** `GET /stores/{storeId}`의 상세 응답(카드 필드 + 상세 전용). */
 export interface StoreDetailResponse {
-  storeId: number;
+  storeId: string;
   name: string;
   geog: GeoPoint;
   address: string;
