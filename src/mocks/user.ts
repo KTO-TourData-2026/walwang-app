@@ -1,9 +1,8 @@
 import { MOCK_PLACES } from "@/mocks/places";
 import { getMyReviews } from "@/mocks/reviews";
-import type { PassportStamp, UserSummary } from "@/types/user";
+import type { PassportStamp } from "@/types/user";
 
-// 마이(플로우 D) 화면 개발용 목. 리뷰수·도장수는 getMyReviews에서 파생(화면 간 일관).
-// 실연동 시 이 파일만 지우면 되도록 User 외의 타입을 만들지 말 것.
+// 마이(플로우 D) 여권 개발용 목. 프로필(GET /user/me)은 실연동됨 — 여권 API 연동 시 이 파일 삭제.
 
 const storeName = (placeId: string) =>
   MOCK_PLACES.find((place) => place.id === placeId)?.name ?? "";
@@ -20,12 +19,6 @@ export const MOCK_PASSPORT: PassportStamp[] = getMyReviews()
     photoUrl: review.id === "r-010" ? null : review.photoUrl,
     createdAt: review.createdAt,
   }));
-
-export const MOCK_USER: UserSummary = {
-  nickname: "나영",
-  reviewCount: getMyReviews().length,
-  stampCount: MOCK_PASSPORT.length,
-};
 
 export function getStamp(id: string): PassportStamp | undefined {
   return MOCK_PASSPORT.find((stamp) => stamp.id === id);

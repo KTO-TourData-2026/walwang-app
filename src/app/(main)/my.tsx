@@ -12,15 +12,21 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Passport } from "@/components/my/passport";
 import { ProfileSummaryCard } from "@/components/my/profile-summary-card";
 import { ThemedText } from "@/components/themed-text";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingView } from "@/components/ui/loading-view";
 import { Palette, Spacing } from "@/constants/theme";
+import { useDeleteAccountMutation } from "@/hooks/use-delete-account-mutation";
 import { useLogoutMutation } from "@/hooks/use-logout-mutation";
-import { MOCK_PASSPORT, MOCK_USER } from "@/mocks/user";
+import { useMyProfileQuery } from "@/hooks/use-my-profile-query";
+import { MOCK_PASSPORT } from "@/mocks/user";
 import type { PassportStamp } from "@/types/user";
 
 export default function MyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const logoutMutation = useLogoutMutation();
+  const deleteAccountMutation = useDeleteAccountMutation();
+  const profileQuery = useMyProfileQuery();
 
   const openReviews = () => router.push("/my/reviews");
 
@@ -58,7 +64,20 @@ export default function MyScreen() {
         {
           text: "탈퇴",
           style: "destructive",
-          onPress: () => router.replace("/login"),
+          onPress: async () => {
+            try {
+              await deleteAccountMutation.mutateAsync();
+            } catch {
+              // 탈퇴 실패 시 계정·세션은 그대로 유지된다(deleteUser는 성공 뒤에만 토큰 정리).
+              ToastAndroid.show(
+                "탈퇴에 실패했어요. 잠시 후 다시 시도해주세요.",
+                ToastAndroid.SHORT,
+              );
+              return;
+            }
+            ToastAndroid.show("탈퇴가 완료됐어요.", ToastAndroid.SHORT);
+            router.replace("/login");
+          },
         },
       ],
     );
@@ -72,11 +91,21 @@ export default function MyScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <ProfileSummaryCard
-        user={MOCK_USER}
-        onPressReviews={openReviews}
-        onLogout={logout}
-      />
+      {profileQuery.isLoading ? (
+        <LoadingView style={styles.profileState} />
+      ) : profileQuery.isError || !profileQuery.data ? (
+        <ErrorState
+          message="프로필을 불러오지 못했어요"
+          onRetry={() => profileQuery.refetch()}
+          style={styles.profileState}
+        />
+      ) : (
+        <ProfileSummaryCard
+          user={profileQuery.data}
+          onPressReviews={openReviews}
+          onLogout={logout}
+        />
+      )}
 
       <View style={styles.passportSection}>
         <ThemedText type="subtitle02" color={Palette.gray[700]}>
@@ -112,6 +141,9 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.five,
+  },
+  profileState: {
+    minHeight: 148,
   },
   passportSection: {
     gap: Spacing.three,

@@ -22,8 +22,10 @@ import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
 import { CATEGORY_LABEL } from "@/constants/category";
 import { Palette, Radius, Spacing } from "@/constants/theme";
+import { useSavedStoresQuery } from "@/hooks/use-saved-stores-query";
 import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useStoreReviewsQuery } from "@/hooks/use-store-reviews-query";
+import { useToggleSavedStoreMutation } from "@/hooks/use-toggle-saved-store-mutation";
 
 /**
  * 가게 상세(S-05) — 전체 화면 페이지. 지도 핀/검색 결과에서 진입한다.
@@ -33,12 +35,24 @@ export default function StoreDetailScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [saved, setSaved] = useState(false);
   const [failedCoverUri, setFailedCoverUri] = useState<string | null>(null);
 
   const detailQuery = useStoreDetailQuery(placeId);
   const reviewsQuery = useStoreReviewsQuery(placeId);
+  const savedStoresQuery = useSavedStoresQuery();
+  const toggleSaved = useToggleSavedStoreMutation();
   const place = detailQuery.data;
+
+  // 저장 여부는 저장 목록 캐시에서 파생한다(상세 응답엔 saved 필드가 없음).
+  const saved =
+    savedStoresQuery.data?.some((item) => item.id === placeId) ?? false;
+
+  const toggleSave = () => {
+    if (!place) {
+      return;
+    }
+    toggleSaved.mutate({ storeId: place.id, nextSaved: !saved, place });
+  };
 
   if (detailQuery.isLoading) {
     return (
@@ -122,7 +136,7 @@ export default function StoreDetailScreen() {
               styles.saveButton,
               { top: insets.top + Spacing.two },
             ]}
-            onPress={() => setSaved((prev) => !prev)}
+            onPress={toggleSave}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel={saved ? "저장 해제" : "저장"}

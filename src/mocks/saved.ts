@@ -1,13 +1,7 @@
 import { MOCK_COURSE, MOCK_COURSE_FALLBACK } from "@/mocks/courses";
-import { MOCK_PLACES } from "@/mocks/places";
 import type { Course, SavedCoursePreview } from "@/types/course";
-import type { Place } from "@/types/place";
 
-// 저장(플로우 C) 화면 개발용 목. 실연동 시 이 파일만 지우면 되도록 Place/Course 외 타입을 만들지 말 것.
-
-export const MOCK_SAVED_PLACES: Place[] = ["p-002", "p-001", "p-004", "p-016"]
-  .map((id) => MOCK_PLACES.find((place) => place.id === id))
-  .filter((place): place is Place => place !== undefined);
+// 저장(플로우 C) 코스 탭 개발용 목. 장소 저장은 실연동됨 — 코스 API 연동 시 이 파일 삭제.
 
 function toPreview(
   course: Course,

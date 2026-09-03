@@ -142,6 +142,25 @@ export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
   return mapStoreDetail(data);
 }
 
+// 저장한 장소 목록(`GET /user/store`). 응답은 지도 카드와 같은 StoreCardResponse[]라
+// mapStoreCard를 그대로 재사용한다.
+export async function getSavedStores(): Promise<Place[]> {
+  const { data } = await apiClient.get<StoreCardResponse[]>(
+    API_ENDPOINTS.user.savedStores,
+    { params: { demo: DEMO_MODE } },
+  );
+  return data.map(mapStoreCard);
+}
+
+// 장소 저장/해제(`POST`/`DELETE /stores/{storeId}/save`). 바디·응답 본문 없음.
+export async function saveStore(storeId: string): Promise<void> {
+  await apiClient.post(API_ENDPOINTS.store.save(storeId));
+}
+
+export async function unsaveStore(storeId: string): Promise<void> {
+  await apiClient.delete(API_ENDPOINTS.store.save(storeId));
+}
+
 // 응답엔 placeId가 없어 요청한 storeId로 채운다(목·화면 연결용).
 function mapReview(res: ReviewResponse, storeId: string): Review {
   return {
