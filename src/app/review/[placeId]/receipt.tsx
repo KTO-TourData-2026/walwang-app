@@ -2,7 +2,15 @@ import { useState } from "react";
 
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowLeft, Check } from "lucide-react-native";
-import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  ToastAndroid,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CameraCapture } from "@/components/review/camera-capture";
@@ -10,15 +18,16 @@ import { ReviewHeaderTitle } from "@/components/review/review-header-title";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { MOCK_PLACES } from "@/mocks/places";
-import { mockVerifyReceipt, type ReceiptOutcome } from "@/mocks/receipt";
+import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
+import { useVerifyReceiptMutation } from "@/hooks/use-verify-receipt-mutation";
 import { useReviewDraft } from "@/stores/review-draft";
+import type { ReceiptVerifyResponse } from "@/types/review";
 
 const SAMPLE_RECEIPT_URI = "https://picsum.photos/seed/walwang-receipt/600/900";
 
 type ReceiptFailure = "unreadable" | "mismatch";
 
-/** S-06 영수증 OCR 인증. OCR은 API라 결과만 목으로 흉내 낸다(mockVerifyReceipt). */
+/** S-06 영수증 OCR 인증. `POST /reviews/receipt-verify`가 상호명 유사도로 판정한다. */
 export default function ReceiptScreen() {
   const { placeId } = useLocalSearchParams<{ placeId: string }>();
   const router = useRouter();
@@ -26,38 +35,52 @@ export default function ReceiptScreen() {
 
   const setReceipt = useReviewDraft((state) => state.setReceipt);
   const resetReceipt = useReviewDraft((state) => state.resetReceipt);
+  const verifyMutation = useVerifyReceiptMutation();
 
   const [verified, setVerified] = useState(false);
   const [failure, setFailure] = useState<ReceiptFailure | null>(null);
   const [mismatchName, setMismatchName] = useState<string | null>(null);
 
-  const place = MOCK_PLACES.find((item) => item.id === placeId);
-  const placeName = place?.name ?? "이 가게";
+  const storeQuery = useStoreDetailQuery(placeId);
+  const placeName = storeQuery.data?.name ?? "이 가게";
 
-  const applyOutcome = (outcome: ReceiptOutcome, imageUri: string) => {
-    if (!place) {
-      return;
-    }
-    const verdict = mockVerifyReceipt(place, outcome);
-
-    if (verdict.verified) {
+  const applyResult = (result: ReceiptVerifyResponse, imageUri: string) => {
+    if (result.verified && result.receiptToken) {
       setReceipt({
         verified: true,
         imageUri,
-        matchedName: verdict.matchedName,
-        token: verdict.receiptToken,
+        matchedName: result.matchedName,
+        token: result.receiptToken,
       });
       setVerified(true);
       return;
     }
 
+    // 실패 분기는 상호명(matchedName) 유무로 판정 — 읽었는데 다르면 불일치, 못 읽으면 판독실패.
     resetReceipt();
-    if (verdict.reason === "OCR_FAILED") {
-      setFailure("unreadable");
-    } else {
-      setMismatchName(verdict.matchedName);
+    if (result.matchedName) {
+      setMismatchName(result.matchedName);
       setFailure("mismatch");
+    } else {
+      setFailure("unreadable");
     }
+  };
+
+  const capture = (imageUri: string) => {
+    if (verifyMutation.isPending) {
+      return;
+    }
+    verifyMutation.mutate(
+      { storeId: placeId, imageUri },
+      {
+        onSuccess: (result) => applyResult(result, imageUri),
+        onError: () =>
+          ToastAndroid.show(
+            "영수증 인증에 실패했어요. 다시 시도해주세요.",
+            ToastAndroid.SHORT,
+          ),
+      },
+    );
   };
 
   const goPhoto = () =>
@@ -154,13 +177,16 @@ export default function ReceiptScreen() {
         title="영수증 사진 촬영"
         hint={"상호명이 잘 나오도록 촬영해주세요.\n금액·날짜는 보지 않아요."}
         fallbackUri={SAMPLE_RECEIPT_URI}
-        onCapture={(uri) => applyOutcome("verified", uri)}
+        onCapture={capture}
         onBack={() => router.back()}
         overlay={
-          __DEV__ ? (
-            <DevOutcomeRow
-              onPick={(outcome) => applyOutcome(outcome, SAMPLE_RECEIPT_URI)}
-            />
+          verifyMutation.isPending ? (
+            <View style={styles.verifyingRow}>
+              <ActivityIndicator color={Palette.white} />
+              <ThemedText type="label04" color={Palette.white}>
+                영수증을 확인하고 있어요…
+              </ThemedText>
+            </View>
           ) : null
         }
       />
@@ -245,38 +271,6 @@ export default function ReceiptScreen() {
   );
 }
 
-/** [DEV 전용] OCR 결과 강제 — 실연동 시 제거. */
-function DevOutcomeRow({
-  onPick,
-}: {
-  onPick: (outcome: ReceiptOutcome) => void;
-}) {
-  const options: { label: string; outcome: ReceiptOutcome }[] = [
-    { label: "정상", outcome: "verified" },
-    { label: "불일치", outcome: "mismatch" },
-    { label: "판독실패", outcome: "unreadable" },
-  ];
-  return (
-    <View style={styles.devRow}>
-      <ThemedText type="label06" color="rgba(255,255,255,0.6)">
-        DEV
-      </ThemedText>
-      {options.map((option) => (
-        <Pressable
-          key={option.outcome}
-          onPress={() => onPick(option.outcome)}
-          hitSlop={6}
-          style={styles.devChip}
-        >
-          <ThemedText type="label06" color={Palette.white}>
-            {option.label}
-          </ThemedText>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
@@ -319,18 +313,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.two,
     textAlign: "center",
   },
-  devRow: {
+  verifyingRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: Spacing.two,
-  },
-  devChip: {
-    paddingVertical: Spacing.half,
-    paddingHorizontal: Spacing.two,
-    borderRadius: Radius.small,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
   },
   modalRoot: {
     flex: 1,

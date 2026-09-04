@@ -51,6 +51,8 @@ export interface StoreDetailResponse {
   lastVerifiedAt: string | null;
   sizeStatus: SizeStatusResponse[];
   thumbnailUrls: string[];
+  /** 한국관광공사 API로 검증된 반려견 동반 장소. true면 리뷰 수 무관 두 크기 모두 가능. */
+  petVerified: boolean;
 }
 
 // ── 앱 타입 ────────────────────────────────────────────────

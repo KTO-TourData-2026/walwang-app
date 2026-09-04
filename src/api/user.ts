@@ -5,14 +5,27 @@ import {
   setAccessToken,
   setRefreshToken,
 } from "@/api/client";
+import { DEMO_MODE } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { ApiHttpError } from "@/api/http-error";
 import type {
+  PassportDetailResponse,
+  PassportServerStatus,
+  PassportStamp,
+  PassportStatus,
+  PassportSummary,
+  PassportSummaryResponse,
   UserLoginRequest,
   UserProfileResponse,
   UserSignUpRequest,
   UserSummary,
 } from "@/types/user";
+
+const PASSPORT_STATUS_MAP: Record<PassportServerStatus, PassportStatus> = {
+  PENDING: "pending",
+  READY: "ready",
+  FALLBACK: "fallback",
+};
 
 // user 도메인 단일 호출 함수. 다른 도메인(store/review/course)도 이 파일을 본떠 추가한다.
 
@@ -74,8 +87,10 @@ export async function login(body: UserLoginRequest): Promise<void> {
 
 // 내 정보. swagger 응답이 camelCase(UserProfileResponse)라 필요한 필드만 추린다.
 export async function getMyProfile(): Promise<UserSummary> {
+  // demo=true — 리뷰 목록·여권과 같은 데모 공간의 개수를 받는다(안 붙이면 실서비스 공간=0).
   const { data } = await apiClient.get<UserProfileResponse>(
     API_ENDPOINTS.user.me,
+    { params: { demo: DEMO_MODE } },
   );
   return {
     nickname: data.nickname,
@@ -98,4 +113,41 @@ export async function deleteUser(): Promise<void> {
   // 탈퇴가 성공한 뒤에만 토큰을 지운다(실패 시 계정은 남아있으므로 로그인 유지).
   await apiClient.delete(API_ENDPOINTS.user.me);
   await clearTokens();
+}
+
+// 여권 도장 목록(`GET /user/me/passport`). storeName·photoUrl 없이 stampUrl·status만 온다.
+// size 상한은 10(swagger). 책 도장은 status 3분기로 렌더한다.
+export async function getPassport(
+  page = 0,
+  size = 10,
+): Promise<PassportSummary[]> {
+  const { data } = await apiClient.get<PassportSummaryResponse[]>(
+    API_ENDPOINTS.user.passport,
+    { params: { page, size, demo: DEMO_MODE } },
+  );
+  return data.map((item) => ({
+    id: String(item.id),
+    stampUrl: item.stampUrl ?? null,
+    status: PASSPORT_STATUS_MAP[item.status] ?? "pending",
+    createdAt: item.createdAt,
+  }));
+}
+
+// 여권 도장 상세(`GET /user/me/passport/{id}`). 가게·원본사진을 여기서 받아 채운다.
+export async function getPassportDetail(
+  passportId: string,
+): Promise<PassportStamp> {
+  const { data } = await apiClient.get<PassportDetailResponse>(
+    API_ENDPOINTS.user.passportDetail(passportId),
+    { params: { demo: DEMO_MODE } },
+  );
+  return {
+    id: String(data.id),
+    storeId: String(data.storeId),
+    storeName: data.storeName,
+    stampUrl: data.stampUrl ?? null,
+    status: PASSPORT_STATUS_MAP[data.status] ?? "pending",
+    photoUrl: data.photoUrl ?? null,
+    createdAt: data.createdAt,
+  };
 }

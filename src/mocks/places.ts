@@ -1,4 +1,4 @@
-import type { Place, SizeKey } from "@/types/place";
+import type { Place } from "@/types/place";
 
 /**
  * 백엔드 API가 나오기 전까지 화면 개발용으로 쓰는 목 데이터.
@@ -198,27 +198,6 @@ export const MOCK_PLACES: Place[] = [
     lastVerifiedAt: "2026-08-07T09:00:00Z",
   },
 ];
-
-/**
- * 거절 완료(S-12) 대안 카드. 실제로는 PostGIS 반경+상태 조인이지만 목에선
- * 업종·상태 필터만 쓴다. 후보 0개 가능 — 호출부에서 폴백 처리.
- */
-export function getAlternativePlaces(
-  placeId: string,
-  size: SizeKey,
-  limit = 3,
-): Place[] {
-  const origin = MOCK_PLACES.find((place) => place.id === placeId);
-  if (!origin) {
-    return [];
-  }
-  return MOCK_PLACES.filter(
-    (place) =>
-      place.id !== origin.id &&
-      place.category === origin.category &&
-      place.sizeStatus[size] === "allowed",
-  ).slice(0, limit);
-}
 
 /**
  * [DEV 전용] 영어 검색 키워드. 에뮬레이터에 한글 자판이 없어도 영어로

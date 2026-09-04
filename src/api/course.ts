@@ -1,4 +1,5 @@
 import { apiClient } from "@/api/client";
+import { DEMO_MODE } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { mapCategory } from "@/api/store";
 import type {
@@ -191,8 +192,7 @@ function toSaveBody(course: Course): CourseSaveRequestBody {
   };
 }
 
-// 조회는 demo=true(데모 데이터), 쓰기(저장·이름변경·삭제)엔 붙이지 않는다.
-const DEMO_MODE = true;
+// 조회는 demo=true(DEMO_MODE), 쓰기(저장·이름변경·삭제)엔 붙이지 않는다.
 
 export async function recommendCourse(
   request: CourseRecommendRequest,

@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
     detail: (storeId: string) => `/stores/${storeId}`,
     reviews: (storeId: string) => `/stores/${storeId}/reviews`,
     save: (storeId: string) => `/stores/${storeId}/save`, // POST 저장 · DELETE 해제
+    alternatives: (storeId: string) => `/stores/${storeId}/alternatives`, // 거절 대체 장소(size 필수)
   },
   review: {
     base: "/reviews", // POST 등록

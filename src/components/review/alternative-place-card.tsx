@@ -25,9 +25,11 @@ export function AlternativePlaceCard({
       <ThemedText type="subtitle03" color={Palette.gray[700]}>
         {place.name}
       </ThemedText>
-      <ThemedText type="label05" color={Palette.gray[400]}>
-        {place.location}
-      </ThemedText>
+      {place.location ? (
+        <ThemedText type="label05" color={Palette.gray[400]}>
+          {place.location}
+        </ThemedText>
+      ) : null}
       <View style={styles.metaRow}>
         <ThemedText type="label04" color={Palette.gray[500]}>
           {CATEGORY_LABEL[place.category]}

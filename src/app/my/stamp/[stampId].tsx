@@ -1,21 +1,31 @@
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { ChevronRight, PawPrint, X } from "lucide-react-native";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingView } from "@/components/ui/loading-view";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { getStamp } from "@/mocks/user";
+import { usePassportDetailQuery } from "@/hooks/use-passport-detail-query";
 import { formatReviewDate } from "@/utils/date";
 
 // 이미지 저장은 네이티브 의존성(view-shot/media-library) 전이라 안내만 — 실제 저장은 범위 밖.
 export default function StampDetailScreen() {
   const router = useRouter();
   const { stampId } = useLocalSearchParams<{ stampId: string }>();
-  const stamp = getStamp(stampId);
+  const {
+    data: stamp,
+    isLoading,
+    isError,
+    refetch,
+  } = usePassportDetailQuery(stampId);
 
   const close = () => router.back();
+
+  // 이미지 저장은 네이티브 의존성(view-shot/media-library) 전이라 후속 이슈에서 구현.
+  const saveImage = () => {};
 
   const openStore = () => {
     if (stamp) {
@@ -25,9 +35,6 @@ export default function StampDetailScreen() {
       });
     }
   };
-
-  const saveImage = () =>
-    Alert.alert("준비 중", "이미지 저장 기능은 곧 제공될 예정이에요.");
 
   return (
     <View style={styles.root}>
@@ -50,7 +57,15 @@ export default function StampDetailScreen() {
           <X size={22} color={Palette.gray[500]} />
         </Pressable>
 
-        {stamp ? (
+        {isLoading ? (
+          <LoadingView style={styles.loading} />
+        ) : isError ? (
+          <ErrorState
+            message="도장을 불러오지 못했어요"
+            onRetry={() => refetch()}
+            style={styles.loading}
+          />
+        ) : stamp ? (
           <>
             <View style={styles.imageWrap}>
               {stamp.photoUrl ? (
@@ -163,6 +178,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: Spacing.one,
+  },
+  loading: {
+    minHeight: 200,
   },
   notFound: {
     textAlign: "center",
