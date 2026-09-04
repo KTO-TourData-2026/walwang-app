@@ -73,7 +73,9 @@ export function SizeStatusSection({
           </ThemedText>
 
           <ThemedText type="label06" color={Palette.gray[500]}>
-            일정 리뷰 수를 충족시키면 상태가 확정돼요
+            일정 리뷰 수를 충족시키면 상태가 확정돼요{"\n"}
+            한국관광공사 api로 검증된 장소일 경우 리뷰 수와 관계없이 가능으로
+            보여져요
           </ThemedText>
         </View>
       ) : null}

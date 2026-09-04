@@ -5,7 +5,10 @@
 
 export type SizeKey = "smallMedium" | "large";
 export type PlaceStatus = "allowed" | "denied" | "unknown";
-export type Category = "park" | "cafe" | "restaurant" | "shopping";
+// 가게 type(cafe/restaurant/shopping/park)과 코스 nearby type(park/festival/attraction)을
+// 한 enum으로 합쳐 mapCategory 하나로 매핑한다.
+export type Category =
+  "park" | "cafe" | "restaurant" | "shopping" | "festival" | "attraction";
 
 export interface Place {
   id: string;

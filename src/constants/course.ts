@@ -4,9 +4,17 @@ export const PURPOSE_LABEL: Record<CoursePurpose, string> = {
   walk: "산책",
   meal: "식사",
   cafe: "카페",
+  shopping: "쇼핑",
+  play: "놀이",
 };
 
-export const PURPOSE_ORDER: CoursePurpose[] = ["walk", "meal", "cafe"];
+export const PURPOSE_ORDER: CoursePurpose[] = [
+  "walk",
+  "meal",
+  "cafe",
+  "shopping",
+  "play",
+];
 
 export const DURATION_LABEL: Record<CourseDuration, string> = {
   hour: "1시간",

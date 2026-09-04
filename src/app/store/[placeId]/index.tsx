@@ -26,22 +26,61 @@ import { useSavedStoresQuery } from "@/hooks/use-saved-stores-query";
 import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useStoreReviewsQuery } from "@/hooks/use-store-reviews-query";
 import { useToggleSavedStoreMutation } from "@/hooks/use-toggle-saved-store-mutation";
+import type { Category } from "@/types/place";
+import type { StoreDetail } from "@/types/store";
+
+type NearbyParams = {
+  title?: string;
+  address?: string;
+  category?: string;
+  imageUrl?: string;
+};
+
+// 코스 인근 장소(nearby)는 storeId가 없어 서버 조회를 못 한다. 넘어온 정보만으로
+// 상세를 프리뷰로 채운다(크기 상태·리뷰 없음, 리뷰쓰기/저장 비활성).
+function buildNearbyPlace(params: NearbyParams, id: string): StoreDetail {
+  return {
+    id,
+    name: params.title ?? "",
+    category: (params.category as Category) ?? "cafe",
+    location: params.address ?? "",
+    latitude: 0,
+    longitude: 0,
+    // 한국관광공사 API로 검증된 장소라 리뷰가 없어도 크기 무관 동반 가능으로 본다.
+    sizeStatus: { smallMedium: "allowed", large: "allowed" },
+    reviewCount: 0,
+    lastVerifiedAt: null,
+    tags: [],
+    openTime: null,
+    closeTime: null,
+    thumbnailUrls: params.imageUrl ? [params.imageUrl] : [],
+    sizeCounts: {
+      smallMedium: { possible: 0, impossible: 0 },
+      large: { possible: 0, impossible: 0 },
+    },
+  };
+}
 
 /**
  * 가게 상세(S-05) — 전체 화면 페이지. 지도 핀/검색 결과에서 진입한다.
  * 리뷰 쓰기 플로우(플로우 A)의 시작점.
  */
 export default function StoreDetailScreen() {
-  const { placeId } = useLocalSearchParams<{ placeId: string }>();
+  const params = useLocalSearchParams<
+    { placeId: string; nearby?: string } & NearbyParams
+  >();
+  const placeId = params.placeId;
+  const isNearby = params.nearby === "1";
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [failedCoverUri, setFailedCoverUri] = useState<string | null>(null);
 
-  const detailQuery = useStoreDetailQuery(placeId);
-  const reviewsQuery = useStoreReviewsQuery(placeId);
-  const savedStoresQuery = useSavedStoresQuery();
+  // 인근 장소 프리뷰는 조회 훅을 모두 비활성화하고 넘어온 params로 렌더한다.
+  const detailQuery = useStoreDetailQuery(isNearby ? undefined : placeId);
+  const reviewsQuery = useStoreReviewsQuery(isNearby ? undefined : placeId);
+  const savedStoresQuery = useSavedStoresQuery({ enabled: !isNearby });
   const toggleSaved = useToggleSavedStoreMutation();
-  const place = detailQuery.data;
+  const place = isNearby ? buildNearbyPlace(params, placeId) : detailQuery.data;
 
   // 저장 여부는 저장 목록 캐시에서 파생한다(상세 응답엔 saved 필드가 없음).
   const saved =
@@ -78,7 +117,9 @@ export default function StoreDetailScreen() {
 
   const reviews = (reviewsQuery.data?.pages.flat() ?? []).slice(0, 3);
   const tags = place.tags;
-  const coverUri = reviews.find((review) => review.photoUrl)?.photoUrl ?? null;
+  const reviewCover =
+    reviews.find((review) => review.photoUrl)?.photoUrl ?? null;
+  const coverUri = isNearby ? (place.thumbnailUrls[0] ?? null) : reviewCover;
   const hasReviews = reviews.length > 0;
 
   const goWrite = () =>
@@ -130,23 +171,25 @@ export default function StoreDetailScreen() {
             <ArrowLeft size={22} color={Palette.gray[700]} />
           </Pressable>
 
-          <Pressable
-            style={[
-              styles.iconButton,
-              styles.saveButton,
-              { top: insets.top + Spacing.two },
-            ]}
-            onPress={toggleSave}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={saved ? "저장 해제" : "저장"}
-          >
-            <Heart
-              size={22}
-              color={saved ? Palette.main[500] : Palette.gray[700]}
-              fill={saved ? Palette.main[500] : "transparent"}
-            />
-          </Pressable>
+          {isNearby ? null : (
+            <Pressable
+              style={[
+                styles.iconButton,
+                styles.saveButton,
+                { top: insets.top + Spacing.two },
+              ]}
+              onPress={toggleSave}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={saved ? "저장 해제" : "저장"}
+            >
+              <Heart
+                size={22}
+                color={saved ? Palette.main[500] : Palette.gray[700]}
+                fill={saved ? Palette.main[500] : "transparent"}
+              />
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.body}>
@@ -156,7 +199,8 @@ export default function StoreDetailScreen() {
                 {place.name}
               </ThemedText>
               <ThemedText type="label04" color={Palette.gray[400]}>
-                {CATEGORY_LABEL[place.category]} · {place.location}
+                {CATEGORY_LABEL[place.category]}
+                {place.location ? ` · ${place.location}` : ""}
               </ThemedText>
             </View>
 
@@ -221,7 +265,9 @@ export default function StoreDetailScreen() {
             <EmptyState
               Icon={MessageCircleDashed}
               title="아직 리뷰가 없어요"
-              subtitle="첫 리뷰를 남겨보세요!"
+              subtitle={
+                isNearby ? "코스 주변 추천 장소예요" : "첫 리뷰를 남겨보세요!"
+              }
               actionLabel={null}
               style={styles.reviewState}
             />
@@ -229,11 +275,16 @@ export default function StoreDetailScreen() {
         </View>
       </ScrollView>
 
-      <View
-        style={[styles.footer, { paddingBottom: insets.bottom + Spacing.two }]}
-      >
-        <Button label="리뷰 쓰기" variant="main" onPress={goWrite} />
-      </View>
+      {isNearby ? null : (
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: insets.bottom + Spacing.two },
+          ]}
+        >
+          <Button label="리뷰 쓰기" variant="main" onPress={goWrite} />
+        </View>
+      )}
     </View>
   );
 }
