@@ -8,6 +8,7 @@ import { PlaceListItem } from "@/components/map/place-list-item";
 import { ThemedText } from "@/components/themed-text";
 import { SearchBar } from "@/components/ui/search-bar";
 import { Palette, Spacing } from "@/constants/theme";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useStoreSearchQuery } from "@/hooks/use-store-search-query";
 import type { StartPoint } from "@/types/course";
 import type { Place } from "@/types/place";
@@ -33,8 +34,13 @@ export function StartPointField({
   const [query, setQuery] = useState("");
 
   const searchQuery = useStoreSearchQuery(query);
-  const hasKeyword = query.trim().length > 0;
-  const results = searchQuery.data ?? [];
+  const keyword = query.trim();
+  const hasKeyword = keyword.length > 0;
+  // 훅과 같은 지연으로 입력이 안정됐는지 본다. 디바운스 중이거나 이전 결과(placeholder)를
+  // 보여주는 동안엔 목록을 비워, 현재 검색어와 안 맞는 장소가 선택되는 걸 막는다.
+  const debounced = useDebouncedValue(keyword, 300);
+  const isSettled = keyword === debounced && !searchQuery.isPlaceholderData;
+  const results = isSettled ? (searchQuery.data ?? []) : [];
 
   const select = (place: Place) => {
     onChange({
@@ -125,7 +131,7 @@ export function StartPointField({
                 <ThemedText type="label03" color={Palette.gray[400]}>
                   {!hasKeyword
                     ? "장소명으로 출발지를 검색하세요"
-                    : searchQuery.isFetching
+                    : !isSettled || searchQuery.isFetching
                       ? "검색 중…"
                       : "검색 결과가 없어요"}
                 </ThemedText>
