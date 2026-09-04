@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 
 import { CameraView, useCameraPermissions } from "expo-camera";
+import * as ImagePicker from "expo-image-picker";
 import { ArrowLeft, SwitchCamera } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -45,6 +46,21 @@ export function CameraCapture({
       onCapture(shot.uri);
     } else if (__DEV__) {
       onCapture(fallbackUri);
+    }
+  };
+
+  // 갤러리에서 로컬 이미지를 고른다(카메라 대신). file:// 로컬 URI라 multipart 업로드가 정상 동작한다.
+  const pickFromLibrary = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]?.uri) {
+      onCapture(result.assets[0].uri);
     }
   };
 
@@ -102,9 +118,17 @@ export function CameraCapture({
       <View
         style={[styles.bar, { paddingBottom: insets.bottom + Spacing.four }]}
       >
-        <ThemedText type="label05" color="rgba(255,255,255,0.4)">
-          갤러리 없음
-        </ThemedText>
+        <Pressable
+          onPress={pickFromLibrary}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="갤러리에서 선택"
+          style={styles.switchButton}
+        >
+          <ThemedText type="label05" color={Palette.white}>
+            갤러리
+          </ThemedText>
+        </Pressable>
 
         <Pressable
           onPress={capture}
