@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AlternativePlaceCard } from "@/components/review/alternative-place-card";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import { useAlternativeStoresQuery } from "@/hooks/use-alternative-stores-query";
@@ -128,6 +129,12 @@ export default function ReviewDoneScreen() {
 
             {alternativesQuery.isLoading ? (
               <LoadingView style={styles.altLoading} />
+            ) : alternativesQuery.isError ? (
+              <ErrorState
+                message="추천 장소를 불러오지 못했어요"
+                onRetry={() => alternativesQuery.refetch()}
+                style={styles.altLoading}
+              />
             ) : alternatives.length > 0 ? (
               <View style={styles.cardList}>
                 {alternatives.map((alt) => (
