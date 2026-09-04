@@ -1,6 +1,8 @@
 // 도메인별 React Query 키 팩토리. 무효화(invalidate) 범위를 계층으로 잡을 수 있게 한다.
 // 예: queryClient.invalidateQueries({ queryKey: queryKeys.user.all })
 
+import type { CourseRecommendRequest } from "@/types/course";
+
 type StoreListParams = {
   lat: number;
   lng: number;
@@ -28,6 +30,8 @@ export const queryKeys = {
   },
   course: {
     all: ["course"] as const,
+    recommend: (request: CourseRecommendRequest) =>
+      ["course", "recommend", request] as const,
     detail: (id: string) => ["course", "detail", id] as const,
   },
   tags: () => ["tags"] as const,

@@ -1,0 +1,238 @@
+import { apiClient } from "@/api/client";
+import { API_ENDPOINTS } from "@/api/endpoints";
+import { mapCategory } from "@/api/store";
+import type {
+  Coordinate,
+  Course,
+  CourseCreateResponse,
+  CourseDuration,
+  CoursePurpose,
+  CourseRecommendRequest,
+  CourseRecommendRequestBody,
+  CourseResponse,
+  CourseSaveRequestBody,
+  CourseStoreResponse,
+  CourseWaypoint,
+  NearbyPlace,
+  NearbyPlaceResponse,
+  SavedCoursePreview,
+  SavedCourseListResponse,
+  SavedCourseSummaryResponse,
+  ServerDuration,
+  ServerPurpose,
+} from "@/types/course";
+import type { SizeKey } from "@/types/place";
+import type { ServerSize } from "@/types/store";
+
+const SIZE_TO_SERVER: Record<SizeKey, ServerSize> = {
+  smallMedium: "SMALL_MEDIUM",
+  large: "LARGE",
+};
+
+function sizeFromServer(size: ServerSize): SizeKey {
+  return size === "SMALL_MEDIUM" ? "smallMedium" : "large";
+}
+
+const PURPOSE_TO_SERVER: Record<CoursePurpose, ServerPurpose> = {
+  walk: "WALK",
+  meal: "RESTAURANT",
+  cafe: "CAFE",
+  shopping: "SHOPPING",
+  play: "PLAY",
+};
+
+const PURPOSE_FROM_SERVER: Record<ServerPurpose, CoursePurpose> = {
+  WALK: "walk",
+  RESTAURANT: "meal",
+  CAFE: "cafe",
+  SHOPPING: "shopping",
+  PLAY: "play",
+};
+
+const DURATION_TO_SERVER: Record<CourseDuration, ServerDuration> = {
+  hour: "SHORT",
+  halfDay: "HALF_DAY",
+  fullDay: "FULL_DAY",
+};
+
+const DURATION_FROM_SERVER: Record<ServerDuration, CourseDuration> = {
+  SHORT: "hour",
+  HALF_DAY: "halfDay",
+  FULL_DAY: "fullDay",
+};
+
+// 좌표가 문자열·null로 와도 지도가 NaN으로 터지지 않게 유한 숫자로 강제한다.
+function toNum(value: unknown): number {
+  const num = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(num) ? num : 0;
+}
+
+function isRenderableCoord(lat: number, lng: number): boolean {
+  return (
+    Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)
+  );
+}
+
+function mapWaypoint(store: CourseStoreResponse): CourseWaypoint {
+  return {
+    placeId: String(store.storeId),
+    name: store.name,
+    category: mapCategory(store.type),
+    latitude: toNum(store.lat),
+    longitude: toNum(store.lng),
+    // 서버가 지점별 leg를 주지 않아 null. 추후 제공되면 여기서 채운다.
+    legToNext: null,
+  };
+}
+
+// swagger에 좌표 순서 명시가 없어 서버 GeoPoint({ lat, lng })에 맞춰 [lat, lng]로 가정한다.
+// 데모에서 경로가 어긋나면 이 매핑만 뒤집으면 된다.
+function mapWalkPath(path: number[][] | null | undefined): Coordinate[] | null {
+  if (!path || path.length === 0) {
+    return null;
+  }
+  const coords = path
+    .filter((pair) => Array.isArray(pair) && pair.length >= 2)
+    .map(([lat, lng]) => ({ latitude: toNum(lat), longitude: toNum(lng) }))
+    .filter((coord) => isRenderableCoord(coord.latitude, coord.longitude));
+  return coords.length > 0 ? coords : null;
+}
+
+function mapNearby(place: NearbyPlaceResponse): NearbyPlace {
+  return {
+    title: place.title,
+    category: mapCategory(place.type),
+    latitude: toNum(place.lat),
+    longitude: toNum(place.lng),
+    imageUrl: place.imageUrl ?? null,
+    source: place.source ?? null,
+    // storeId는 스키마 확정 대기 — 아직 없으면 상세 이동 대신 프리뷰로 연다.
+    storeId: place.storeId ?? null,
+    address: place.address ?? null,
+  };
+}
+
+function mapCourse(res: CourseResponse): Course {
+  const sorted = [...(res.stores ?? [])].sort(
+    (a, b) => (a.arrivalOrder ?? 0) - (b.arrivalOrder ?? 0),
+  );
+  // 상세 응답은 지점이 storeId별로 중복돼 오는 경우가 있어(추천은 단일) 한 번만 남긴다.
+  const seen = new Set<string>();
+  const stores = sorted.filter((store) => {
+    const id = String(store.storeId);
+    if (seen.has(id)) {
+      return false;
+    }
+    seen.add(id);
+    return true;
+  });
+  return {
+    id: String(res.id),
+    title: res.title,
+    description: res.description ?? null,
+    size: sizeFromServer(res.dogSize),
+    purposes: (res.purposes ?? [])
+      .map((purpose) => PURPOSE_FROM_SERVER[purpose])
+      .filter((purpose): purpose is CoursePurpose => Boolean(purpose)),
+    duration: DURATION_FROM_SERVER[res.duration] ?? "halfDay",
+    waypoints: stores.map(mapWaypoint),
+    walkPath: mapWalkPath(res.walkPath),
+    totalDistance: res.totalDistance ?? 0,
+    totalTime: res.totalDuration ?? 0,
+    relaxed: res.relaxed ?? false,
+    nearby: (res.nearby ?? [])
+      .map(mapNearby)
+      .filter((place) => isRenderableCoord(place.latitude, place.longitude)),
+  };
+}
+
+function mapSavedCourse(res: SavedCourseSummaryResponse): SavedCoursePreview {
+  return {
+    id: String(res.courseId),
+    title: res.title,
+    size: sizeFromServer(res.dogSize),
+    storeCount: res.storeCount ?? res.storeNames?.length ?? 0,
+    storeNames: res.storeNames ?? [],
+    totalDistance: res.totalDistance ?? 0,
+    totalTime: res.totalDuration ?? 0,
+    createdAt: res.createdAt,
+  };
+}
+
+function toRecommendBody(
+  request: CourseRecommendRequest,
+): CourseRecommendRequestBody {
+  return {
+    dogSize: SIZE_TO_SERVER[request.size],
+    purposes: request.purposes.map((purpose) => PURPOSE_TO_SERVER[purpose]),
+    duration: DURATION_TO_SERVER[request.duration],
+    lat: request.start.latitude,
+    lng: request.start.longitude,
+    ...(request.tags && request.tags.length > 0 ? { tags: request.tags } : {}),
+  };
+}
+
+function toSaveBody(course: Course): CourseSaveRequestBody {
+  return {
+    title: course.title,
+    dogSize: SIZE_TO_SERVER[course.size],
+    purposes: course.purposes.map((purpose) => PURPOSE_TO_SERVER[purpose]),
+    duration: DURATION_TO_SERVER[course.duration],
+    ...(course.description ? { description: course.description } : {}),
+    storeIds: course.waypoints.map((waypoint) => waypoint.placeId),
+  };
+}
+
+// 조회는 demo=true(데모 데이터), 쓰기(저장·이름변경·삭제)엔 붙이지 않는다.
+const DEMO_MODE = true;
+
+export async function recommendCourse(
+  request: CourseRecommendRequest,
+): Promise<Course> {
+  const { data } = await apiClient.post<CourseResponse>(
+    API_ENDPOINTS.course.recommend,
+    toRecommendBody(request),
+    { params: { demo: DEMO_MODE } },
+  );
+  return mapCourse(data);
+}
+
+// 응답은 courseId만 → 상세는 재조회로 렌더한다.
+export async function saveCourse(course: Course): Promise<string> {
+  const { data } = await apiClient.post<CourseCreateResponse>(
+    API_ENDPOINTS.course.base,
+    toSaveBody(course),
+  );
+  return String(data.courseId);
+}
+
+// demo=true여야 추천 화면과 동일하게 상호명 마스킹이 적용된다.
+export async function getCourseDetail(courseId: string): Promise<Course> {
+  const { data } = await apiClient.get<CourseResponse>(
+    API_ENDPOINTS.course.detail(courseId),
+    { params: { demo: DEMO_MODE } },
+  );
+  return mapCourse(data);
+}
+
+export async function getSavedCourses(): Promise<SavedCoursePreview[]> {
+  const { data } = await apiClient.get<SavedCourseListResponse>(
+    API_ENDPOINTS.user.savedCourses,
+    { params: { demo: DEMO_MODE } },
+  );
+  return (data.courses ?? []).map(mapSavedCourse);
+}
+
+export async function renameCourse(
+  courseId: string,
+  title: string,
+): Promise<void> {
+  await apiClient.patch(API_ENDPOINTS.user.savedCourseDetail(courseId), {
+    title,
+  });
+}
+
+// 삭제만 /course/{id}(단수) — #19에서 단수 경로 실재 확인 완료.
+export async function deleteCourse(courseId: string): Promise<void> {
+  await apiClient.delete(API_ENDPOINTS.course.remove(courseId));
+}

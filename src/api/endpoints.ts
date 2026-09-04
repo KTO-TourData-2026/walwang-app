@@ -12,6 +12,9 @@ export const API_ENDPOINTS = {
     checkNickname: "/user/check-nickname",
     savedStores: "/user/store",
     savedCourses: "/user/me/saved-courses",
+    savedCourseDetail: (courseId: string) =>
+      `/user/me/saved-courses/${courseId}`, // PATCH 이름 변경
+
     passport: "/user/me/passport",
     passportDetail: (passportId: string) => `/user/me/passport/${passportId}`,
   },
@@ -33,7 +36,7 @@ export const API_ENDPOINTS = {
     recommend: "/courses/recommend",
     base: "/courses", // POST 저장
     detail: (courseId: string) => `/courses/${courseId}`,
-    // 명세엔 삭제가 /course/{id}(단수)로 적혀 있음 — 오타로 보고 /courses 사용, 백엔드 확인 필요.
-    remove: (courseId: string) => `/courses/${courseId}`,
+    // 삭제만 /course/{id}(단수) — 다른 경로는 복수. #19에서 단수 경로 실재 확인 완료.
+    remove: (courseId: string) => `/course/${courseId}`,
   },
 } as const;
