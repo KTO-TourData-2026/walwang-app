@@ -16,9 +16,11 @@ import { LoadingView } from "@/components/ui/loading-view";
 import { PopoverMenu } from "@/components/ui/popover-menu";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Palette, Spacing } from "@/constants/theme";
+import { useDeleteCourseMutation } from "@/hooks/use-delete-course-mutation";
+import { useRenameCourseMutation } from "@/hooks/use-rename-course-mutation";
+import { useSavedCoursesQuery } from "@/hooks/use-saved-courses-query";
 import { useSavedStoresQuery } from "@/hooks/use-saved-stores-query";
 import { useToggleSavedStoreMutation } from "@/hooks/use-toggle-saved-store-mutation";
-import { MOCK_SAVED_COURSES } from "@/mocks/saved";
 import type { SavedCoursePreview } from "@/types/course";
 import type { Place } from "@/types/place";
 
@@ -37,10 +39,12 @@ export default function SavedScreen() {
 
   const [segment, setSegment] = useState<Segment>("place");
   const savedStoresQuery = useSavedStoresQuery();
+  const savedCoursesQuery = useSavedCoursesQuery();
   const toggleSaved = useToggleSavedStoreMutation();
+  const renameCourseMutation = useRenameCourseMutation();
+  const deleteCourseMutation = useDeleteCourseMutation();
   const places = savedStoresQuery.data ?? [];
-  const [courses, setCourses] =
-    useState<SavedCoursePreview[]>(MOCK_SAVED_COURSES);
+  const courses = savedCoursesQuery.data ?? [];
   const [menu, setMenu] = useState<ActiveMenu | null>(null);
 
   const openPlace = (place: Place) =>
@@ -63,15 +67,13 @@ export default function SavedScreen() {
       // 저장 해제 — 목록 캐시는 뮤테이션이 낙관적으로 갱신한다.
       toggleSaved.mutate({ storeId: menu.id, nextSaved: false });
     } else {
-      setCourses((prev) => prev.filter((item) => item.id !== menu.id));
+      deleteCourseMutation.mutate(menu.id);
     }
     setMenu(null);
   };
 
   const renameCourse = (course: SavedCoursePreview, title: string) =>
-    setCourses((prev) =>
-      prev.map((item) => (item.id === course.id ? { ...item, title } : item)),
-    );
+    renameCourseMutation.mutate({ courseId: course.id, title });
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + Spacing.three }]}>
@@ -115,6 +117,13 @@ export default function SavedScreen() {
             subtitle="지도에서 마음에 드는 곳을 저장해보세요"
           />
         )
+      ) : savedCoursesQuery.isLoading ? (
+        <LoadingView />
+      ) : savedCoursesQuery.isError ? (
+        <ErrorState
+          message="저장한 코스를 불러오지 못했어요"
+          onRetry={() => savedCoursesQuery.refetch()}
+        />
       ) : courses.length > 0 ? (
         <FlatList
           data={courses}
