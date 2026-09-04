@@ -20,6 +20,9 @@ const TYPE_TO_CATEGORY: Record<string, Category> = {
   CAFE: "cafe",
   RESTAURANT: "restaurant",
   SHOPPING: "shopping",
+  // 코스 nearby 전용 타입
+  FESTIVAL: "festival",
+  ATTRACTION: "attraction",
 };
 
 // 이미 경고한 type은 다시 안 찍는다(가게 수백 개면 같은 경고가 도배됨).
