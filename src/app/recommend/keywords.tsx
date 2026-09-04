@@ -25,7 +25,6 @@ import type { SizeKey } from "@/types/place";
 
 const SIZE_ORDER: SizeKey[] = ["smallMedium", "large"];
 
-// 해시태그는 UI 전용 — 추천 요청 바디엔 실리지 않는다.
 const KEYWORD_HASHTAGS: readonly string[] = HASHTAGS;
 
 const MAX_TAGS = 5;
@@ -60,7 +59,7 @@ export default function KeywordsScreen() {
   const canSubmit = start !== null && size !== null;
 
   const submit = () => {
-    if (!canSubmit) {
+    if (!canSubmit || !start || !size) {
       return;
     }
     router.push({
@@ -69,6 +68,10 @@ export default function KeywordsScreen() {
         size,
         purposes: purposes.join(","),
         ...(duration ? { duration } : {}),
+        ...(tags.length > 0 ? { tags: tags.join(",") } : {}),
+        startLat: String(start.latitude),
+        startLng: String(start.longitude),
+        startLabel: start.label,
       },
     });
   };
