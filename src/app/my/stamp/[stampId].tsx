@@ -5,15 +5,16 @@ import { Alert, Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { LoadingView } from "@/components/ui/loading-view";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { getStamp } from "@/mocks/user";
+import { usePassportDetailQuery } from "@/hooks/use-passport-detail-query";
 import { formatReviewDate } from "@/utils/date";
 
 // 이미지 저장은 네이티브 의존성(view-shot/media-library) 전이라 안내만 — 실제 저장은 범위 밖.
 export default function StampDetailScreen() {
   const router = useRouter();
   const { stampId } = useLocalSearchParams<{ stampId: string }>();
-  const stamp = getStamp(stampId);
+  const { data: stamp, isLoading } = usePassportDetailQuery(stampId);
 
   const close = () => router.back();
 
@@ -50,7 +51,9 @@ export default function StampDetailScreen() {
           <X size={22} color={Palette.gray[500]} />
         </Pressable>
 
-        {stamp ? (
+        {isLoading ? (
+          <LoadingView style={styles.loading} />
+        ) : stamp ? (
           <>
             <View style={styles.imageWrap}>
               {stamp.photoUrl ? (
@@ -163,6 +166,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: Spacing.one,
+  },
+  loading: {
+    minHeight: 200,
   },
   notFound: {
     textAlign: "center",

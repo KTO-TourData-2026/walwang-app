@@ -18,8 +18,8 @@ import { Palette, Spacing } from "@/constants/theme";
 import { useDeleteAccountMutation } from "@/hooks/use-delete-account-mutation";
 import { useLogoutMutation } from "@/hooks/use-logout-mutation";
 import { useMyProfileQuery } from "@/hooks/use-my-profile-query";
-import { MOCK_PASSPORT } from "@/mocks/user";
-import type { PassportStamp } from "@/types/user";
+import { usePassportQuery } from "@/hooks/use-passport-query";
+import type { PassportSummary } from "@/types/user";
 
 export default function MyScreen() {
   const router = useRouter();
@@ -27,10 +27,11 @@ export default function MyScreen() {
   const logoutMutation = useLogoutMutation();
   const deleteAccountMutation = useDeleteAccountMutation();
   const profileQuery = useMyProfileQuery();
+  const passportQuery = usePassportQuery();
 
   const openReviews = () => router.push("/my/reviews");
 
-  const openStamp = (stamp: PassportStamp) =>
+  const openStamp = (stamp: PassportSummary) =>
     router.push({
       pathname: "/my/stamp/[stampId]",
       params: { stampId: stamp.id },
@@ -111,7 +112,20 @@ export default function MyScreen() {
         <ThemedText type="subtitle02" color={Palette.gray[700]}>
           나의 여권
         </ThemedText>
-        <Passport stamps={MOCK_PASSPORT} onSelectStamp={openStamp} />
+        {passportQuery.isLoading ? (
+          <LoadingView style={styles.passportState} />
+        ) : passportQuery.isError ? (
+          <ErrorState
+            message="여권을 불러오지 못했어요"
+            onRetry={() => passportQuery.refetch()}
+            style={styles.passportState}
+          />
+        ) : (
+          <Passport
+            stamps={passportQuery.data ?? []}
+            onSelectStamp={openStamp}
+          />
+        )}
       </View>
 
       <Pressable
@@ -144,6 +158,9 @@ const styles = StyleSheet.create({
   },
   profileState: {
     minHeight: 148,
+  },
+  passportState: {
+    minHeight: 260,
   },
   passportSection: {
     gap: Spacing.three,

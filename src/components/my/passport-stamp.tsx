@@ -1,9 +1,9 @@
 import { Image } from "expo-image";
-import { PawPrint } from "lucide-react-native";
+import { Dog, PawPrint } from "lucide-react-native";
 import { Pressable, StyleSheet } from "react-native";
 
 import { Palette, Radius } from "@/constants/theme";
-import type { PassportStamp } from "@/types/user";
+import type { PassportSummary } from "@/types/user";
 
 export function PassportStampView({
   stamp,
@@ -11,16 +11,18 @@ export function PassportStampView({
   angle,
   onPress,
 }: {
-  stamp: PassportStamp;
+  stamp: PassportSummary;
   size: number;
   angle: number;
-  onPress: (stamp: PassportStamp) => void;
+  onPress: (stamp: PassportSummary) => void;
 }) {
+  // status 3분기: READY=생성된 도장 이미지 / FALLBACK=실루엣 / PENDING=생성 중 발도장.
+  const showStamp = stamp.status === "ready" && stamp.stampUrl;
   return (
     <Pressable
       onPress={() => onPress(stamp)}
       accessibilityRole="button"
-      accessibilityLabel={`${stamp.storeName} 도장`}
+      accessibilityLabel="도장"
       style={({ pressed }) => [
         styles.stamp,
         {
@@ -31,14 +33,16 @@ export function PassportStampView({
         },
       ]}
     >
-      {stamp.stampUrl ? (
+      {showStamp ? (
         <Image
-          source={{ uri: stamp.stampUrl }}
+          source={{ uri: stamp.stampUrl as string }}
           style={styles.image}
           contentFit="cover"
           transition={120}
-          accessibilityLabel={`${stamp.storeName} 도장`}
+          accessibilityLabel="도장"
         />
+      ) : stamp.status === "fallback" ? (
+        <Dog size={size * 0.46} color={Palette.main[400]} strokeWidth={1.8} />
       ) : (
         <PawPrint
           size={size * 0.44}

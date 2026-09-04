@@ -13,7 +13,7 @@ import {
 
 import { ThemedText } from "@/components/themed-text";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import type { PassportStamp } from "@/types/user";
+import type { PassportSummary } from "@/types/user";
 
 import { PassportBook, WINDOWS } from "./passport-book";
 import { slotsFor, STAMPS_PER_PAGE, stampJitter } from "./passport-slots";
@@ -22,8 +22,8 @@ import { PassportStampView } from "./passport-stamp";
 /** 스파인 쪽을 제외한 3면 안쪽 패딩(px). */
 const PAD = 12;
 
-function chunk(stamps: PassportStamp[]): PassportStamp[][] {
-  const pages: PassportStamp[][] = [];
+function chunk(stamps: PassportSummary[]): PassportSummary[][] {
+  const pages: PassportSummary[][] = [];
   for (let i = 0; i < stamps.length; i += STAMPS_PER_PAGE) {
     pages.push(stamps.slice(i, i + STAMPS_PER_PAGE));
   }
@@ -34,8 +34,8 @@ export function Passport({
   stamps,
   onSelectStamp,
 }: {
-  stamps: PassportStamp[];
-  onSelectStamp: (stamp: PassportStamp) => void;
+  stamps: PassportSummary[];
+  onSelectStamp: (stamp: PassportSummary) => void;
 }) {
   const scrollRef = useRef<ScrollView>(null);
   const [width, setWidth] = useState(0);
@@ -66,7 +66,10 @@ export function Passport({
 
   const isEmpty = stamps.length === 0;
 
-  const renderPage = (pageStamps: PassportStamp[], side: "left" | "right") => {
+  const renderPage = (
+    pageStamps: PassportSummary[],
+    side: "left" | "right",
+  ) => {
     const win = WINDOWS[side];
     const slots = slotsFor(side);
     // 왼쪽 페이지: 스파인이 오른쪽 → 왼쪽에 PAD, 오른쪽 flush. 오른쪽 페이지는 반대.
