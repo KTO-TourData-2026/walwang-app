@@ -121,11 +121,13 @@ function mapCourse(res: CourseResponse): Course {
   const stores = [...(res.stores ?? [])].sort(
     (a, b) => (a.arrivalOrder ?? 0) - (b.arrivalOrder ?? 0),
   );
-  // legs는 코스 레벨 이동 구간(길이 = 지점 수 - 1). fromIndex 순으로 정렬해
-  // 앞 지점부터 순서대로 legToNext에 매핑한다(마지막 지점은 leg 없음).
-  const legs = [...(res.legs ?? [])].sort(
-    (a, b) => (a.fromIndex ?? 0) - (b.fromIndex ?? 0),
-  );
+  // legs는 코스 레벨 이동 구간(길이 = 지점 수 - 1). fromIndex로 "현재 → 다음" 구간만
+  // 매핑해 누락·비연속에도 지점이 밀리지 않게 한다. 0/1-base는 fromIndex 최소값으로 판별.
+  const legs = res.legs ?? [];
+  const legBase = legs.length
+    ? Math.min(...legs.map((leg) => leg.fromIndex ?? 0))
+    : 0;
+  const legByFrom = new Map(legs.map((leg) => [leg.fromIndex, leg]));
   return {
     id: String(res.id),
     title: res.title,
@@ -135,7 +137,13 @@ function mapCourse(res: CourseResponse): Course {
       .map((purpose) => PURPOSE_FROM_SERVER[purpose])
       .filter((purpose): purpose is CoursePurpose => Boolean(purpose)),
     duration: DURATION_FROM_SERVER[res.duration] ?? "halfDay",
-    waypoints: stores.map((store, index) => mapWaypoint(store, legs[index])),
+    waypoints: stores.map((store, index) => {
+      const leg = legByFrom.get(legBase + index);
+      return mapWaypoint(
+        store,
+        leg?.toIndex === legBase + index + 1 ? leg : undefined,
+      );
+    }),
     walkPath: mapWalkPath(res.walkPath),
     totalDistance: res.totalDistance ?? 0,
     totalTime: res.totalDuration ?? 0,
