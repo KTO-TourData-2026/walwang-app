@@ -6,6 +6,7 @@ import type {
   Course,
   CourseCreateResponse,
   CourseDuration,
+  CourseLegResponse,
   CoursePurpose,
   CourseRecommendRequest,
   CourseRecommendRequestBody,
@@ -73,15 +74,19 @@ function isRenderableCoord(lat: number, lng: number): boolean {
   );
 }
 
-function mapWaypoint(store: CourseStoreResponse): CourseWaypoint {
+function mapWaypoint(
+  store: CourseStoreResponse,
+  leg: CourseLegResponse | undefined,
+): CourseWaypoint {
   return {
     placeId: String(store.storeId),
     name: store.name,
     category: mapCategory(store.type),
     latitude: toNum(store.lat),
     longitude: toNum(store.lng),
-    // 서버가 지점별 leg를 주지 않아 null. 추후 제공되면 여기서 채운다.
-    legToNext: null,
+    legToNext: leg
+      ? { distance: toNum(leg.distance), duration: toNum(leg.duration) }
+      : null,
   };
 }
 
@@ -113,19 +118,14 @@ function mapNearby(place: NearbyPlaceResponse): NearbyPlace {
 }
 
 function mapCourse(res: CourseResponse): Course {
-  const sorted = [...(res.stores ?? [])].sort(
+  const stores = [...(res.stores ?? [])].sort(
     (a, b) => (a.arrivalOrder ?? 0) - (b.arrivalOrder ?? 0),
   );
-  // 상세 응답은 지점이 storeId별로 중복돼 오는 경우가 있어(추천은 단일) 한 번만 남긴다.
-  const seen = new Set<string>();
-  const stores = sorted.filter((store) => {
-    const id = String(store.storeId);
-    if (seen.has(id)) {
-      return false;
-    }
-    seen.add(id);
-    return true;
-  });
+  // legs는 코스 레벨 이동 구간(길이 = 지점 수 - 1). fromIndex 순으로 정렬해
+  // 앞 지점부터 순서대로 legToNext에 매핑한다(마지막 지점은 leg 없음).
+  const legs = [...(res.legs ?? [])].sort(
+    (a, b) => (a.fromIndex ?? 0) - (b.fromIndex ?? 0),
+  );
   return {
     id: String(res.id),
     title: res.title,
@@ -135,7 +135,7 @@ function mapCourse(res: CourseResponse): Course {
       .map((purpose) => PURPOSE_FROM_SERVER[purpose])
       .filter((purpose): purpose is CoursePurpose => Boolean(purpose)),
     duration: DURATION_FROM_SERVER[res.duration] ?? "halfDay",
-    waypoints: stores.map(mapWaypoint),
+    waypoints: stores.map((store, index) => mapWaypoint(store, legs[index])),
     walkPath: mapWalkPath(res.walkPath),
     totalDistance: res.totalDistance ?? 0,
     totalTime: res.totalDuration ?? 0,
@@ -197,16 +197,18 @@ export async function recommendCourse(
   return mapCourse(data);
 }
 
+// 데모 공간은 분리돼 있어 저장·조회 모두 demo=true여야 매칭된다(안 맞으면 404).
 // 응답은 courseId만 → 상세는 재조회로 렌더한다.
 export async function saveCourse(course: Course): Promise<string> {
   const { data } = await apiClient.post<CourseCreateResponse>(
     API_ENDPOINTS.course.base,
     toSaveBody(course),
+    { params: { demo: DEMO_MODE } },
   );
   return String(data.courseId);
 }
 
-// demo=true여야 추천 화면과 동일하게 상호명 마스킹이 적용된다.
+// 시연에서 저장한 코스는 demo=true로만 조회된다(POST /courses도 demo로 저장하므로 일치).
 export async function getCourseDetail(courseId: string): Promise<Course> {
   const { data } = await apiClient.get<CourseResponse>(
     API_ENDPOINTS.course.detail(courseId),

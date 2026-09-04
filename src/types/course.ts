@@ -32,12 +32,22 @@ export interface CourseStoreResponse {
 export interface NearbyPlaceResponse {
   title: string;
   type: string;
+  address: string;
   lat: number;
   lng: number;
   imageUrl: string | null;
   source: string | null;
   storeId?: string | null;
-  address?: string | null;
+}
+
+/** 지점 간 이동 구간(`CourseResponse.legs[]`, 길이 = 지점 수 - 1). */
+export interface CourseLegResponse {
+  fromIndex: number;
+  toIndex: number;
+  /** m */
+  distance: number;
+  /** 분(도보) */
+  duration: number;
 }
 
 /** `POST /courses/recommend`·`GET /courses/{id}` 공통 응답. */
@@ -56,6 +66,7 @@ export interface CourseResponse {
   description: string | null;
   relaxed: boolean;
   stores: CourseStoreResponse[];
+  legs: CourseLegResponse[];
   nearby: NearbyPlaceResponse[];
 }
 
@@ -143,7 +154,7 @@ export interface CourseWaypoint {
   category: Category;
   latitude: number;
   longitude: number;
-  // 서버가 지점별 leg를 주지 않아 현재는 항상 null(추후 제공 시 매핑).
+  // 이 지점 → 다음 지점 이동(코스 legs에서 매핑). 마지막 지점은 null.
   legToNext: {
     distance: number;
     duration: number;
