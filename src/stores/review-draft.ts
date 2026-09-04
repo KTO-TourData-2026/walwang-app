@@ -3,9 +3,9 @@ import { create } from "zustand";
 import type { SizeKey } from "@/types/place";
 
 /**
- * 리뷰 작성 플로우의 화면 간 공유 드래프트(zustand). 서버 전송은 아직 없음(UI 전용).
- * 등록 시 이 값들이 `POST /reviews`(data)의
- * dog_allowed·dog_size·tag_ids·content·receipt_token에 매핑된다.
+ * 리뷰 작성 플로우의 화면 간 공유 드래프트(zustand).
+ * 등록 시 이 값들이 `POST /reviews`(data 파트)의
+ * dogAllowed·dogSize·tags·content·receiptToken으로 매핑된다(경계: api/review.ts).
  */
 
 /** `dog_allowed`(true=들어갔어요 / false=거절당했어요)와 1:1. */

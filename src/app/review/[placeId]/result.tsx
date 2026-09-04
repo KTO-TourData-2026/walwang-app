@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { MOCK_PLACES } from "@/mocks/places";
+import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useReviewDraft, type ReviewResult } from "@/stores/review-draft";
 
 export default function ReviewResultScreen() {
@@ -16,7 +16,8 @@ export default function ReviewResultScreen() {
   const begin = useReviewDraft((state) => state.begin);
   const setResult = useReviewDraft((state) => state.setResult);
 
-  const place = MOCK_PLACES.find((item) => item.id === placeId);
+  const storeQuery = useStoreDetailQuery(placeId);
+  const placeName = storeQuery.data?.name ?? null;
 
   useEffect(() => {
     if (placeId) {
@@ -62,9 +63,9 @@ export default function ReviewResultScreen() {
           <ThemedText type="subtitle01" color={Palette.gray[700]}>
             들어갈 수 있었나요?
           </ThemedText>
-          {place ? (
+          {placeName ? (
             <ThemedText type="subtitle03" color={Palette.gray[400]}>
-              {place.name}
+              {placeName}
             </ThemedText>
           ) : null}
         </View>

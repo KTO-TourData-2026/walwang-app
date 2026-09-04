@@ -74,3 +74,58 @@ export interface ReviewReportRequest {
   /** 신고 사유(50자 이내). */
   reason: string;
 }
+
+// 리뷰 해시태그 서버 enum(swagger ReviewCreateRequest.tags). 한글 HASHTAGS와의 매핑은
+// 경계(`src/api/review.ts`의 HASHTAG_TO_REVIEW_TAG)에서 변환한다.
+export type ReviewTag =
+  | "WIDE_YARD"
+  | "FENCED"
+  | "LAWN"
+  | "GOOD_FOR_PLAY"
+  | "DOG_ONLY_AREA"
+  | "SPACIOUS_TERRACE"
+  | "EASY_PARKING"
+  | "WATER_STATION"
+  | "POOP_BAGS"
+  | "DOG_CUSHION"
+  | "DOG_MENU"
+  | "DOG_BOWL"
+  | "QUIET"
+  | "NOT_CROWDED"
+  | "SHY_DOG_FRIENDLY"
+  | "MANY_DOG_FRIENDS"
+  | "GOOD_FIRST_OUTING"
+  | "GOOD_FOR_LONG_STAY"
+  | "LEASH_REQUIRED";
+
+// `POST /reviews` 요청 JSON 파트(multipart `data`). 사진(photo)은 파일 파트로 별도 전송.
+export interface ReviewCreateRequest {
+  storeId: string;
+  /** 영수증 인증 통과 시 발급 토큰. 거절 리뷰는 없다. */
+  receiptToken?: string;
+  /** true=들어갔어요 / false=거절당했어요. */
+  dogAllowed: boolean;
+  dogSize: "SMALL_MEDIUM" | "LARGE";
+  content?: string;
+  tags?: ReviewTag[];
+}
+
+// `POST /reviews` 응답(ReviewCreateResponse). store 요약은 화면에서 미사용.
+export interface ReviewCreateResponse {
+  reviewId: string;
+  stampUrl: string | null;
+  store?: unknown;
+}
+
+// `POST /reviews/receipt-verify` 응답(ReceiptVerifyResponse). 상호명 유사도로 판정한다.
+export interface ReceiptVerifyResponse {
+  verified: boolean;
+  /** 실패 사유 코드(통과 시 무의미). 화면 분기는 matchedName 유무로 한다. */
+  reason: string | null;
+  /** OCR로 읽은 상호명. 판독 실패 시 null. */
+  matchedName: string | null;
+  /** 0.0 ~ 1.0 */
+  similarity: number;
+  /** 통과 시에만 발급. 리뷰 등록의 receiptToken으로 전달한다. */
+  receiptToken: string | null;
+}

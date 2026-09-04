@@ -3,7 +3,13 @@ import { type ReactNode } from "react";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Camera } from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  ToastAndroid,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ReviewHeaderTitle } from "@/components/review/review-header-title";
@@ -15,7 +21,8 @@ import { TextField } from "@/components/ui/text-field";
 import { HASHTAGS } from "@/constants/hashtags";
 import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { MOCK_PLACES } from "@/mocks/places";
+import { useCreateReviewMutation } from "@/hooks/use-create-review-mutation";
+import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useReviewDraft } from "@/stores/review-draft";
 import type { SizeKey } from "@/types/place";
 
@@ -38,9 +45,10 @@ export default function ReviewFormScreen() {
   const setSize = useReviewDraft((state) => state.setSize);
   const toggleTag = useReviewDraft((state) => state.toggleTag);
   const setContent = useReviewDraft((state) => state.setContent);
+  const createReviewMutation = useCreateReviewMutation();
 
-  const place = MOCK_PLACES.find((item) => item.id === placeId);
-  const placeName = place?.name ?? "이 가게";
+  const storeQuery = useStoreDetailQuery(placeId);
+  const placeName = storeQuery.data?.name ?? "이 가게";
   const allowed = result === "allowed";
   // 들어갔어요는 영수증 인증·사진까지 끝난 경우에만 등록 가능(선행 단계 검증).
   const prerequisitesMet =
@@ -50,10 +58,34 @@ export default function ReviewFormScreen() {
     prerequisitesMet && size !== null && content.trim().length >= MIN_CONTENT;
 
   const submit = () => {
-    if (!canSubmit) {
+    if (!canSubmit || size === null || createReviewMutation.isPending) {
       return;
     }
-    router.push({ pathname: "/review/[placeId]/done", params: { placeId } });
+    createReviewMutation.mutate(
+      {
+        storeId: placeId,
+        dogAllowed: allowed,
+        dogSize: size,
+        content,
+        // 태그는 들어갔어요에서만 입력받는다(거절 리뷰는 빈 배열).
+        tags: allowed ? tags : [],
+        // 영수증 토큰·사진은 들어갔어요에서만 존재.
+        receiptToken: allowed ? receipt.token : null,
+        photoUri: allowed ? photoUri : null,
+      },
+      {
+        onSuccess: () =>
+          router.push({
+            pathname: "/review/[placeId]/done",
+            params: { placeId },
+          }),
+        onError: () =>
+          ToastAndroid.show(
+            "리뷰 등록에 실패했어요. 잠시 후 다시 시도해주세요.",
+            ToastAndroid.SHORT,
+          ),
+      },
+    );
   };
 
   return (
@@ -175,9 +207,9 @@ export default function ReviewFormScreen() {
         style={[styles.footer, { paddingBottom: insets.bottom + Spacing.two }]}
       >
         <Button
-          label="리뷰 등록하기"
+          label={createReviewMutation.isPending ? "등록 중…" : "리뷰 등록하기"}
           variant="main"
-          disabled={!canSubmit}
+          disabled={!canSubmit || createReviewMutation.isPending}
           onPress={submit}
         />
       </View>
