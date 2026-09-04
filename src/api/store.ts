@@ -1,5 +1,7 @@
 import { apiClient } from "@/api/client";
+import { DEMO_MODE } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
+import type { CourseStoreResponse } from "@/types/course";
 import type { Category, PlaceStatus, Place, SizeKey } from "@/types/place";
 import type { Review, ReviewResponse } from "@/types/review";
 import type {
@@ -92,6 +94,7 @@ function mapStoreCard(res: StoreCardResponse): Place {
 }
 
 function mapStoreDetail(res: StoreDetailResponse): StoreDetail {
+  const petVerified = res.petVerified ?? false;
   return {
     id: String(res.storeId),
     name: res.name,
@@ -99,7 +102,10 @@ function mapStoreDetail(res: StoreDetailResponse): StoreDetail {
     location: res.address,
     latitude: res.geog?.lat ?? 0,
     longitude: res.geog?.lng ?? 0,
-    sizeStatus: foldSizeStatus(res.sizeStatus),
+    // 한국관광공사 공식 검증(petVerified) 장소는 리뷰 수와 무관하게 두 크기 모두 가능으로 표시한다.
+    sizeStatus: petVerified
+      ? { smallMedium: "allowed", large: "allowed" }
+      : foldSizeStatus(res.sizeStatus),
     // reviewCount는 서버에 없어 확인 리뷰(가능+불가) 합으로 파생한다.
     reviewCount: (res.possibleCount ?? 0) + (res.impossibleCount ?? 0),
     lastVerifiedAt: res.lastVerifiedAt ?? null,
@@ -110,10 +116,6 @@ function mapStoreDetail(res: StoreDetailResponse): StoreDetail {
     sizeCounts: foldSizeCounts(res.sizeStatus),
   };
 }
-
-// 데모 기간에는 모든 store 조회에 demo=true를 붙여 시연용 데이터를 받는다.
-// 데모가 끝나면 이 한 줄만 false로 끄면 된다(courses 등 다른 도메인은 별도).
-const DEMO_MODE = true;
 
 export interface StoresQueryParams {
   lat: number;
@@ -156,12 +158,19 @@ export async function getSavedStores(): Promise<Place[]> {
 }
 
 // 장소 저장/해제(`POST`/`DELETE /stores/{storeId}/save`). 바디·응답 본문 없음.
+// 저장·해제 모두 (user, storeId)로 스코프되므로 어느 공간인지 알려면 demo가 필요하다.
+// 저장(POST)은 스웨거에 demo가 있고, 해제(DELETE)는 스웨거에 빠져 있으나 대칭을 맞춰
+// 방어적으로 함께 보낸다(백엔드에 DELETE에도 demo 파라미터 추가 요청 필요).
 export async function saveStore(storeId: string): Promise<void> {
-  await apiClient.post(API_ENDPOINTS.store.save(storeId));
+  await apiClient.post(API_ENDPOINTS.store.save(storeId), undefined, {
+    params: { demo: DEMO_MODE },
+  });
 }
 
 export async function unsaveStore(storeId: string): Promise<void> {
-  await apiClient.delete(API_ENDPOINTS.store.save(storeId));
+  await apiClient.delete(API_ENDPOINTS.store.save(storeId), {
+    params: { demo: DEMO_MODE },
+  });
 }
 
 // 응답엔 placeId가 없어 요청한 storeId로 채운다(목·화면 연결용).
@@ -179,6 +188,43 @@ function mapReview(res: ReviewResponse, storeId: string): Review {
     createdAt: res.createdAt,
     mine: res.mine ?? false,
   };
+}
+
+// 거절 완료(S-12) 대체 장소. 응답은 코스 지점과 동일 DTO(CourseStoreResponse[])라
+// mapCategory·STATUS_MAP를 재사용한다. DTO에 주소가 없어 location은 비운다(카드에서 숨김).
+// 서버는 요청한 size 기준으로 status를 주므로 해당 크기에만 상태를 채운다.
+function mapAlternative(res: CourseStoreResponse, size: SizeKey): Place {
+  const sizeStatus: Record<SizeKey, PlaceStatus> = {
+    smallMedium: "unknown",
+    large: "unknown",
+  };
+  sizeStatus[size] = STATUS_MAP[res.status] ?? "unknown";
+  return {
+    id: String(res.storeId),
+    name: res.name,
+    category: mapCategory(res.type),
+    location: "",
+    latitude: res.lat ?? 0,
+    longitude: res.lng ?? 0,
+    sizeStatus,
+  };
+}
+
+// `GET /stores/{storeId}/alternatives`. size(SMALL_MEDIUM/LARGE) 쿼리 필수.
+export async function getAlternativeStores(
+  storeId: string,
+  size: SizeKey,
+): Promise<Place[]> {
+  const { data } = await apiClient.get<CourseStoreResponse[]>(
+    API_ENDPOINTS.store.alternatives(storeId),
+    {
+      params: {
+        size: size === "smallMedium" ? "SMALL_MEDIUM" : "LARGE",
+        demo: DEMO_MODE,
+      },
+    },
+  );
+  return data.map((item) => mapAlternative(item, size));
 }
 
 // 가게 리뷰 목록(상세 최근 리뷰·전체보기). 최신순은 서버 정렬을 따른다.

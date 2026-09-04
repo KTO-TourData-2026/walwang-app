@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AlternativePlaceCard } from "@/components/review/alternative-place-card";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { LoadingView } from "@/components/ui/loading-view";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { getAlternativePlaces, MOCK_PLACES } from "@/mocks/places";
+import { useAlternativeStoresQuery } from "@/hooks/use-alternative-stores-query";
+import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useReviewDraft } from "@/stores/review-draft";
 
 export default function ReviewDoneScreen() {
@@ -19,8 +21,8 @@ export default function ReviewDoneScreen() {
   const size = useReviewDraft((state) => state.size);
   const reset = useReviewDraft((state) => state.reset);
 
-  const place = MOCK_PLACES.find((item) => item.id === placeId);
-  const placeName = place?.name ?? "이 가게";
+  const storeQuery = useStoreDetailQuery(placeId);
+  const placeName = storeQuery.data?.name ?? "이 가게";
   const allowed = result === "allowed";
 
   const leave = (to: "/map" | "/my") => {
@@ -38,7 +40,12 @@ export default function ReviewDoneScreen() {
   };
 
   const altSize = size ?? "smallMedium";
-  const alternatives = allowed ? [] : getAlternativePlaces(placeId, altSize, 3);
+  // 거절 완료에서만 대체 장소를 조회한다(들어갔어요는 스탬프 화면).
+  const alternativesQuery = useAlternativeStoresQuery(
+    allowed ? undefined : placeId,
+    altSize,
+  );
+  const alternatives = (alternativesQuery.data ?? []).slice(0, 3);
 
   return (
     <View style={styles.root}>
@@ -119,7 +126,9 @@ export default function ReviewDoneScreen() {
               인근에 이런 곳은 어때요?
             </ThemedText>
 
-            {alternatives.length > 0 ? (
+            {alternativesQuery.isLoading ? (
+              <LoadingView style={styles.altLoading} />
+            ) : alternatives.length > 0 ? (
               <View style={styles.cardList}>
                 {alternatives.map((alt) => (
                   <AlternativePlaceCard
@@ -206,6 +215,9 @@ const styles = StyleSheet.create({
   },
   cardList: {
     gap: Spacing.three,
+  },
+  altLoading: {
+    minHeight: 120,
   },
   emptyBox: {
     alignItems: "center",
