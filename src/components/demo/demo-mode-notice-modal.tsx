@@ -74,10 +74,10 @@ export function DemoModeNoticeModal() {
                 데모 모드
               </ThemedText>
               <ThemedText type="label04" color={Palette.gray[600]}>
-                본 앱은 시연용 데모 버전입니다. 위치 및 장소 API 기능 시연을
-                위해 실제 매장 정보를 가상의 상호명으로 치환하여 표시하고
-                있으며, 노출되는 리뷰는 모두 가상의 목(Mock) 데이터입니다.
-                영수증 OCR 기능 제외 모든 기능을 사용할 수 있습니다.
+                시연용 데모 모드입니다. 위치 및 장소 API 기능 시연을 위해 실제
+                매장 정보를 가상의 상호명으로 치환하여 표시하고 있으며, 노출되는
+                리뷰는 모두 가상의 목(Mock) 데이터입니다. 영수증 OCR 기능 제외
+                모든 기능을 사용할 수 있습니다.
               </ThemedText>
             </View>
           </ScrollView>
