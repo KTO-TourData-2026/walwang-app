@@ -139,6 +139,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         microphonePermission: false,
       },
     ],
+    // 도장 원본 사진을 기기 갤러리에 저장(도장 상세). 쓰기 권한만 필요하다.
+    [
+      "expo-media-library",
+      {
+        photosPermission:
+          "저장한 도장 사진을 확인하기 위해 사진 보관함에 접근합니다.",
+        savePhotosPermission:
+          "도장 사진을 기기 갤러리에 저장하기 위해 사용합니다.",
+        isAccessMediaLocationEnabled: false,
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

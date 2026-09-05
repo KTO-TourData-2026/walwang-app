@@ -1,9 +1,10 @@
 import { useState } from "react";
 
+import { Directory, File, Paths } from "expo-file-system";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { ChevronRight, Dog, X } from "lucide-react-native";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, ToastAndroid, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import { usePassportDetailQuery } from "@/hooks/use-passport-detail-query";
 import { formatReviewDate } from "@/utils/date";
 import { isLoadableImageUrl } from "@/utils/stamp";
 
-// 이미지 저장은 네이티브 의존성(view-shot/media-library) 전이라 안내만 — 실제 저장은 범위 밖.
 export default function StampDetailScreen() {
   const router = useRouter();
   const { stampId } = useLocalSearchParams<{ stampId: string }>();
@@ -27,11 +27,48 @@ export default function StampDetailScreen() {
 
   // 원본 사진 URL이 있어도 로드 실패(예: 데모의 도달 불가 목 URL)하면 아이콘 폴백으로 넘긴다.
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const photoUrl = stamp?.photoUrl ?? null;
+  const showPhoto = isLoadableImageUrl(photoUrl) && !photoFailed;
 
   const close = () => router.back();
 
-  // 이미지 저장은 네이티브 의존성(view-shot/media-library) 전이라 후속 이슈에서 구현.
-  const saveImage = () => {};
+  // 원본 사진을 기기 갤러리에 저장한다. expo-media-library는 네이티브 모듈이라
+  // dev build 재빌드(npx expo run:android) 후에만 동작한다(재빌드 전엔 catch로 안내).
+  const saveImage = async () => {
+    if (saving) {
+      return;
+    }
+    // 이미지가 없거나 로드 실패(아이콘 폴백)한 도장은 저장할 원본이 없다.
+    if (!showPhoto || !photoUrl) {
+      ToastAndroid.show("이미지를 저장할 수 없어요.", ToastAndroid.SHORT);
+      return;
+    }
+    setSaving(true);
+    try {
+      const MediaLibrary = await import("expo-media-library");
+      // 갤러리 쓰기 권한만 요청(writeOnly). 거부되면 저장하지 않는다.
+      const permission = await MediaLibrary.requestPermissionsAsync(true);
+      if (!permission.granted) {
+        ToastAndroid.show("사진 저장 권한이 필요해요.", ToastAndroid.SHORT);
+        return;
+      }
+      // 원격 사진을 캐시로 내려받은 뒤 갤러리 에셋으로 등록한다.
+      const downloaded = await File.downloadFileAsync(
+        photoUrl,
+        new Directory(Paths.cache),
+      );
+      await MediaLibrary.Asset.create(downloaded.uri);
+      ToastAndroid.show("사진을 저장했어요.", ToastAndroid.SHORT);
+    } catch {
+      ToastAndroid.show(
+        "사진 저장에 실패했어요. 잠시 후 다시 시도해주세요.",
+        ToastAndroid.SHORT,
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const openStore = () => {
     if (stamp) {
@@ -74,9 +111,9 @@ export default function StampDetailScreen() {
         ) : stamp ? (
           <>
             <View style={styles.imageWrap}>
-              {isLoadableImageUrl(stamp.photoUrl) && !photoFailed ? (
+              {isLoadableImageUrl(photoUrl) && !photoFailed ? (
                 <Image
-                  source={{ uri: stamp.photoUrl }}
+                  source={{ uri: photoUrl }}
                   style={styles.image}
                   contentFit="cover"
                   transition={150}
@@ -113,9 +150,10 @@ export default function StampDetailScreen() {
             </ThemedText>
 
             <Button
-              label="원본 이미지 저장하기"
+              label={saving ? "저장 중…" : "원본 이미지 저장하기"}
               variant="secondary"
               onPress={saveImage}
+              disabled={saving}
               style={styles.saveButton}
             />
           </>
