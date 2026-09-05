@@ -1,11 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { useRouter } from "expo-router";
 import { HelpCircle } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { getStoreDetail } from "@/api/store";
 import { StartPointField } from "@/components/recommend/start-point-field";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,6 @@ import {
 import { HASHTAGS } from "@/constants/hashtags";
 import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
-import { useDemoMode } from "@/stores/demo-mode";
 import type { CourseDuration, CoursePurpose, StartPoint } from "@/types/course";
 import type { SizeKey } from "@/types/place";
 
@@ -37,33 +35,6 @@ export default function KeywordsScreen() {
 
   const [start, setStart] = useState<StartPoint | null>(null);
   const [size, setSize] = useState<SizeKey | null>(null);
-  const isDemo = useDemoMode((state) => state.isDemo);
-
-  // 모드(실사용/데모) 전환 시, 이미 고른 출발지의 상호명을 현재 모드 기준으로 다시 조회한다.
-  // 좌표는 그대로 두고 라벨만 갱신 — 데모에서 실제 상호명이 남지 않게(§5 마스킹).
-  const startStoreId = start?.storeId;
-  useEffect(() => {
-    if (!startStoreId) {
-      return;
-    }
-    let cancelled = false;
-    getStoreDetail(startStoreId)
-      .then((detail) => {
-        if (!cancelled) {
-          setStart((prev) =>
-            prev && prev.storeId === startStoreId
-              ? { ...prev, label: detail.name }
-              : prev,
-          );
-        }
-      })
-      .catch(() => {
-        // 조회 실패 시 라벨 유지(다음 전환에서 재시도).
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isDemo, startStoreId]);
   const [purposes, setPurposes] = useState<CoursePurpose[]>([]);
   const [duration, setDuration] = useState<CourseDuration | null>(null);
   const [tags, setTags] = useState<string[]>([]);

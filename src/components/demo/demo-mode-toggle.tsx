@@ -7,27 +7,30 @@ import { useDemoMode } from "@/stores/demo-mode";
 
 // 작은 실사용/데모 토글(docs/demo-mode.md §7-2). 양쪽 모드에서 상시 노출한다.
 // 세그먼트 탭 → 즉시 전환(setDemo). ⓘ 탭 → 전체 안내 모달(§6-1).
+// disabled면 현재 모드는 그대로 보여주되 전환만 막는다(공간 격리 화면 — 코스 추천/저장 코스
+// 상세 등에서 모드 전환 시 다른 공간 조회로 깨지는 것을 원천 차단). 안내(ⓘ)는 계속 열린다.
 const OPTIONS = [
   { value: false, label: "실사용" },
   { value: true, label: "데모" },
 ] as const;
 
-export function DemoModeToggle() {
+export function DemoModeToggle({ disabled = false }: { disabled?: boolean }) {
   const isDemo = useDemoMode((state) => state.isDemo);
   const setDemo = useDemoMode((state) => state.setDemo);
   const openNotice = useDemoMode((state) => state.openNotice);
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.track}>
+      <View style={[styles.track, disabled && styles.trackDisabled]}>
         {OPTIONS.map((option) => {
           const selected = option.value === isDemo;
           return (
             <Pressable
               key={option.label}
-              onPress={() => setDemo(option.value)}
+              onPress={disabled ? undefined : () => setDemo(option.value)}
+              disabled={disabled}
               accessibilityRole="tab"
-              accessibilityState={{ selected }}
+              accessibilityState={{ selected, disabled }}
               style={[styles.segment, selected && styles.segmentSelected]}
             >
               <ThemedText
@@ -83,6 +86,9 @@ const styles = StyleSheet.create({
     padding: Spacing.half,
     borderRadius: Radius.pill,
     backgroundColor: Palette.gray[100],
+  },
+  trackDisabled: {
+    opacity: 0.8,
   },
   segment: {
     paddingVertical: Spacing.one,
