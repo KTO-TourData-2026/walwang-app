@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { Image } from "expo-image";
 import { Dog, MoreVertical } from "lucide-react-native";
@@ -12,6 +12,7 @@ import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import type { Review } from "@/types/review";
 import { formatReviewDate } from "@/utils/date";
+import { isLoadableImageUrl } from "@/utils/stamp";
 
 /**
  * 리뷰 전체보기 화면의 리뷰 카드(전체 내용).
@@ -27,6 +28,9 @@ export function ReviewCard({
   onMenu?: (anchor: MenuAnchor) => void;
 }) {
   const menuRef = useRef<View>(null);
+  // 이미지 로드 실패/도달 불가 URL이면 대기 없이 강아지 얼굴 아이콘으로 폴백한다.
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const showPhoto = isLoadableImageUrl(review.photoUrl) && !photoFailed;
 
   const openMenu = () => {
     menuRef.current?.measureInWindow((x, y, width, height) =>
@@ -84,13 +88,20 @@ export function ReviewCard({
       </View>
 
       {review.photoUrl ? (
-        <Image
-          source={{ uri: review.photoUrl }}
-          style={styles.photo}
-          contentFit="cover"
-          transition={150}
-          accessibilityLabel="반려견 인증 사진"
-        />
+        showPhoto ? (
+          <Image
+            source={{ uri: review.photoUrl }}
+            style={styles.photo}
+            contentFit="cover"
+            transition={150}
+            accessibilityLabel="반려견 인증 사진"
+            onError={() => setPhotoFailed(true)}
+          />
+        ) : (
+          <View style={[styles.photo, styles.photoFallback]}>
+            <Dog size={56} color={Palette.gray[300]} strokeWidth={1.6} />
+          </View>
+        )
       ) : null}
 
       {review.content ? (
@@ -157,6 +168,10 @@ const styles = StyleSheet.create({
     aspectRatio: 4 / 3,
     borderRadius: Radius.medium,
     backgroundColor: Palette.gray[100],
+  },
+  photoFallback: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   date: {
     alignSelf: "flex-end",
