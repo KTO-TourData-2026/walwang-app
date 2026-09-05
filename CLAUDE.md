@@ -9,6 +9,7 @@
 - **Expo는 자주 바뀐다.** 코드 작성 전 반드시 SDK 57 버전 문서를 확인한다: <https://docs.expo.dev/versions/v57.0.0/>
 - 코드 스타일(lint·포맷) 규칙은 [docs/code-style.md](docs/code-style.md)를, 이를 강제하는 자동화(pre-commit·CI·CodeRabbit)는 [docs/ci-workflow.md](docs/ci-workflow.md)를 따른다.
 - 브랜치·커밋·PR 규칙은 [docs/convention.md](docs/convention.md)를 따른다.
+- 실사용/데모 모드(전환·`demo` 파라미터·마스킹·안내 모달) 규약은 [docs/demo-mode.md](docs/demo-mode.md)를 따른다.
 
 ## 프로젝트 개요
 
