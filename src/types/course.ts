@@ -132,7 +132,9 @@ export interface Coordinate {
 
 /** 사용자가 검색으로 직접 지정한 출발 지점(GPS 미사용). */
 export interface StartPoint extends Coordinate {
-  /** 표시용 라벨(선택한 가게·장소명). */
+  /** 선택한 가게의 storeId. 모드 전환 시 현재 모드 기준으로 라벨을 다시 조회하는 데 쓴다. */
+  storeId: string;
+  /** 표시용 라벨(선택한 가게·장소명). 데모/실사용에 따라 마스킹 여부가 달라진다. */
   label: string;
 }
 

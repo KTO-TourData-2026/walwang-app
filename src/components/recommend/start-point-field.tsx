@@ -44,6 +44,7 @@ export function StartPointField({
 
   const select = (place: Place) => {
     onChange({
+      storeId: place.id,
       label: place.name,
       latitude: place.latitude,
       longitude: place.longitude,
