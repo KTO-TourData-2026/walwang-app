@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import { ChevronLeft, ChevronRight, PawPrint } from "lucide-react-native";
+import { ChevronLeft, ChevronRight, Dog } from "lucide-react-native";
 import {
   type LayoutChangeEvent,
   type NativeScrollEvent,
@@ -46,7 +46,11 @@ export function Passport({
   const bookScale = bookW / WINDOWS.left.w;
   const bookH = Math.round(WINDOWS.left.h * bookScale);
   const boardHeight = bookH + PAD * 2;
-  const pages = chunk(stamps);
+  // 위(첫 슬롯)부터 아래로 누적되도록 생성일 오름차순(오래된 것 먼저)으로 정렬한 뒤 채운다.
+  const ordered = [...stamps].sort((a, b) =>
+    a.createdAt.localeCompare(b.createdAt),
+  );
+  const pages = chunk(ordered);
 
   const onLayout = (event: LayoutChangeEvent) => {
     setWidth(event.nativeEvent.layout.width);
@@ -120,7 +124,7 @@ export function Passport({
           <View style={{ width, height: boardHeight }}>
             {renderPage([], "left")}
             <View style={styles.emptyOverlay} pointerEvents="none">
-              <PawPrint size={28} color={Palette.gray[300]} />
+              <Dog size={28} color={Palette.gray[300]} />
               <ThemedText type="label04" color={Palette.gray[400]}>
                 아직 모은 도장이 없어요
               </ThemedText>

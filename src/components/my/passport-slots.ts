@@ -1,19 +1,32 @@
 // 도장 슬롯 좌표는 원본 책(BOOK 380×288) 기준 — 렌더 시 크롭 창 기준으로 환산한다.
-export const LEFT_SLOTS: { x: number; y: number }[] = [
+// 각 페이지 슬롯 배열의 가로 오프셋(book 좌표 단위, 양수=오른쪽 / 음수=왼쪽).
+// 좌/우 페이지를 독립적으로 조정한다.
+const LEFT_SLOT_DX = 10;
+const RIGHT_SLOT_DX = 0;
+
+const LEFT_SLOTS_BASE: { x: number; y: number }[] = [
   { x: 74, y: 78 },
   { x: 128, y: 110 },
-  { x: 70, y: 150 },
+  { x: 70, y: 140 },
   { x: 126, y: 182 },
-  { x: 74, y: 214 },
+  { x: 74, y: 204 },
 ];
 
-export const RIGHT_SLOTS: { x: number; y: number }[] = [
+const RIGHT_SLOTS_BASE: { x: number; y: number }[] = [
   { x: 250, y: 78 },
   { x: 305, y: 110 },
-  { x: 246, y: 150 },
+  { x: 246, y: 140 },
   { x: 302, y: 182 },
-  { x: 250, y: 214 },
+  { x: 250, y: 204 },
 ];
+
+export const LEFT_SLOTS: { x: number; y: number }[] = LEFT_SLOTS_BASE.map(
+  (slot) => ({ x: slot.x + LEFT_SLOT_DX, y: slot.y }),
+);
+
+export const RIGHT_SLOTS: { x: number; y: number }[] = RIGHT_SLOTS_BASE.map(
+  (slot) => ({ x: slot.x + RIGHT_SLOT_DX, y: slot.y }),
+);
 
 export function slotsFor(side: "left" | "right") {
   return side === "left" ? LEFT_SLOTS : RIGHT_SLOTS;

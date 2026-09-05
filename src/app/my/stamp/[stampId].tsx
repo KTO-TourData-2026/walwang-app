@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronRight, PawPrint, X } from "lucide-react-native";
+import { ChevronRight, Dog, X } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -78,13 +78,9 @@ export default function StampDetailScreen() {
                 />
               ) : (
                 <View style={styles.silhouette}>
-                  <PawPrint
-                    size={72}
-                    color={Palette.main[300]}
-                    strokeWidth={1.6}
-                  />
+                  <Dog size={72} color={Palette.main[300]} strokeWidth={1.6} />
                   <ThemedText type="label05" color={Palette.gray[400]}>
-                    원본 사진이 없어 발도장으로 남겼어요
+                    원본 사진이 없어 아이콘으로 남겼어요
                   </ThemedText>
                 </View>
               )}
