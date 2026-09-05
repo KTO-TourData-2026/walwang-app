@@ -2,6 +2,7 @@ import { apiClient } from "@/api/client";
 import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { mapCategory } from "@/api/store";
+import { SHOW_COURSE_NEARBY } from "@/constants/feature-flags";
 import type {
   Coordinate,
   Course,
@@ -149,9 +150,13 @@ function mapCourse(res: CourseResponse): Course {
     totalDistance: res.totalDistance ?? 0,
     totalTime: res.totalDuration ?? 0,
     relaxed: res.relaxed ?? false,
-    nearby: (res.nearby ?? [])
-      .map(mapNearby)
-      .filter((place) => isRenderableCoord(place.latitude, place.longitude)),
+    // nearby는 정책 검증 전까지 임시 숨김(피처 플래그 한 곳에서 온오프). off면 빈 배열로
+    // 내려 결과 화면 리스트·지도 마커가 함께 사라진다.
+    nearby: SHOW_COURSE_NEARBY
+      ? (res.nearby ?? [])
+          .map(mapNearby)
+          .filter((place) => isRenderableCoord(place.latitude, place.longitude))
+      : [],
   };
 }
 
