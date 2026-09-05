@@ -2,9 +2,9 @@
 // 값만 바꾸면 관련 기능이 앱 전체에서 일괄 온오프된다.
 
 /**
- * 코스 추천 결과·저장 코스에 나오는 **주변 장소(nearby)** 노출 여부.
- * 연동은 완료됐으나 정책 검증 전까지 임시로 숨긴다. `mapCourse`(api/course.ts) 경계에서
- * 이 값이 false면 nearby를 비워, 결과 화면 리스트·지도 마커가 모두 함께 사라진다.
- * 검증이 끝나면 이 값을 true로 바꾸면 한 번에 다시 노출된다.
+ * 거절 완료(done) 화면의 **대체 장소(alternative)** 노출 여부.
+ * 연동·마스킹 검증은 마쳤으나 정책 확정 전까지 임시로 숨긴다. `false`면 done.tsx가
+ * "인근에 이런 곳은 어때요?" 섹션을 렌더하지 않고 조회(GET /stores/{id}/alternatives)도
+ * 하지 않는다. 노출하려면 이 값을 `true`로 바꾸면 한 번에 다시 보인다.
  */
-export const SHOW_COURSE_NEARBY: boolean = false;
+export const SHOW_REVIEW_ALTERNATIVES: boolean = false;

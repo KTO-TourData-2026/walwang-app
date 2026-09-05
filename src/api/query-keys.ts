@@ -16,7 +16,7 @@ export const queryKeys = {
     me: () => ["user", "me"] as const,
     savedStores: () => ["user", "savedStores"] as const,
     savedCourses: () => ["user", "savedCourses"] as const,
-    passport: (page: number) => ["user", "passport", page] as const,
+    passport: () => ["user", "passport"] as const,
     passportDetail: (id: string) => ["user", "passport", "detail", id] as const,
     myReviews: (page?: number) => ["user", "reviews", page] as const,
   },

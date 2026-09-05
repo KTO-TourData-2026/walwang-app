@@ -81,9 +81,10 @@ export function DemoModeFloatingToggle() {
     gap = GAP;
   }
 
-  // 코스 추천 흐름(추천 입력·결과·저장 코스 상세)은 공간 격리 화면이라 모드 전환을 막는다.
-  // 토글은 현재 모드 표시로 계속 띄우되 클릭만 비활성화(§4 — 다른 공간 조회로 깨지는 것 방지).
-  const disabled = pathname.startsWith("/recommend");
+  // 코스 추천·리뷰 작성 흐름은 공간 격리 화면이라 플로우 도중 모드를 바꾸면 데이터 공간이
+  // 어긋나 깨진다(§4). 토글은 현재 모드 표시로 계속 띄우되 클릭만 비활성화한다.
+  const disabled =
+    pathname.startsWith("/recommend") || pathname.startsWith("/review/");
 
   return (
     <View

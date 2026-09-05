@@ -1,4 +1,7 @@
+import { useState } from "react";
+
 import { Image } from "expo-image";
+import { Dog } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 
 import { ReviewResultBadge } from "@/components/review/review-result-badge";
@@ -7,6 +10,7 @@ import { SIZE_LABEL } from "@/constants/status";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import type { Review } from "@/types/review";
 import { formatReviewDate } from "@/utils/date";
+import { isLoadableImageUrl } from "@/utils/stamp";
 
 /**
  * 상세의 "최근 리뷰" 요약 행.
@@ -14,16 +18,26 @@ import { formatReviewDate } from "@/utils/date";
  * 거절 리뷰는 썸네일이 없어 텍스트만 나온다.
  */
 export function ReviewSummaryRow({ review }: { review: Review }) {
+  // 이미지 로드 실패/도달 불가 URL이면 대기 없이 강아지 얼굴 아이콘으로 폴백한다.
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const showThumb = isLoadableImageUrl(review.thumbnailUrl) && !thumbFailed;
   return (
     <View style={styles.container}>
       {review.thumbnailUrl ? (
-        <Image
-          source={{ uri: review.thumbnailUrl }}
-          style={styles.thumb}
-          contentFit="cover"
-          transition={120}
-          accessibilityLabel="리뷰 사진"
-        />
+        showThumb ? (
+          <Image
+            source={{ uri: review.thumbnailUrl }}
+            style={styles.thumb}
+            contentFit="cover"
+            transition={120}
+            accessibilityLabel="리뷰 사진"
+            onError={() => setThumbFailed(true)}
+          />
+        ) : (
+          <View style={[styles.thumb, styles.thumbFallback]}>
+            <Dog size={28} color={Palette.gray[300]} strokeWidth={1.6} />
+          </View>
+        )
       ) : null}
 
       <View style={styles.textCol}>
@@ -75,5 +89,9 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: Radius.medium,
     backgroundColor: Palette.gray[100],
+  },
+  thumbFallback: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

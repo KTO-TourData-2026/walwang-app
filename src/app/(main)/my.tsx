@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { useRouter } from "expo-router";
 import {
   Alert,
@@ -28,6 +30,24 @@ export default function MyScreen() {
   const deleteAccountMutation = useDeleteAccountMutation();
   const profileQuery = useMyProfileQuery();
   const passportQuery = usePassportQuery();
+  const {
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  } = passportQuery;
+
+  // 여권 도장 전 페이지를 순차로 이어받아 전부 표시한다(11개 이상 대응).
+  // 다음 페이지 요청이 실패하면 자동 재요청을 멈춘다(무한 재시도 방지). 사용자가
+  // refetch로 재시도하면 에러가 풀려 이어서 조회한다.
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && !isFetchNextPageError) {
+      void fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, isFetchNextPageError, fetchNextPage]);
+
+  // 무한 쿼리의 페이지 배열을 하나로 합쳐 Passport에 넘긴다.
+  const stamps = passportQuery.data?.pages.flat() ?? [];
 
   const openReviews = () => router.push("/my/reviews");
 
@@ -128,10 +148,7 @@ export default function MyScreen() {
             style={styles.passportState}
           />
         ) : (
-          <Passport
-            stamps={passportQuery.data ?? []}
-            onSelectStamp={openStamp}
-          />
+          <Passport stamps={stamps} onSelectStamp={openStamp} />
         )}
       </View>
 

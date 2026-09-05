@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -45,7 +45,11 @@ export default function ReviewFormScreen() {
   const setSize = useReviewDraft((state) => state.setSize);
   const toggleTag = useReviewDraft((state) => state.toggleTag);
   const setContent = useReviewDraft((state) => state.setContent);
+  const setStampUrl = useReviewDraft((state) => state.setStampUrl);
   const createReviewMutation = useCreateReviewMutation();
+  // 연타로 등록 API가 여러 번 호출되는 것 방지. isPending은 재렌더 후에야 반영돼
+  // 프레임 내 빠른 연타를 못 막으므로, 동기 ref로 즉시 잠근다(실패 시 해제해 재시도 허용).
+  const submittingRef = useRef(false);
 
   const storeQuery = useStoreDetailQuery(placeId);
   const placeName = storeQuery.data?.name ?? "이 가게";
@@ -58,9 +62,15 @@ export default function ReviewFormScreen() {
     prerequisitesMet && size !== null && content.trim().length >= MIN_CONTENT;
 
   const submit = () => {
-    if (!canSubmit || size === null || createReviewMutation.isPending) {
+    if (
+      !canSubmit ||
+      size === null ||
+      submittingRef.current ||
+      createReviewMutation.isPending
+    ) {
       return;
     }
+    submittingRef.current = true;
     createReviewMutation.mutate(
       {
         storeId: placeId,
@@ -74,16 +84,21 @@ export default function ReviewFormScreen() {
         photoUri: allowed ? photoUri : null,
       },
       {
-        onSuccess: () =>
+        onSuccess: (data) => {
+          // 등록 응답으로 온 도장 이미지를 완료 화면에서 렌더하도록 넘긴다(없으면 폴백).
+          setStampUrl(data.stampUrl);
           router.push({
             pathname: "/review/[placeId]/done",
             params: { placeId },
-          }),
-        onError: () =>
+          });
+        },
+        onError: () => {
+          submittingRef.current = false; // 실패 시 잠금 해제 — 다시 시도 가능.
           ToastAndroid.show(
             "리뷰 등록에 실패했어요. 잠시 후 다시 시도해주세요.",
             ToastAndroid.SHORT,
-          ),
+          );
+        },
       },
     );
   };

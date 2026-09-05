@@ -28,6 +28,7 @@ import { useStoreReviewsQuery } from "@/hooks/use-store-reviews-query";
 import { useToggleSavedStoreMutation } from "@/hooks/use-toggle-saved-store-mutation";
 import type { Category } from "@/types/place";
 import type { StoreDetail } from "@/types/store";
+import { isLoadableImageUrl } from "@/utils/stamp";
 
 type NearbyParams = {
   title?: string;
@@ -146,7 +147,7 @@ export default function StoreDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.cover}>
-          {coverUri && failedCoverUri !== coverUri ? (
+          {isLoadableImageUrl(coverUri) && failedCoverUri !== coverUri ? (
             <Image
               source={{ uri: coverUri }}
               style={styles.coverImage}
