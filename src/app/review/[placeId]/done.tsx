@@ -9,6 +9,7 @@ import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
+import { SHOW_REVIEW_ALTERNATIVES } from "@/constants/feature-flags";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import { useAlternativeStoresQuery } from "@/hooks/use-alternative-stores-query";
 import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
@@ -58,9 +59,10 @@ export default function ReviewDoneScreen() {
   };
 
   const altSize = size ?? "smallMedium";
-  // 거절 완료에서만 대체 장소를 조회한다(들어갔어요는 스탬프 화면).
+  // 거절 완료에서만, 그리고 플래그가 켜진 경우에만 대체 장소를 조회한다
+  // (들어갔어요는 스탬프 화면 / 플래그 off면 섹션 자체를 숨기므로 조회도 생략).
   const alternativesQuery = useAlternativeStoresQuery(
-    allowed ? undefined : placeId,
+    !allowed && SHOW_REVIEW_ALTERNATIVES ? placeId : undefined,
     altSize,
   );
   const alternatives = (alternativesQuery.data ?? []).slice(0, 3);
@@ -150,38 +152,42 @@ export default function ReviewDoneScreen() {
               {demoNotice}
             </View>
 
-            <View style={styles.divider} />
+            {SHOW_REVIEW_ALTERNATIVES ? (
+              <>
+                <View style={styles.divider} />
 
-            <ThemedText type="subtitle02" color={Palette.gray[700]}>
-              인근에 이런 곳은 어때요?
-            </ThemedText>
-
-            {alternativesQuery.isLoading ? (
-              <LoadingView style={styles.altLoading} />
-            ) : alternativesQuery.isError ? (
-              <ErrorState
-                message="추천 장소를 불러오지 못했어요"
-                onRetry={() => alternativesQuery.refetch()}
-                style={styles.altLoading}
-              />
-            ) : alternatives.length > 0 ? (
-              <View style={styles.cardList}>
-                {alternatives.map((alt) => (
-                  <AlternativePlaceCard
-                    key={alt.id}
-                    place={alt}
-                    size={altSize}
-                    onPress={openStore}
-                  />
-                ))}
-              </View>
-            ) : (
-              <View style={styles.emptyBox}>
-                <ThemedText type="label04" color={Palette.gray[400]}>
-                  근처에 추천할 만한 곳을 아직 못 찾았어요
+                <ThemedText type="subtitle02" color={Palette.gray[700]}>
+                  인근에 이런 곳은 어때요?
                 </ThemedText>
-              </View>
-            )}
+
+                {alternativesQuery.isLoading ? (
+                  <LoadingView style={styles.altLoading} />
+                ) : alternativesQuery.isError ? (
+                  <ErrorState
+                    message="추천 장소를 불러오지 못했어요"
+                    onRetry={() => alternativesQuery.refetch()}
+                    style={styles.altLoading}
+                  />
+                ) : alternatives.length > 0 ? (
+                  <View style={styles.cardList}>
+                    {alternatives.map((alt) => (
+                      <AlternativePlaceCard
+                        key={alt.id}
+                        place={alt}
+                        size={altSize}
+                        onPress={openStore}
+                      />
+                    ))}
+                  </View>
+                ) : (
+                  <View style={styles.emptyBox}>
+                    <ThemedText type="label04" color={Palette.gray[400]}>
+                      근처에 추천할 만한 곳을 아직 못 찾았어요
+                    </ThemedText>
+                  </View>
+                )}
+              </>
+            ) : null}
           </View>
         )}
       </ScrollView>
