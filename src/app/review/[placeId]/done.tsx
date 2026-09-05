@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Dog } from "lucide-react-native";
@@ -31,6 +33,9 @@ export default function ReviewDoneScreen() {
   const storeQuery = useStoreDetailQuery(placeId);
   const placeName = storeQuery.data?.name ?? "이 가게";
   const allowed = result === "allowed";
+
+  // 도장 이미지 로드 실패(404·네트워크) 시 기본 아이콘으로 폴백한다(expo-image는 자동 폴백 없음).
+  const [stampFailed, setStampFailed] = useState(false);
 
   // 데모 리뷰는 판정·집계에서 제외되고 본인에게만 보인다(§6-3). 완료 화면에 짧게 고지한다.
   const demoNotice = isDemo ? (
@@ -105,13 +110,14 @@ export default function ReviewDoneScreen() {
             </Pressable>
 
             <View style={styles.stampCircle}>
-              {hasCustomStamp(stampUrl) ? (
+              {hasCustomStamp(stampUrl) && !stampFailed ? (
                 <Image
                   source={{ uri: stampUrl }}
                   style={styles.stampImage}
                   contentFit="cover"
                   transition={150}
                   accessibilityLabel="획득한 도장"
+                  onError={() => setStampFailed(true)}
                 />
               ) : (
                 <Dog size={56} color={Palette.main[400]} strokeWidth={1.8} />
