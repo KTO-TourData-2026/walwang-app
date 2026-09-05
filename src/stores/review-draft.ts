@@ -27,6 +27,8 @@ interface ReviewDraftState {
   size: SizeKey | null;
   tags: string[];
   content: string;
+  /** 등록(`POST /reviews`) 응답으로 온 도장 이미지 URL. 완료 화면에서 렌더한다(없으면 폴백). */
+  stampUrl: string | null;
 
   begin: (placeId: string) => void;
   /** 결과 변경 시 영수증·사진 초기화(재입력 필요). */
@@ -37,6 +39,7 @@ interface ReviewDraftState {
   setSize: (size: SizeKey) => void;
   toggleTag: (tag: string) => void;
   setContent: (content: string) => void;
+  setStampUrl: (url: string | null) => void;
   reset: () => void;
 }
 
@@ -49,7 +52,14 @@ const EMPTY_RECEIPT: ReceiptDraft = {
 
 const INITIAL: Pick<
   ReviewDraftState,
-  "placeId" | "result" | "receipt" | "photoUri" | "size" | "tags" | "content"
+  | "placeId"
+  | "result"
+  | "receipt"
+  | "photoUri"
+  | "size"
+  | "tags"
+  | "content"
+  | "stampUrl"
 > = {
   placeId: null,
   result: null,
@@ -58,6 +68,7 @@ const INITIAL: Pick<
   size: null,
   tags: [],
   content: "",
+  stampUrl: null,
 };
 
 export const useReviewDraft = create<ReviewDraftState>((set) => ({
@@ -90,6 +101,8 @@ export const useReviewDraft = create<ReviewDraftState>((set) => ({
     })),
 
   setContent: (content) => set({ content }),
+
+  setStampUrl: (stampUrl) => set({ stampUrl }),
 
   reset: () => set({ ...INITIAL }),
 }));
