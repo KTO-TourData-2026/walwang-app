@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { ChevronRight, Dog, X } from "lucide-react-native";
@@ -10,6 +12,7 @@ import { LoadingView } from "@/components/ui/loading-view";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import { usePassportDetailQuery } from "@/hooks/use-passport-detail-query";
 import { formatReviewDate } from "@/utils/date";
+import { isLoadableImageUrl } from "@/utils/stamp";
 
 // 이미지 저장은 네이티브 의존성(view-shot/media-library) 전이라 안내만 — 실제 저장은 범위 밖.
 export default function StampDetailScreen() {
@@ -21,6 +24,9 @@ export default function StampDetailScreen() {
     isError,
     refetch,
   } = usePassportDetailQuery(stampId);
+
+  // 원본 사진 URL이 있어도 로드 실패(예: 데모의 도달 불가 목 URL)하면 아이콘 폴백으로 넘긴다.
+  const [photoFailed, setPhotoFailed] = useState(false);
 
   const close = () => router.back();
 
@@ -68,19 +74,22 @@ export default function StampDetailScreen() {
         ) : stamp ? (
           <>
             <View style={styles.imageWrap}>
-              {stamp.photoUrl ? (
+              {isLoadableImageUrl(stamp.photoUrl) && !photoFailed ? (
                 <Image
                   source={{ uri: stamp.photoUrl }}
                   style={styles.image}
                   contentFit="cover"
                   transition={150}
                   accessibilityLabel="당시 촬영한 반려견 원본 사진"
+                  onError={() => setPhotoFailed(true)}
                 />
               ) : (
                 <View style={styles.silhouette}>
-                  <Dog size={72} color={Palette.main[300]} strokeWidth={1.6} />
+                  <Dog size={72} color={Palette.gray[300]} strokeWidth={1.6} />
                   <ThemedText type="label05" color={Palette.gray[400]}>
-                    원본 사진이 없어 아이콘으로 남겼어요
+                    {photoFailed
+                      ? "사진을 불러오지 못해 아이콘으로 남겼어요"
+                      : "원본 사진이 없어 아이콘으로 남겼어요"}
                   </ThemedText>
                 </View>
               )}

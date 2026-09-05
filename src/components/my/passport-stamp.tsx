@@ -5,7 +5,7 @@ import { Dog } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Palette, Radius } from "@/constants/theme";
+import { Palette } from "@/constants/theme";
 import type { PassportSummary } from "@/types/user";
 import { formatReviewDate } from "@/utils/date";
 import { hasCustomStamp } from "@/utils/stamp";
@@ -21,11 +21,11 @@ export function PassportStampView({
   angle: number;
   onPress: (stamp: PassportSummary) => void;
 }) {
-  // READY이고 커스텀 도장 이미지가 있으면 이미지, 그 외(PENDING·FALLBACK·기본 발도장 애셋)는
-  // 기본 아이콘(강아지 얼굴)으로 통일한다.
-  // 이미지 로드 실패(예: 데모의 도달 불가 목 URL) 시 기본 아이콘으로 폴백한다.
+  // 커스텀 도장 이미지가 있으면 이미지, 아니면 기본 아이콘(강아지 얼굴). 도달 불가 목 URL·
+  // 기본 발도장은 hasCustomStamp가 즉시 걸러 아이콘을 바로 띄우고(타임아웃 대기 없음),
+  // onError는 그 외 깨진 URL을 위한 안전망이다.
   const [imageFailed, setImageFailed] = useState(false);
-  const showStamp =
+  const showImage =
     stamp.status === "ready" && hasCustomStamp(stamp.stampUrl) && !imageFailed;
   const dateLabel = stamp.createdAt ? formatReviewDate(stamp.createdAt) : "";
   return (
@@ -47,7 +47,7 @@ export function PassportStampView({
           },
         ]}
       >
-        {showStamp ? (
+        {showImage ? (
           <Image
             source={{ uri: stamp.stampUrl as string }}
             style={styles.image}
@@ -88,9 +88,11 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: Radius.pill,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   date: {
     marginTop: 0,
