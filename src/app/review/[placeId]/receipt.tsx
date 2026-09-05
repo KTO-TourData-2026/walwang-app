@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 import { useStoreDetailQuery } from "@/hooks/use-store-detail-query";
 import { useVerifyReceiptMutation } from "@/hooks/use-verify-receipt-mutation";
+import { useDemoMode } from "@/stores/demo-mode";
 import { useReviewDraft } from "@/stores/review-draft";
 import type { ReceiptVerifyResponse } from "@/types/review";
 
@@ -33,6 +34,7 @@ export default function ReceiptScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
+  const isDemo = useDemoMode((state) => state.isDemo);
   const setReceipt = useReviewDraft((state) => state.setReceipt);
   const resetReceipt = useReviewDraft((state) => state.resetReceipt);
   const verifyMutation = useVerifyReceiptMutation();
@@ -83,6 +85,18 @@ export default function ReceiptScreen() {
     );
   };
 
+  // 데모: OCR(receipt-verify) 없이 상호명 인식을 임의 통과시킨다(§6-2). 토큰 없이도
+  // POST /reviews?demo=true로 등록되므로 draft.receipt.verified만 세워 폼 선행조건을 통과시킨다.
+  const passDemo = () => {
+    setReceipt({
+      verified: true,
+      imageUri: null,
+      matchedName: null,
+      token: null,
+    });
+    setVerified(true);
+  };
+
   const goPhoto = () =>
     router.push({ pathname: "/review/[placeId]/photo", params: { placeId } });
 
@@ -104,7 +118,7 @@ export default function ReceiptScreen() {
                 onPress={() => setVerified(false)}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="다시 촬영"
+                accessibilityLabel={isDemo ? "뒤로" : "다시 촬영"}
               >
                 <ArrowLeft size={22} color={Palette.gray[700]} />
               </Pressable>
@@ -164,6 +178,87 @@ export default function ReceiptScreen() {
             style={styles.footerHint}
           >
             사진은 스탬프 재료로 쓰여요
+          </ThemedText>
+        </View>
+      </View>
+    );
+  }
+
+  // 데모: 카메라/OCR 대신 튜토리얼 안내를 띄우고, 상호명 인식을 임의 통과시킨다(§6-2).
+  if (isDemo) {
+    return (
+      <View style={styles.root}>
+        <Stack.Screen
+          options={{
+            headerShown: true,
+            headerBackVisible: false,
+            headerTitle: () => <ReviewHeaderTitle placeName={placeName} />,
+            headerLeft: () => (
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="뒤로"
+              >
+                <ArrowLeft size={22} color={Palette.gray[700]} />
+              </Pressable>
+            ),
+          }}
+        />
+
+        <ScrollView
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: insets.bottom + 120 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.tutorialHeader}>
+            <ThemedText type="head03" color={Palette.gray[700]}>
+              영수증 인증 튜토리얼
+            </ThemedText>
+            <ThemedText type="label04" color={Palette.gray[400]}>
+              지금은 데모 모드예요. 가상 상호명이라 실제 영수증과 매칭할 수
+              없어, 영수증 인증은 실제로 체험할 수 없어요.
+            </ThemedText>
+          </View>
+
+          <View style={styles.tutorialCard}>
+            <ThemedText type="subtitle03" color={Palette.gray[700]}>
+              실사용에서는 이렇게 동작해요
+            </ThemedText>
+            <TutorialItem
+              title="인증 성공"
+              desc="영수증 상호명이 확인되면 바로 반려견 사진 단계로 넘어가요."
+            />
+            <TutorialItem
+              title="판독 실패"
+              desc="글씨가 잘 안 보이면 다시 촬영하도록 안내해요."
+            />
+            <TutorialItem
+              title="상호 불일치"
+              desc="다른 가게 영수증이면 가게를 다시 선택하도록 안내해요."
+            />
+          </View>
+        </ScrollView>
+
+        <View
+          style={[
+            styles.footer,
+            { paddingBottom: insets.bottom + Spacing.two },
+          ]}
+        >
+          <Button
+            label="상호명 인식 완료"
+            variant="primary"
+            onPress={passDemo}
+          />
+          <ThemedText
+            type="label05"
+            color={Palette.gray[400]}
+            style={styles.footerHint}
+          >
+            데모에서는 이 단계를 건너뛰고 통과 처리해요
           </ThemedText>
         </View>
       </View>
@@ -271,10 +366,53 @@ export default function ReceiptScreen() {
   );
 }
 
+function TutorialItem({ title, desc }: { title: string; desc: string }) {
+  return (
+    <View style={styles.tutorialItem}>
+      <View style={styles.tutorialDot} />
+      <View style={styles.tutorialItemText}>
+        <ThemedText type="subtitle04" color={Palette.gray[700]}>
+          {title}
+        </ThemedText>
+        <ThemedText type="label04" color={Palette.gray[400]}>
+          {desc}
+        </ThemedText>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: Palette.background.base,
+  },
+  tutorialHeader: {
+    gap: Spacing.two,
+  },
+  tutorialCard: {
+    gap: Spacing.three,
+    marginTop: Spacing.four,
+    padding: Spacing.four,
+    borderRadius: Radius.large,
+    borderWidth: 1,
+    borderColor: Palette.border.disabled,
+    backgroundColor: Palette.white,
+  },
+  tutorialItem: {
+    flexDirection: "row",
+    gap: Spacing.two,
+  },
+  tutorialDot: {
+    width: 6,
+    height: 6,
+    marginTop: 6,
+    borderRadius: Radius.pill,
+    backgroundColor: Palette.main[400],
+  },
+  tutorialItemText: {
+    flex: 1,
+    gap: Spacing.half,
   },
   content: {
     flexGrow: 1,
