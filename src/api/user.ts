@@ -5,7 +5,7 @@ import {
   setAccessToken,
   setRefreshToken,
 } from "@/api/client";
-import { DEMO_MODE } from "@/api/demo";
+import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { ApiHttpError } from "@/api/http-error";
 import type {
@@ -87,10 +87,10 @@ export async function login(body: UserLoginRequest): Promise<void> {
 
 // 내 정보. swagger 응답이 camelCase(UserProfileResponse)라 필요한 필드만 추린다.
 export async function getMyProfile(): Promise<UserSummary> {
-  // demo=true — 리뷰 목록·여권과 같은 데모 공간의 개수를 받는다(안 붙이면 실서비스 공간=0).
+  // 현재 모드(demo)를 붙여 리뷰 목록·여권과 같은 공간의 개수를 받는다(모드가 다르면 서로 0).
   const { data } = await apiClient.get<UserProfileResponse>(
     API_ENDPOINTS.user.me,
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return {
     nickname: data.nickname,
@@ -123,7 +123,7 @@ export async function getPassport(
 ): Promise<PassportSummary[]> {
   const { data } = await apiClient.get<PassportSummaryResponse[]>(
     API_ENDPOINTS.user.passport,
-    { params: { page, size, demo: DEMO_MODE } },
+    { params: { page, size, demo: getDemoMode() } },
   );
   return data.map((item) => ({
     id: String(item.id),
@@ -139,7 +139,7 @@ export async function getPassportDetail(
 ): Promise<PassportStamp> {
   const { data } = await apiClient.get<PassportDetailResponse>(
     API_ENDPOINTS.user.passportDetail(passportId),
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return {
     id: String(data.id),

@@ -27,6 +27,7 @@ import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 import { useCheckEmailMutation } from "@/hooks/use-check-email-mutation";
 import { useCheckNicknameMutation } from "@/hooks/use-check-nickname-mutation";
 import { useSignupMutation } from "@/hooks/use-signup-mutation";
+import { useDemoMode } from "@/stores/demo-mode";
 
 const AGREEMENTS = [
   { code: "TERMS_OF_SERVICE", label: "(필수) 이용약관 동의", more: true },
@@ -173,6 +174,8 @@ export default function SignupScreen() {
         })),
       });
       ToastAndroid.show("회원가입이 완료됐어요!", ToastAndroid.SHORT);
+      // 토큰 발급 최초 진입 — 전체 안내 모달 1회 자동 노출(오늘 억제 시 건너뜀, §6-1).
+      void useDemoMode.getState().maybeAutoShowNotice();
       router.replace("/map");
     } catch (error) {
       if (error instanceof ApiHttpError && error.status === 409) {

@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { DEMO_MODE } from "@/api/demo";
+import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { mapCategory } from "@/api/store";
 import type {
@@ -192,7 +192,8 @@ function toSaveBody(course: Course): CourseSaveRequestBody {
   };
 }
 
-// 조회는 demo=true(DEMO_MODE), 쓰기(저장·이름변경·삭제)엔 붙이지 않는다.
+// 조회는 현재 모드(getDemoMode)를 붙이고, 쓰기 중 이름변경·삭제엔 붙이지 않는다(§3 예외).
+// 저장(POST /courses)은 조회와 공간을 맞춰야 하므로 붙인다.
 
 export async function recommendCourse(
   request: CourseRecommendRequest,
@@ -200,7 +201,7 @@ export async function recommendCourse(
   const { data } = await apiClient.post<CourseResponse>(
     API_ENDPOINTS.course.recommend,
     toRecommendBody(request),
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return mapCourse(data);
 }
@@ -211,7 +212,7 @@ export async function saveCourse(course: Course): Promise<string> {
   const { data } = await apiClient.post<CourseCreateResponse>(
     API_ENDPOINTS.course.base,
     toSaveBody(course),
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return String(data.courseId);
 }
@@ -220,7 +221,7 @@ export async function saveCourse(course: Course): Promise<string> {
 export async function getCourseDetail(courseId: string): Promise<Course> {
   const { data } = await apiClient.get<CourseResponse>(
     API_ENDPOINTS.course.detail(courseId),
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return mapCourse(data);
 }
@@ -228,7 +229,7 @@ export async function getCourseDetail(courseId: string): Promise<Course> {
 export async function getSavedCourses(): Promise<SavedCoursePreview[]> {
   const { data } = await apiClient.get<SavedCourseListResponse>(
     API_ENDPOINTS.user.savedCourses,
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return (data.courses ?? []).map(mapSavedCourse);
 }
