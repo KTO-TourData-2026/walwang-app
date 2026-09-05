@@ -8,8 +8,8 @@ import { Palette } from "@/constants/theme";
 import type { Place } from "@/types/place";
 
 const INITIAL_CAMERA = {
-  latitude: 37.5445,
-  longitude: 127.0374,
+  latitude: 37.548668,
+  longitude: 127.046869,
   zoom: 15,
 };
 

@@ -18,9 +18,9 @@ import { useStoreSearchQuery } from "@/hooks/use-store-search-query";
 import { useStoresQuery } from "@/hooks/use-stores-query";
 import type { Place } from "@/types/place";
 
-// 핀 조회 중심점(서울숲) — place-map 초기 카메라와 맞춘다. 반경으로 핀 밀도 조절(MVP 고정).
-const MAP_CENTER = { lat: 37.5445, lng: 127.0374 };
-const MAP_RADIUS = 1000;
+// 핀 조회 중심점 — place-map 초기 카메라와 맞춘다. 반경으로 핀 밀도 조절(MVP 고정).
+const MAP_CENTER = { lat: 37.548668, lng: 127.046869 };
+const MAP_RADIUS = 1500;
 
 export default function MapScreen() {
   const router = useRouter();
