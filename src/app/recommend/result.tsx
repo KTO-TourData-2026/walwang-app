@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Footprints } from "lucide-react-native";
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { getStoreDetail } from "@/api/store";
 import CourseMap from "@/components/recommend/course-map";
 import { NearbyPlaceCard } from "@/components/recommend/nearby-place-card";
 import { WaypointListItem } from "@/components/recommend/waypoint-list-item";
@@ -25,6 +26,7 @@ import { useCourseDetailQuery } from "@/hooks/use-course-detail-query";
 import { useRecommendCourseQuery } from "@/hooks/use-recommend-course-query";
 import { useSaveCourseMutation } from "@/hooks/use-save-course-mutation";
 import { useSavedCoursesQuery } from "@/hooks/use-saved-courses-query";
+import { useDemoMode } from "@/stores/demo-mode";
 import type {
   Course,
   CourseDuration,
@@ -52,6 +54,10 @@ export default function RecommendResultScreen() {
 
   const [saved, setSaved] = useState(false);
   const [savedModalOpen, setSavedModalOpen] = useState(false);
+  // 추천 결과를 최초 1회 고정한다(아래 freeze 효과). 모드 토글 시 재추천 대신 이 코스를 유지.
+  const [frozenCourse, setFrozenCourse] = useState<Course | null>(null);
+  const frozenRef = useRef<Course | null>(null);
+  const isDemo = useDemoMode((state) => state.isDemo);
 
   const fromSaved = Boolean(params.courseId);
 
@@ -86,7 +92,10 @@ export default function RecommendResultScreen() {
     params.startLng,
   ]);
 
-  const recommendQuery = useRecommendCourseQuery(recommendRequest);
+  // 고정 후에는 추천 쿼리를 비활성화(null)해, resetQueries가 새 코스를 재생성하지 않게 한다.
+  const recommendQuery = useRecommendCourseQuery(
+    frozenCourse ? null : recommendRequest,
+  );
   const detailQuery = useCourseDetailQuery(params.courseId, {
     enabled: fromSaved,
   });
@@ -94,8 +103,62 @@ export default function RecommendResultScreen() {
   const savedCoursesQuery = useSavedCoursesQuery({ enabled: fromSaved });
   const saveMutation = useSaveCourseMutation();
 
+  // 추천 결과 최초 1회 고정(렌더 중 파생 상태 확정 — effect가 아니라 조건부 setState).
+  // 고정되면 위 recommendQuery가 비활성화돼 모드 토글 시 재추천이 일어나지 않는다.
+  if (!fromSaved && !frozenCourse && recommendQuery.data) {
+    setFrozenCourse(recommendQuery.data);
+  }
+
+  useEffect(() => {
+    frozenRef.current = frozenCourse;
+  }, [frozenCourse]);
+
+  // 모드 전환 시 고정된 코스의 지점 상호명만 현재 모드 기준으로 다시 조회(§5 마스킹).
+  // 코스 구조(순서·경로)는 그대로 두고 라벨만 갱신. 주변 장소(nearby)는 대상에서 제외.
+  useEffect(() => {
+    const current = frozenRef.current;
+    if (fromSaved || !current) {
+      return;
+    }
+    let cancelled = false;
+    Promise.all(
+      current.waypoints.map((waypoint) =>
+        getStoreDetail(waypoint.placeId)
+          .then((detail) => detail.name)
+          .catch(() => null),
+      ),
+    ).then((names) => {
+      if (cancelled) {
+        return;
+      }
+      setFrozenCourse((prev) =>
+        prev
+          ? {
+              ...prev,
+              waypoints: prev.waypoints.map((waypoint, index) =>
+                names[index]
+                  ? { ...waypoint, name: names[index] as string }
+                  : waypoint,
+              ),
+            }
+          : prev,
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDemo, fromSaved]);
+
   const activeQuery = fromSaved ? detailQuery : recommendQuery;
-  const course = activeQuery.data;
+  const course = fromSaved
+    ? detailQuery.data
+    : (frozenCourse ?? recommendQuery.data);
+  const isLoading = fromSaved
+    ? detailQuery.isLoading
+    : !frozenCourse && recommendQuery.isLoading;
+  const isError = fromSaved
+    ? detailQuery.isError
+    : !frozenCourse && recommendQuery.isError;
 
   const save = () => {
     if (!course) {
@@ -146,7 +209,7 @@ export default function RecommendResultScreen() {
     });
   };
 
-  if (activeQuery.isLoading) {
+  if (isLoading) {
     return (
       <View style={styles.centered}>
         <LoadingView />
@@ -154,7 +217,7 @@ export default function RecommendResultScreen() {
     );
   }
 
-  if (activeQuery.isError || !course) {
+  if (isError || !course) {
     return (
       <View style={styles.centered}>
         <ErrorState
