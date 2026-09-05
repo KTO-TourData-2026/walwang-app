@@ -291,8 +291,6 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.three,
-    borderTopWidth: 1,
-    borderTopColor: Palette.border.disabled,
     backgroundColor: Palette.background.base,
   },
 });

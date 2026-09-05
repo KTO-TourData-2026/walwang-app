@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import * as SplashScreen from "expo-splash-screen";
 
 import { ACCESS_TOKEN_KEY } from "@/api/client";
+import { hydrateDemoMode } from "@/stores/demo-mode";
 
 type AuthState = "checking" | "signedIn" | "signedOut";
 
@@ -16,6 +17,10 @@ export default function SplashGate() {
 
     (async () => {
       let token: string | null = null;
+
+      // 저장된 데모 모드를 먼저 복원한다 — API 경계(getDemoMode)는 동기 읽기라
+      // 첫 조회보다 먼저 완료돼야 실사용/데모 데이터 공간이 어긋나지 않는다(§7-1).
+      await hydrateDemoMode();
 
       try {
         token = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);

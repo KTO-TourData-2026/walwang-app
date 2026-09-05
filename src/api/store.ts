@@ -1,5 +1,5 @@
 import { apiClient } from "@/api/client";
-import { DEMO_MODE } from "@/api/demo";
+import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import type { CourseStoreResponse } from "@/types/course";
 import type { Category, PlaceStatus, Place, SizeKey } from "@/types/place";
@@ -126,7 +126,7 @@ export interface StoresQueryParams {
 export async function getStores(params: StoresQueryParams): Promise<Place[]> {
   const { data } = await apiClient.get<StoreCardResponse[]>(
     API_ENDPOINTS.store.list,
-    { params: { ...params, demo: DEMO_MODE } },
+    { params: { ...params, demo: getDemoMode() } },
   );
   return data.map(mapStoreCard);
 }
@@ -134,7 +134,7 @@ export async function getStores(params: StoresQueryParams): Promise<Place[]> {
 export async function searchStores(keyword: string): Promise<Place[]> {
   const { data } = await apiClient.get<StoreCardResponse[]>(
     API_ENDPOINTS.store.search,
-    { params: { keyword, demo: DEMO_MODE } },
+    { params: { keyword, demo: getDemoMode() } },
   );
   return data.map(mapStoreCard);
 }
@@ -142,7 +142,7 @@ export async function searchStores(keyword: string): Promise<Place[]> {
 export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
   const { data } = await apiClient.get<StoreDetailResponse>(
     API_ENDPOINTS.store.detail(storeId),
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return mapStoreDetail(data);
 }
@@ -152,7 +152,7 @@ export async function getStoreDetail(storeId: string): Promise<StoreDetail> {
 export async function getSavedStores(): Promise<Place[]> {
   const { data } = await apiClient.get<StoreCardResponse[]>(
     API_ENDPOINTS.user.savedStores,
-    { params: { demo: DEMO_MODE } },
+    { params: { demo: getDemoMode() } },
   );
   return data.map(mapStoreCard);
 }
@@ -163,13 +163,13 @@ export async function getSavedStores(): Promise<Place[]> {
 // 방어적으로 함께 보낸다(백엔드에 DELETE에도 demo 파라미터 추가 요청 필요).
 export async function saveStore(storeId: string): Promise<void> {
   await apiClient.post(API_ENDPOINTS.store.save(storeId), undefined, {
-    params: { demo: DEMO_MODE },
+    params: { demo: getDemoMode() },
   });
 }
 
 export async function unsaveStore(storeId: string): Promise<void> {
   await apiClient.delete(API_ENDPOINTS.store.save(storeId), {
-    params: { demo: DEMO_MODE },
+    params: { demo: getDemoMode() },
   });
 }
 
@@ -220,7 +220,7 @@ export async function getAlternativeStores(
     {
       params: {
         size: size === "smallMedium" ? "SMALL_MEDIUM" : "LARGE",
-        demo: DEMO_MODE,
+        demo: getDemoMode(),
       },
     },
   );
@@ -235,7 +235,7 @@ export async function getStoreReviews(
 ): Promise<Review[]> {
   const { data } = await apiClient.get<ReviewResponse[]>(
     API_ENDPOINTS.store.reviews(storeId),
-    { params: { page, size, demo: DEMO_MODE } },
+    { params: { page, size, demo: getDemoMode() } },
   );
   return data.map((review) => mapReview(review, storeId));
 }

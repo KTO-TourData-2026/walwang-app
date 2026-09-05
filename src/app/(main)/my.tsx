@@ -14,7 +14,7 @@ import { ProfileSummaryCard } from "@/components/my/profile-summary-card";
 import { ThemedText } from "@/components/themed-text";
 import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
-import { Palette, Spacing } from "@/constants/theme";
+import { BottomTabInset, Palette, Spacing } from "@/constants/theme";
 import { useDeleteAccountMutation } from "@/hooks/use-delete-account-mutation";
 import { useLogoutMutation } from "@/hooks/use-logout-mutation";
 import { useMyProfileQuery } from "@/hooks/use-my-profile-query";
@@ -83,6 +83,16 @@ export default function MyScreen() {
       ],
     );
 
+  // 프로필·여권 두 쿼리가 모두 준비될 때까지 화면 전체를 채우는 로딩 하나만 보인다
+  // (섹션별 스피너 중복 방지). ScrollView 밖에서 그려야 flex가 먹어 진짜 중앙에 온다.
+  if (profileQuery.isLoading || passportQuery.isLoading) {
+    return (
+      <View style={[styles.root, styles.loading]}>
+        <LoadingView />
+      </View>
+    );
+  }
+
   return (
     <ScrollView
       style={styles.root}
@@ -92,9 +102,8 @@ export default function MyScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      {profileQuery.isLoading ? (
-        <LoadingView style={styles.profileState} />
-      ) : profileQuery.isError || !profileQuery.data ? (
+      {/* 에러는 프로필·여권 원인이 서로 달라(재시도도 별도) 섹션별로 유지한다. */}
+      {profileQuery.isError || !profileQuery.data ? (
         <ErrorState
           message="프로필을 불러오지 못했어요"
           onRetry={() => profileQuery.refetch()}
@@ -112,9 +121,7 @@ export default function MyScreen() {
         <ThemedText type="subtitle02" color={Palette.gray[700]}>
           나의 여권
         </ThemedText>
-        {passportQuery.isLoading ? (
-          <LoadingView style={styles.passportState} />
-        ) : passportQuery.isError ? (
+        {passportQuery.isError ? (
           <ErrorState
             message="여권을 불러오지 못했어요"
             onRetry={() => passportQuery.refetch()}
@@ -155,6 +162,11 @@ const styles = StyleSheet.create({
     gap: Spacing.four,
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.five,
+  },
+  loading: {
+    // LoadingView(flex:1)가 화면을 채워 중앙정렬되게 한다. 하단 탭 높이만큼 빼서
+    // 탭 바 위 보이는 영역 기준으로 가운데 오도록 보정.
+    paddingBottom: BottomTabInset,
   },
   profileState: {
     minHeight: 148,

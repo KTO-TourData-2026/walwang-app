@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 import { useLoginMutation } from "@/hooks/use-login-mutation";
+import { useDemoMode } from "@/stores/demo-mode";
 
 const loginSchema = z.object({
   email: z
@@ -57,6 +58,8 @@ export default function LoginScreen() {
     try {
       await loginMutation.mutateAsync(values);
       ToastAndroid.show("로그인됐어요!", ToastAndroid.SHORT);
+      // 토큰 발급 최초 진입 — 전체 안내 모달 1회 자동 노출(오늘 억제 시 건너뜀, §6-1).
+      void useDemoMode.getState().maybeAutoShowNotice();
       router.replace("/map");
     } catch (error) {
       if (error instanceof ApiHttpError && error.status === 401) {

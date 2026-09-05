@@ -1,7 +1,7 @@
 import { File, Paths } from "expo-file-system";
 
 import { apiClient } from "@/api/client";
-import { DEMO_MODE } from "@/api/demo";
+import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { mapCategory } from "@/api/store";
 import type { Hashtag } from "@/constants/hashtags";
@@ -95,7 +95,7 @@ export async function getMyReviewsPage(
 ): Promise<MyReview[]> {
   const { data } = await apiClient.get<MyReviewResponse[]>(
     API_ENDPOINTS.user.myReviews,
-    { params: { page, size, demo: DEMO_MODE } },
+    { params: { page, size, demo: getDemoMode() } },
   );
   return data.map(mapMyReview);
 }
@@ -127,7 +127,7 @@ export async function verifyReceipt(
     API_ENDPOINTS.review.receiptVerify,
     form,
     {
-      params: { store_id: storeId, demo: DEMO_MODE },
+      params: { store_id: storeId, demo: getDemoMode() },
       headers: MULTIPART_HEADERS,
     },
   );
@@ -174,7 +174,7 @@ export async function createReview(
   const { data } = await apiClient.post<ReviewCreateResponse>(
     API_ENDPOINTS.review.base,
     form,
-    { params: { demo: DEMO_MODE }, headers: MULTIPART_HEADERS },
+    { params: { demo: getDemoMode() }, headers: MULTIPART_HEADERS },
   );
   return data;
 }
