@@ -21,6 +21,19 @@ import { queryClient } from "@/api/query-client";
 const MODE_KEY = "walwang.demoMode";
 const NOTICE_SUPPRESS_KEY = "walwang.demoNoticeSuppressedDate";
 
+// MODE_KEY 저장 직렬화. SecureStore.setItemAsync는 같은 키 연속 쓰기의 완료 순서를 보장하지
+// 않아, 토글 연타 시 이전 쓰기가 나중에 끝나 옛 모드가 영속될 수 있다. 쓰기를 큐로 순서화해
+// hydrateDemoMode가 항상 마지막으로 고른 모드를 복원하게 한다.
+let modeWriteQueue: Promise<void> = Promise.resolve();
+function persistMode(value: boolean) {
+  modeWriteQueue = modeWriteQueue
+    .catch(() => {})
+    .then(() => SecureStore.setItemAsync(MODE_KEY, value ? "true" : "false"))
+    .catch((error) => {
+      console.warn("데모 모드 상태를 저장하지 못했습니다.", error);
+    });
+}
+
 // 로컬 날짜 YYYY-MM-DD. 자동 노출 하루 억제 비교에만 쓴다(타임존 이슈 회피 위해 로컬 기준).
 function today(): string {
   const now = new Date();
@@ -61,7 +74,7 @@ export const useDemoMode = create<DemoModeState>((set, get) => ({
     set({ isDemo: value });
     // ⓑ 캐시 리셋(§4) — 데이터를 비우고 마운트된 화면까지 새 모드로 다시 조회한다.
     void queryClient.resetQueries();
-    void SecureStore.setItemAsync(MODE_KEY, value ? "true" : "false");
+    persistMode(value); // 쓰기 직렬화(위 persistMode 참고)
   },
 
   openNotice: () => set({ noticeVisible: true }),
