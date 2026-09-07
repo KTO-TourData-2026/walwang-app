@@ -1,4 +1,4 @@
-import { ChevronRight, Dog } from "lucide-react-native";
+import { ChevronRight, Dog, Settings } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
@@ -8,11 +8,11 @@ import type { UserSummary } from "@/types/user";
 export function ProfileSummaryCard({
   user,
   onPressReviews,
-  onLogout,
+  onOpenSettings,
 }: {
   user: UserSummary;
   onPressReviews: () => void;
-  onLogout: () => void;
+  onOpenSettings: () => void;
 }) {
   return (
     <View style={styles.card}>
@@ -27,10 +27,13 @@ export function ProfileSummaryCard({
         >
           {user.nickname}
         </ThemedText>
-        <Pressable onPress={onLogout} hitSlop={8} accessibilityRole="button">
-          <ThemedText type="label05" color={Palette.gray[400]}>
-            로그아웃
-          </ThemedText>
+        <Pressable
+          onPress={onOpenSettings}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="프로필 편집"
+        >
+          <Settings size={20} color={Palette.main[500]} />
         </Pressable>
       </View>
 
