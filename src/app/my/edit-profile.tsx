@@ -296,7 +296,7 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
               onChangeText={onChange}
               onBlur={onBlur}
               error={errors.currentPassword?.message}
-              secureTextEntry
+              secureToggle
               autoCapitalize="none"
               autoComplete="current-password"
               returnKeyType="next"
@@ -319,7 +319,7 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
               onChangeText={onChange}
               onBlur={onBlur}
               error={errors.newPassword?.message}
-              secureTextEntry
+              secureToggle
               autoCapitalize="none"
               autoComplete="new-password"
               returnKeyType="next"
@@ -342,7 +342,7 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
               onChangeText={onChange}
               onBlur={onBlur}
               error={errors.newPasswordConfirm?.message}
-              secureTextEntry
+              secureToggle
               autoCapitalize="none"
               autoComplete="new-password"
               returnKeyType="done"

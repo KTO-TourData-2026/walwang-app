@@ -304,7 +304,7 @@ export default function SignupScreen() {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.password?.message}
-                secureTextEntry
+                secureToggle
                 autoCapitalize="none"
                 autoComplete="new-password"
                 returnKeyType="next"
@@ -327,7 +327,7 @@ export default function SignupScreen() {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.passwordConfirm?.message}
-                secureTextEntry
+                secureToggle
                 autoCapitalize="none"
                 autoComplete="new-password"
                 returnKeyType="done"

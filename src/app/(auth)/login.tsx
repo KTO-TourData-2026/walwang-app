@@ -123,7 +123,7 @@ export default function LoginScreen() {
                 onChangeText={onChange}
                 onBlur={onBlur}
                 error={errors.password?.message}
-                secureTextEntry
+                secureToggle
                 autoCapitalize="none"
                 autoComplete="current-password"
                 returnKeyType="done"
