@@ -15,7 +15,9 @@ import type {
   PassportStatus,
   PassportSummary,
   PassportSummaryResponse,
+  RefreshTokenResponse,
   UserLoginRequest,
+  UserPatchRequest,
   UserProfileResponse,
   UserSignUpRequest,
   UserSummary,
@@ -97,6 +99,19 @@ export async function getMyProfile(): Promise<UserSummary> {
     reviewCount: data.reviewCount,
     stampCount: data.stampCount,
   };
+}
+
+// 내 정보 수정(`PATCH /user/me`). nickname은 항상, 비번 변경 시 pastPassword+newPassword를 보낸다.
+// 성공 시 서버가 refresh를 회전시켜 새 refreshToken을 준다 → 저장한다(옛 refresh로 재발급 방지).
+// access는 응답에 없다. 비번 변경으로 기존 access가 무효화되면 다음 401에서 새 refresh로 재발급된다.
+export async function updateMyProfile(body: UserPatchRequest): Promise<void> {
+  const { data } = await apiClient.patch<RefreshTokenResponse>(
+    API_ENDPOINTS.user.me,
+    body,
+  );
+  if (data?.refreshToken) {
+    await setRefreshToken(data.refreshToken);
+  }
 }
 
 export async function logout(): Promise<void> {

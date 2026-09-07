@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -12,6 +13,7 @@ import {
 } from "react-native";
 import { z } from "zod";
 
+import { ApiHttpError } from "@/api/http-error";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/ui/error-state";
@@ -24,7 +26,15 @@ import {
   Palette,
   Spacing,
 } from "@/constants/theme";
+import { useCheckNicknameMutation } from "@/hooks/use-check-nickname-mutation";
 import { useMyProfileQuery } from "@/hooks/use-my-profile-query";
+import { useUpdateProfileMutation } from "@/hooks/use-update-profile-mutation";
+
+function errorMessage(error: unknown): string {
+  return error instanceof ApiHttpError
+    ? error.message
+    : "네트워크 상태를 확인한 뒤 다시 시도해주세요.";
+}
 
 // 비밀번호 3칸은 all-or-nothing — 하나라도 채우면 나머지도 검증한다(다 비면 비번 미변경).
 // 새 비밀번호는 swagger 제약(8~64)에 맞추고, 확인 일치까지 본다.
@@ -71,8 +81,8 @@ const editProfileSchema = z
 
 type EditProfileForm = z.infer<typeof editProfileSchema>;
 
-// 프로필 편집(닉네임·비밀번호) — 단일 화면에서 변경분만 골라 한 번의 PATCH로 보낸다(2단계 연동).
-// 여기서는 현재 닉네임을 프리필하고, 로딩/에러는 마이 요약 쿼리에 맞춰 처리한다.
+// 프로필 편집(닉네임·비밀번호) — 단일 화면에서 변경분만 골라 한 번의 PATCH로 보낸다.
+// 현재 닉네임을 프리필하고, 로딩/에러는 마이 요약 쿼리에 맞춰 처리한다.
 export default function EditProfileScreen() {
   const profileQuery = useMyProfileQuery();
 
@@ -111,10 +121,14 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
   // 마지막으로 "사용 가능"을 확인한 닉네임. 입력을 바꾸면 재확인이 필요해진다.
   const [checkedNickname, setCheckedNickname] = useState<string | null>(null);
 
+  const checkNicknameMutation = useCheckNicknameMutation();
+  const updateProfileMutation = useUpdateProfileMutation();
+
   const {
     control,
     handleSubmit,
     trigger,
+    setError,
     clearErrors,
     formState: { errors, isValid },
   } = useForm<EditProfileForm>({
@@ -143,23 +157,63 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
   );
   const hasChanges = !nicknameUnchanged || changingPassword;
 
-  // TODO(2단계): useCheckNicknameMutation 연동. 지금은 형식 검증만 통과하면
-  // 확인됨으로 처리해 "사용 가능" 상태 UI를 눈으로 볼 수 있게 둔다(임시).
+  // [중복 확인] 닉네임: 형식 검증 통과 후 조회. 409면 인라인 에러, 200이면 확인 상태로.
   const handleCheckNickname = async () => {
     if (!(await trigger("nickname"))) {
       return;
     }
-    clearErrors("nickname");
-    setCheckedNickname(nicknameValue);
+    try {
+      const available = await checkNicknameMutation.mutateAsync(nicknameValue);
+      if (available) {
+        clearErrors("nickname");
+        setCheckedNickname(nicknameValue);
+      } else {
+        setError("nickname", { message: "이미 사용 중인 닉네임이에요." });
+        setCheckedNickname(null);
+      }
+    } catch (error) {
+      Alert.alert("확인 실패", errorMessage(error));
+    }
   };
 
-  // TODO(2단계): updateMyProfile(PATCH) 연동. 지금은 검증만 하고 토스트로 대체.
-  const onSubmit = handleSubmit(async () => {
-    if (!nicknameChecked || !hasChanges) {
+  // 변경분만 PATCH로 보낸다. nickname은 항상, 비번 변경 시에만 pastPassword+newPassword.
+  // 성공 시 새 refreshToken이 저장된다(updateMyProfile). 닉네임 미변경이거나 확인 전이면 막는다.
+  const onSubmit = handleSubmit(async (values) => {
+    if (!nicknameChecked || !hasChanges || updateProfileMutation.isPending) {
       return;
     }
-    ToastAndroid.show("(연동 예정) 저장", ToastAndroid.SHORT);
-    router.back();
+    try {
+      await updateProfileMutation.mutateAsync({
+        nickname: values.nickname.trim(),
+        ...(changingPassword
+          ? {
+              pastPassword: values.currentPassword,
+              newPassword: values.newPassword,
+            }
+          : {}),
+      });
+      ToastAndroid.show("변경사항을 저장했어요.", ToastAndroid.SHORT);
+      router.back();
+    } catch (error) {
+      // 409=닉네임 중복(재확인 유도), 비번 변경 중 400/401=현재 비번 불일치로 본다.
+      if (error instanceof ApiHttpError) {
+        if (error.status === 409) {
+          setError("nickname", { message: "이미 사용 중인 닉네임이에요." });
+          setCheckedNickname(null);
+          return;
+        }
+        if (
+          changingPassword &&
+          (error.status === 400 || error.status === 401)
+        ) {
+          setError("currentPassword", {
+            message: "현재 비밀번호가 올바르지 않아요.",
+          });
+          return;
+        }
+      }
+      Alert.alert("저장 실패", errorMessage(error));
+    }
   });
 
   const canSubmit = isValid && nicknameChecked && hasChanges;
@@ -199,6 +253,7 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
                     label="중복 확인"
                     variant="main"
                     onPress={handleCheckNickname}
+                    loading={checkNicknameMutation.isPending}
                     disabled={nicknameUnchanged || nicknameChecked}
                     style={styles.checkButton}
                   />
@@ -299,6 +354,7 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
         <Button
           label="저장"
           onPress={onSubmit}
+          loading={updateProfileMutation.isPending}
           disabled={!canSubmit}
           style={styles.submit}
         />

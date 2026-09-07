@@ -29,6 +29,19 @@ export interface UserSignUpRequest {
   agreements: AgreementRequest[];
 }
 
+// 프로필 수정 요청(swagger UserPatchRequest). nickname은 항상 필수(비번만 바꿔도 함께 보낸다).
+// 비밀번호 변경 시에만 pastPassword+newPassword를 넣는다(newPassword 8~64).
+export interface UserPatchRequest {
+  nickname: string;
+  pastPassword?: string;
+  newPassword?: string;
+}
+
+// 프로필 수정/토큰 재발급 응답(swagger RefreshTokenResponse). 서버가 refresh를 회전시킨다.
+export interface RefreshTokenResponse {
+  refreshToken: string;
+}
+
 // `GET /user/me` 서버 응답(swagger UserProfileResponse, camelCase).
 export interface UserProfileResponse {
   userId: number;
