@@ -49,7 +49,10 @@ const signupSchema = z
       .trim()
       .min(2, "닉네임은 2~10자로 입력해주세요.")
       .max(10, "닉네임은 2~10자로 입력해주세요."),
-    password: z.string().min(8, "비밀번호는 8자 이상이어야 해요."),
+    password: z
+      .string()
+      .min(8, "비밀번호는 8~64자로 입력해주세요.")
+      .max(64, "비밀번호는 8~64자로 입력해주세요."),
     passwordConfirm: z.string().min(1, "비밀번호를 한 번 더 입력해주세요."),
   })
   .refine((values) => values.password === values.passwordConfirm, {
@@ -296,7 +299,7 @@ export default function SignupScreen() {
                 ref={passwordRef}
                 label="비밀번호"
                 focusColor={Palette.border.default}
-                placeholder="8자 이상"
+                placeholder="8~64자"
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
