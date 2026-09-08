@@ -109,9 +109,11 @@ export async function updateMyProfile(body: UserPatchRequest): Promise<void> {
     API_ENDPOINTS.user.me,
     body,
   );
-  if (data?.refreshToken) {
-    await setRefreshToken(data.refreshToken);
+  // refresh가 없으면 저장 성공으로 볼 수 없다(옛 refresh 유지 시 이후 재발급 실패) → login/reissue처럼 던진다.
+  if (!data?.refreshToken) {
+    throw new ApiHttpError(0, "프로필 수정 응답에 토큰이 없어요.");
   }
+  await setRefreshToken(data.refreshToken);
 }
 
 export async function logout(): Promise<void> {
