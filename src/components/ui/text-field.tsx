@@ -1,6 +1,8 @@
 import { useState, type ReactNode, type Ref } from "react";
 
+import { Eye, EyeClosed } from "lucide-react-native";
 import {
+  Pressable,
   StyleSheet,
   TextInput,
   View,
@@ -20,6 +22,8 @@ export type TextFieldProps = TextInputProps & {
   error?: string;
   containerStyle?: StyleProp<ViewStyle>;
   rightAccessory?: ReactNode;
+  /** 우측에 표시/숨김 눈 아이콘을 띄운다(비밀번호 입력란). 켜면 기본은 가려진 상태. */
+  secureToggle?: boolean;
   focusColor?: string;
   ref?: Ref<TextInput>;
 };
@@ -29,6 +33,8 @@ export function TextField({
   error,
   containerStyle,
   rightAccessory,
+  secureToggle = false,
+  secureTextEntry,
   focusColor = Palette.black,
   style,
   onFocus,
@@ -37,6 +43,7 @@ export function TextField({
   ...rest
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   const borderColor = error
     ? ERROR_COLOR
@@ -44,10 +51,34 @@ export function TextField({
       ? focusColor
       : Palette.border.default;
 
+  // secureToggle이면 눈 상태로 가림 여부를 정한다(기본 가림). 아니면 전달값 그대로.
+  const isSecure = secureToggle ? !visible : secureTextEntry;
+
+  // 눈 아이콘은 rightAccessory 자리를 공유한다(둘을 함께 쓰는 입력란은 없다).
+  const right = secureToggle ? (
+    <Pressable
+      onPress={() => setVisible((prev) => !prev)}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={visible ? "비밀번호 숨기기" : "비밀번호 보기"}
+      style={styles.eyeButton}
+    >
+      {/* 뜬 눈=보임, 감은 눈=가림. 표준(아이콘이 현재 표시 상태를 나타냄). */}
+      {visible ? (
+        <Eye size={20} color={Palette.gray[400]} />
+      ) : (
+        <EyeClosed size={20} color={Palette.gray[400]} />
+      )}
+    </Pressable>
+  ) : (
+    rightAccessory
+  );
+
   const input = (
     <TextInput
       ref={ref}
       placeholderTextColor={Palette.gray[300]}
+      secureTextEntry={isSecure}
       onFocus={(event) => {
         setFocused(true);
         onFocus?.(event);
@@ -56,11 +87,7 @@ export function TextField({
         setFocused(false);
         onBlur?.(event);
       }}
-      style={[
-        styles.input,
-        rightAccessory ? styles.inputBare : { borderColor },
-        style,
-      ]}
+      style={[styles.input, right ? styles.inputBare : { borderColor }, style]}
       {...rest}
     />
   );
@@ -77,10 +104,10 @@ export function TextField({
         </ThemedText>
       ) : null}
 
-      {rightAccessory ? (
+      {right ? (
         <View style={[styles.inputWrap, { borderColor }]}>
           {input}
-          {rightAccessory}
+          {right}
         </View>
       ) : (
         input
@@ -125,7 +152,13 @@ const styles = StyleSheet.create({
     minWidth: 0,
     borderWidth: 0,
     borderRadius: 0,
+    // 우측 액세서리(눈·중복확인)와의 간격은 wrap의 gap이 잡는다 → 입력 영역을 오른쪽으로 넓힌다.
+    paddingRight: 0,
     backgroundColor: "transparent",
+  },
+  eyeButton: {
+    paddingHorizontal: Spacing.one,
+    paddingVertical: Spacing.two,
   },
   error: {
     marginTop: Spacing.one,

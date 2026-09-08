@@ -51,6 +51,8 @@ export default function MyScreen() {
 
   const openReviews = () => router.push("/my/reviews");
 
+  const openSettings = () => router.push("/my/edit-profile");
+
   const openStamp = (stamp: PassportSummary) =>
     router.push({
       pathname: "/my/stamp/[stampId]",
@@ -133,7 +135,7 @@ export default function MyScreen() {
         <ProfileSummaryCard
           user={profileQuery.data}
           onPressReviews={openReviews}
-          onLogout={logout}
+          onOpenSettings={openSettings}
         />
       )}
 
@@ -152,20 +154,31 @@ export default function MyScreen() {
         )}
       </View>
 
-      <Pressable
-        onPress={deleteAccount}
-        hitSlop={8}
-        accessibilityRole="button"
-        style={styles.deleteAccount}
-      >
-        <ThemedText
-          type="label05"
-          color={Palette.gray[400]}
-          style={styles.deleteAccountText}
+      <View style={styles.accountActions}>
+        <Pressable onPress={logout} hitSlop={8} accessibilityRole="button">
+          <ThemedText
+            type="label05"
+            color={Palette.gray[400]}
+            style={styles.accountActionText}
+          >
+            로그아웃
+          </ThemedText>
+        </Pressable>
+        <View style={styles.accountActionsDivider} />
+        <Pressable
+          onPress={deleteAccount}
+          hitSlop={8}
+          accessibilityRole="button"
         >
-          회원 탈퇴
-        </ThemedText>
-      </Pressable>
+          <ThemedText
+            type="label05"
+            color={Palette.gray[400]}
+            style={styles.accountActionText}
+          >
+            회원 탈퇴
+          </ThemedText>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -194,12 +207,19 @@ const styles = StyleSheet.create({
   passportSection: {
     gap: Spacing.three,
   },
-  deleteAccount: {
+  accountActions: {
+    flexDirection: "row",
     alignSelf: "center",
+    alignItems: "center",
+    gap: Spacing.three,
     paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
   },
-  deleteAccountText: {
+  accountActionText: {
     textDecorationLine: "underline",
+  },
+  accountActionsDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: Palette.border.disabled,
   },
 });

@@ -86,6 +86,10 @@ export default function RootLayout() {
                 options={{ title: "내가 쓴 리뷰" }}
               />
               <Stack.Screen
+                name="my/edit-profile"
+                options={{ title: "프로필 편집" }}
+              />
+              <Stack.Screen
                 name="my/stamp/[stampId]"
                 options={{
                   headerShown: false,
