@@ -108,15 +108,15 @@ let hydratePromise: Promise<void> | null = null;
 
 export function hydrateDemoMode(): Promise<void> {
   hydratePromise ??= (async () => {
-    let stored: string | null = null;
+    // 데모 모드는 정책상 미사용 — 저장값과 무관하게 항상 실사용(demo=false)으로 고정한다.
+    // 모든 API 경계(getDemoMode)가 false를 읽어 실데이터로 동작한다.
+    setDemoModeFlag(false);
+    useDemoMode.setState({ isDemo: false, hydrated: true });
     try {
-      stored = await SecureStore.getItemAsync(MODE_KEY);
+      await SecureStore.deleteItemAsync(MODE_KEY); // 기기에 남은 데모 플래그 제거
     } catch (error) {
-      console.warn("데모 모드 상태를 읽지 못했습니다.", error);
+      console.warn("데모 모드 플래그를 정리하지 못했습니다.", error);
     }
-    const isDemo = stored === "true";
-    setDemoModeFlag(isDemo);
-    useDemoMode.setState({ isDemo, hydrated: true });
   })();
   return hydratePromise;
 }
