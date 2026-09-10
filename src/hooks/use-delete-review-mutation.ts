@@ -25,6 +25,8 @@ export function useDeleteReviewMutation() {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.myReviews() });
       // 총 리뷰수(GET /user/me)도 함께 갱신 — 마이 리뷰 상단·프로필 카드가 이 값을 쓴다.
       queryClient.invalidateQueries({ queryKey: queryKeys.user.me() });
+      // 리뷰 삭제 시 그 리뷰로 받은 도장도 사라지므로 여권(+도장 상세)을 갱신한다.
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.passport() });
       if (storeId) {
         queryClient.invalidateQueries({
           queryKey: queryKeys.store.reviews(storeId),

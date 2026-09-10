@@ -6,8 +6,9 @@ import * as SplashScreen from "expo-splash-screen";
 
 import { ACCESS_TOKEN_KEY } from "@/api/client";
 import { hydrateDemoMode } from "@/stores/demo-mode";
+import { hasSeenOnboarding } from "@/stores/onboarding";
 
-type AuthState = "checking" | "signedIn" | "signedOut";
+type AuthState = "checking" | "signedIn" | "onboarding" | "signedOut";
 
 export default function SplashGate() {
   const [authState, setAuthState] = useState<AuthState>("checking");
@@ -31,8 +32,17 @@ export default function SplashGate() {
         );
       }
 
+      if (token) {
+        if (!cancelled) {
+          setAuthState("signedIn");
+        }
+        return;
+      }
+
+      // 토큰이 없으면 최초 진입 — 온보딩을 아직 안 봤을 때만 1회 노출, 이후엔 로그인으로.
+      const seenOnboarding = await hasSeenOnboarding();
       if (!cancelled) {
-        setAuthState(token ? "signedIn" : "signedOut");
+        setAuthState(seenOnboarding ? "signedOut" : "onboarding");
       }
     })();
 
@@ -51,5 +61,12 @@ export default function SplashGate() {
     return null;
   }
 
-  return <Redirect href={authState === "signedIn" ? "/map" : "/login"} />;
+  const href =
+    authState === "signedIn"
+      ? "/map"
+      : authState === "onboarding"
+        ? "/onboarding"
+        : "/login";
+
+  return <Redirect href={href} />;
 }
