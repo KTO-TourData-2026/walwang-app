@@ -66,14 +66,14 @@ export default function MyScreen() {
         text: "로그아웃",
         style: "destructive",
         onPress: async () => {
-          // 서버 호출이 실패해도 토큰은 정리되므로(logout()의 finally) 게이트로 보낸다.
+          // 서버 호출이 실패해도 토큰은 정리되므로(logout()의 finally) 로그인으로 보낸다.
           try {
             await logoutMutation.mutateAsync();
           } catch {
             // 네트워크 실패는 무시 — 로컬 세션은 이미 정리됨.
           }
           ToastAndroid.show("로그아웃됐어요!", ToastAndroid.SHORT);
-          router.replace("/");
+          router.replace("/login");
         },
       },
     ]);
