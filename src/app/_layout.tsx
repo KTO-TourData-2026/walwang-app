@@ -46,7 +46,6 @@ export default function RootLayout() {
               <Stack.Screen
                 name="review/[placeId]/receipt"
                 options={{
-                  title: "1 / 3",
                   headerTitleAlign: "center",
                   headerShadowVisible: false,
                 }}
@@ -58,7 +57,6 @@ export default function RootLayout() {
               <Stack.Screen
                 name="review/[placeId]/form"
                 options={{
-                  title: "3 / 3",
                   headerTitleAlign: "center",
                   headerShadowVisible: false,
                 }}
