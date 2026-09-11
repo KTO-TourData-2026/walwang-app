@@ -6,6 +6,10 @@
 
 > 관련: [prd.md](prd.md) · [user-flow.md](user-flow.md) · [api-architecture.md](api-architecture.md) · 이슈 [#36](https://github.com/KTO-TourData-2026/walwang-app/issues/36)
 
+> ⚠️ **[2026-09 결정] real/demo 토글은 제거됨.**
+> 실제 상호명 + 가짜(목) 리뷰를 안전하게 시연하기 위한 조치(상호명 마스킹·목데이터 고지·안내 모달 등)에 들여야 할 품과 **법적 처벌 리스크(기만행위·명예훼손) 회피 비용**이 예상보다 커서, 데모 토글 UI는 **일단 제거**하기로 결정했다.
+> `isDemo` 마스킹 로직(API `demo` 파라미터)은 코드에 남아 있으나, 전 화면 플로팅 토글·안내 모달 UI는 노출하지 않는다(`src/components/demo/demo-mode-floating-toggle.tsx`가 `null` 반환). 아래 내용은 토글이 있던 시점 기준의 **원 설계 기록**으로 남긴다.
+
 ## 1. 왜 두 모드인가 (배경)
 
 왈왕은 **리뷰 기반 신뢰도** 서비스라 시연 시점엔 실제 리뷰가 없어 목(mock) 리뷰가 필요하다.
@@ -209,8 +213,8 @@ API 함수는 훅이 아니라 axios 호출부라 **동기적으로 현재 값�
 
 - [x] `demo-mode` 스토어 신규 + 영속 + `setDemo`에서 캐시 리셋(`resetQueries`)
 - [x] `api/demo.ts` 접근자 방식으로 교체, 4개 API 파일 `getDemoMode()` 반영
-- [x] real/demo 토글 UI(전 화면 플로팅, 양쪽 모드 상시)
-- [x] 안내 모달(문구 §6-1) + 로그인 최초 진입 1회 자동 노출 + "오늘 하루 다시 보지 않기"(로컬 날짜)
+- [x] real/demo 토글 UI(전 화면 플로팅, 양쪽 모드 상시) — **이후 제거(상단 배너 참조): 현재 `DemoModeFloatingToggle`는 `null` 렌더**
+- [x] 안내 모달(문구 §6-1) + 로그인 최초 진입 1회 자동 노출 + "오늘 하루 다시 보지 않기"(로컬 날짜) — **이후 제거(상단 배너 참조)**
 
 이슈 B (데모 리뷰 작성 튜토리얼) — 미착수:
 
