@@ -382,6 +382,22 @@ export default function SignupScreen() {
             </ThemedText>
           </Link>
         </View>
+
+        <Pressable
+          onPress={() => setTermModal("PRIVACY_POLICY")}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="개인정보 처리방침 보기"
+          style={styles.policyLink}
+        >
+          <ThemedText
+            type="label05"
+            color={Palette.gray[500]}
+            style={styles.policyLinkText}
+          >
+            개인정보 처리방침
+          </ThemedText>
+        </Pressable>
       </ScrollView>
 
       <TermsModal
@@ -438,6 +454,12 @@ const styles = StyleSheet.create({
   },
   agreementCheckbox: {
     flex: 1,
+  },
+  policyLink: {
+    alignSelf: "center",
+  },
+  policyLinkText: {
+    textDecorationLine: "underline",
   },
   loginRow: {
     flexDirection: "row",

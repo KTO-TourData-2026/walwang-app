@@ -6,6 +6,7 @@ import { Link, useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
@@ -18,7 +19,9 @@ import { z } from "zod";
 import { ApiHttpError } from "@/api/http-error";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
+import { TermsModal } from "@/components/ui/terms-modal";
 import { TextField } from "@/components/ui/text-field";
+import { TERMS, type TermContentCode } from "@/constants/terms";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 import { useLoginMutation } from "@/hooks/use-login-mutation";
 
@@ -40,6 +43,7 @@ export default function LoginScreen() {
   const passwordRef = useRef<TextInput>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
+  const [termModal, setTermModal] = useState<TermContentCode | null>(null);
 
   const {
     control,
@@ -156,7 +160,30 @@ export default function LoginScreen() {
             </ThemedText>
           </Link>
         </View>
+
+        <Pressable
+          onPress={() => setTermModal("PRIVACY_POLICY")}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="개인정보 처리방침 보기"
+          style={styles.policyLink}
+        >
+          <ThemedText
+            type="label05"
+            color={Palette.gray[500]}
+            style={styles.policyLinkText}
+          >
+            개인정보 처리방침
+          </ThemedText>
+        </Pressable>
       </ScrollView>
+
+      <TermsModal
+        visible={termModal !== null}
+        title={termModal ? TERMS[termModal].title : ""}
+        body={termModal ? TERMS[termModal].body : ""}
+        onClose={() => setTermModal(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -194,6 +221,12 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   signupLink: {
+    textDecorationLine: "underline",
+  },
+  policyLink: {
+    alignSelf: "center",
+  },
+  policyLinkText: {
     textDecorationLine: "underline",
   },
 });
