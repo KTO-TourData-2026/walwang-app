@@ -237,7 +237,7 @@ export const TERMS: Record<TermContentCode, { title: string; body: string }> = {
 
 [방문 기록(도장) 생성 (선택)]
 처리 목적: 방문 기록 제공
-처리 항목: 후기에 첨부된 사진에서 생성한 실루엣 이미지
+처리 항목: 후기에 첨부된 사진에서 생성한 이미지
 
 [후기 인증 (선택)]
 처리 목적: 방문 사실 확인
