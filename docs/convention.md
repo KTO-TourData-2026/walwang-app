@@ -118,6 +118,7 @@ Closes #이슈번호
 - `feat` → `develop` **머지 커밋(Merge commit)** 방식
   - 최소 1명 승인 → 작성자가 직접 머지하고, 작업 브랜치 삭제
   - PR 제목을 이슈 제목과 동일하게 맞춘다
+- `release/*` → `main` **머지 커밋** 방식 — 배포용 릴리즈. 흐름은 [§6](#6-릴리즈-develop--main) 참고
 
 ## 4. Issue 연동 규칙
 
@@ -142,3 +143,36 @@ flowchart LR
   E --> F[머지 커밋으로 develop에 머지]
   F --> G[작업 브랜치 삭제]
 ```
+
+## 6. 릴리즈 (develop → main)
+
+배포 가능한 상태를 `main`에 반영할 때의 흐름. 평소 개발(§5)과 달리 **release 브랜치를 거쳐** `main`에 머지한다.
+
+> 혼자(프론트 단독) 작업 중이라 리뷰 승인자가 없다 → **셀프 점검 후 직접 머지**한다. 대신 아래 배포 전 체크리스트를 리뷰 대용으로 반드시 돈다.
+
+### 6-1. 흐름
+
+```
+develop  ──▶  release/vX.Y.Z  ──▶  main  (머지 후 vX.Y.Z 태그)
+  (통합)       (릴리즈 고정·QA)       (배포)
+```
+
+1. `develop`에서 `release/vX.Y.Z` 브랜치를 딴다. (버전 접두어도 소문자 — 예: `release/v1.0.0`)
+2. release 브랜치에서 **배포 전 체크·QA·막판 fix**(버전 bump, 문구 수정 등)만 한다. 새 기능은 넣지 않는다.
+3. **release 브랜치 → `main`** 으로 PR을 연다. 본문은 릴리즈 PR 템플릿을 쓴다.
+   - PR 작성 URL 끝에 `?template=release.md` 를 붙이면 선택된다. (`.github/PULL_REQUEST_TEMPLATE/release.md`)
+4. 배포 전 체크리스트 통과 후 **머지 커밋**으로 `main`에 머지한다.
+5. 머지된 커밋에 버전 태그를 단다.
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+6. release 브랜치에서 막판 fix가 있었으면 `main`을 `develop`으로 back-merge 해 동기화한다.
+
+### 6-2. 버전 규칙 (SemVer)
+
+`vMAJOR.MINOR.PATCH` — 각각 호환 깨짐 / 기능 추가 / 버그 수정. `package.json`의 `version`도 함께 올린다.
+
+- 공모전 MVP 기간엔 `minor`(기능 추가)·`patch`(버그 수정) 위주로 올린다.
+
+> 앱스토어에 실제로 올리는 경우의 추가 점검(기본 모드 실사용 고정, 목 리뷰 정리 등)은 [demo-mode.md §9](demo-mode.md)의 배포 체크리스트를 따른다.
