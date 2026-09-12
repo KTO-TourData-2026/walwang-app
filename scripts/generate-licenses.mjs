@@ -137,6 +137,18 @@ for (const name of deps) {
   });
 }
 
+// 전문이 비면(LICENSE 파일 없음 + 표준 전문 미보유 라이선스) 생성을 실패시킨다.
+// 누락된 고지가 스토어 빌드에 조용히 포함되는 것을 막기 위함 — 발생 시 해당 라이선스
+// 전문을 STANDARD_LICENSE_TEXT에 추가하거나 원본 LICENSE를 확인해야 한다.
+const missing = entries.filter((entry) => !entry.licenseText);
+if (missing.length > 0) {
+  const list = missing.map((e) => `${e.name}(${e.license})`).join(", ");
+  throw new Error(
+    `[licenses] 라이선스 전문을 확보하지 못했습니다: ${list}. ` +
+      `원본 LICENSE를 확인하거나 STANDARD_LICENSE_TEXT에 해당 라이선스 전문을 추가하세요.`,
+  );
+}
+
 const banner = `// 이 파일은 scripts/generate-licenses.mjs 가 자동 생성합니다. 직접 수정하지 마세요.
 // 갱신: npm run licenses:generate
 `;
