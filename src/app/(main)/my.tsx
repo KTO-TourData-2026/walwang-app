@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
 import { useRouter } from "expo-router";
+import { ChevronRight } from "lucide-react-native";
 import {
   Alert,
   Pressable,
@@ -16,6 +17,7 @@ import { ProfileSummaryCard } from "@/components/my/profile-summary-card";
 import { ThemedText } from "@/components/themed-text";
 import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
+import { DATA_SOURCE_TITLE, DATA_SOURCES } from "@/constants/attribution";
 import { BottomTabInset, Palette, Spacing } from "@/constants/theme";
 import { useDeleteAccountMutation } from "@/hooks/use-delete-account-mutation";
 import { useLogoutMutation } from "@/hooks/use-logout-mutation";
@@ -179,6 +181,35 @@ export default function MyScreen() {
           </ThemedText>
         </Pressable>
       </View>
+
+      <View style={styles.footer}>
+        <ThemedText type="label06" color={Palette.gray[500]}>
+          {DATA_SOURCE_TITLE}
+        </ThemedText>
+        <View style={styles.footerSources}>
+          {DATA_SOURCES.map((item) => (
+            <ThemedText
+              key={item.label}
+              type="label06"
+              color={Palette.gray[400]}
+            >
+              {item.label} — {item.source}
+            </ThemedText>
+          ))}
+        </View>
+
+        <Pressable
+          onPress={() => router.push("/my/licenses")}
+          hitSlop={8}
+          accessibilityRole="button"
+          style={styles.licenseLink}
+        >
+          <ThemedText type="label05" color={Palette.gray[500]}>
+            오픈소스 라이선스
+          </ThemedText>
+          <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }
@@ -221,5 +252,20 @@ const styles = StyleSheet.create({
     width: 1,
     height: 12,
     backgroundColor: Palette.border.disabled,
+  },
+  footer: {
+    gap: Spacing.two,
+    paddingTop: Spacing.three,
+    borderTopWidth: 1,
+    borderTopColor: Palette.border.disabled,
+  },
+  footerSources: {
+    gap: Spacing.half,
+  },
+  licenseLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.half,
+    marginTop: Spacing.one,
   },
 });
