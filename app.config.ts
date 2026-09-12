@@ -31,6 +31,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "walwang",
   slug: "walwang",
+  // EAS 프로젝트 소유 계정(조직). 동적 config라 eas init이 자동으로 못 넣어 직접 적는다.
+  owner: "nyoengs-team",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/images/logo.png",
@@ -151,6 +153,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     ],
   ],
+  // EAS 프로젝트 식별자. eas init이 발급했고, 동적 config라 수동으로 넣는다.
+  // 이 값이 있어야 eas build/submit가 이 프로젝트로 연결된다.
+  extra: {
+    eas: {
+      projectId: "fe9d0735-78a4-4c65-a756-f86a940389de",
+    },
+  },
   experiments: {
     typedRoutes: true,
     reactCompiler: true,
