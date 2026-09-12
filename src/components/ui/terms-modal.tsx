@@ -30,7 +30,11 @@ export function TermsModal({
       <Pressable style={styles.backdrop} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={() => {}}>
           <View style={styles.header}>
-            <ThemedText type="subtitle02" color={Palette.gray[700]}>
+            <ThemedText
+              type="subtitle02"
+              color={Palette.gray[700]}
+              style={styles.headerTitle}
+            >
               {title}
             </ThemedText>
             <Pressable
@@ -76,8 +80,13 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "space-between",
+    gap: Spacing.two,
+  },
+  // 제목이 길어 줄바꿈돼도 X 아이콘을 밀지 않도록 가용 폭 안에서 접히게 한다.
+  headerTitle: {
+    flex: 1,
   },
   bodyScroll: {
     flexGrow: 0,

@@ -93,6 +93,10 @@ export default function RootLayout() {
                 options={{ title: "프로필 편집" }}
               />
               <Stack.Screen
+                name="my/licenses"
+                options={{ title: "오픈소스 라이선스" }}
+              />
+              <Stack.Screen
                 name="my/stamp/[stampId]"
                 options={{
                   headerShown: false,
