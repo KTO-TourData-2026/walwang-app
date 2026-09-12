@@ -64,6 +64,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "licenses:generate": "node ./scripts/generate-licenses.mjs && prettier --write src/constants/oss-licenses.generated.ts",
     "prepare": "husky"
   },

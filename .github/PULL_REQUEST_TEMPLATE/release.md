@@ -21,7 +21,7 @@
 ### 4. 배포 전 체크
 
 - [ ] `npm run lint` / `npm run typecheck` 통과
-- [ ] `npm run format` — 변경사항 없음
+- [ ] `npm run format:check` — 변경사항 없음
 - [ ] `npm run android` — dev build 정상 실행
 - [ ] 핵심 플로우 QA
   - [ ] 로그인 / 회원가입
