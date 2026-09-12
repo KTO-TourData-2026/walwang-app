@@ -6,7 +6,7 @@ import {
 import { StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
-import { Palette } from "@/constants/theme";
+import { Palette, Radius } from "@/constants/theme";
 import type { Coordinate, CourseWaypoint, NearbyPlace } from "@/types/course";
 
 /**
@@ -75,6 +75,9 @@ export default function CourseMap({
       style={styles.map}
       initialCamera={boundsCamera(pathCoords)}
       isShowLocationButton={false}
+      // 하단 시트가 좌하단 네이버 로고를 덮지 않게 시트 겹침(-Radius.large)만큼 올린다
+      // (SDK 약관상 로고 미가림 필수). mapWrap이 flex:1이라 시트 높이가 변해도 간격 유지.
+      mapPadding={{ bottom: Radius.large }}
     >
       {nearby.map((place, index) => (
         <NaverMapMarkerOverlay
