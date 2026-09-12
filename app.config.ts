@@ -54,6 +54,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     package: "com.walwang.android",
+    // 스토어 업로드마다 1씩 올려야 한다(같은 값으로 재업로드 불가).
+    // version("1.0.0")은 사용자에게 보이는 표기, versionCode는 스토어 내부 정수 버전.
+    versionCode: 1,
     adaptiveIcon: {
       backgroundColor: Palette.main[400],
       // 안드로이드는 이 이미지를 제조사별 마스크(원·스퀘어클·물방울)로 잘라내고
@@ -106,9 +109,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         android: {
           extraMavenRepos: ["https://repository.map.naver.com/archive/maven"],
-          // 백엔드가 아직 HTTP(비-HTTPS)라 안드로이드 기본 cleartext 차단을 풀어준다.
-          // 운영에서 HTTPS로 바뀌면 제거할 것. 변경 후 네이티브 재빌드 필요(expo run:android).
-          usesCleartextTraffic: true,
         },
       },
     ],
