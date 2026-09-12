@@ -1,0 +1,18 @@
+# 브랜치 전환 시 Metro 캐시를 비운다.
+# Windows에는 watchman이 없어 node 파일 워처가 브랜치 전환(대량 파일 변경)을
+# 놓치는 일이 있고, 그러면 다음 `expo start`가 stale한 파일맵/라우트로 떠서
+# "없는 경로" 같은 문제가 난다. 전환 때마다 캐시를 비워 fresh crawl을 강제한다.
+#
+# git 인자: $1=이전 HEAD, $2=새 HEAD, $3=1이면 브랜치 체크아웃(파일 체크아웃은 0)
+[ "$3" = "1" ] || exit 0
+
+# Windows(Git Bash/MSYS)에서만 실행 — Mac/Linux(watchman)에는 불필요
+case "$(uname -s)" in
+  MINGW* | MSYS* | CYGWIN*) ;;
+  *) exit 0 ;;
+esac
+
+tmp="$(node -e 'process.stdout.write(require("os").tmpdir())')"
+rm -rf "$tmp/metro-cache" .expo 2>/dev/null
+
+echo "🧹 Metro 캐시 정리 (브랜치 전환) — 다음 expo start는 fresh crawl"

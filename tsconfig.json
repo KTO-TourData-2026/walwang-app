@@ -2,6 +2,10 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    // app.config.ts가 디자인 토큰(src/constants/palette.ts)을 직접 import 한다.
+    // Expo의 설정 로더는 확장자 없는 상대 TS 경로를 못 찾아서 "./...ts"로 써야 하는데,
+    // 이 플래그가 없으면 tsc가 TS5097로 막는다. (빌드는 Metro가 하고 tsc는 --noEmit이라 안전)
+    "allowImportingTsExtensions": true,
     "paths": {
       "@/*": ["./src/*"],
       "@/assets/*": ["./assets/*"]

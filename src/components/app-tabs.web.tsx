@@ -3,21 +3,20 @@ import {
   TabList,
   TabTrigger,
   TabSlot,
-  TabTriggerSlotProps,
+  type TabTriggerSlotProps,
 } from "expo-router/ui";
+import { Heart, Map, UserRound, type LucideIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { Palette, Spacing } from "@/constants/theme";
 
 import { ThemedText } from "./themed-text";
-import { ThemedView } from "./themed-view";
 
 /**
- * 웹용 탭바.
- *
- * 웹에는 네이티브 탭바가 없어서 expo-router/ui의 조립형 Tabs로 직접 그린다.
- * app-tabs.tsx와 탭 구성(지도/저장/마이)을 항상 맞춰줄 것.
- * 이 프로젝트는 Android 우선이라 웹은 개발 편의용 정도로만 유지한다.
+ * 웹 탭바. 네이티브(app-tabs.tsx)의 커스텀 탭바와 비주얼을 맞춘다.
+ * 웹은 native `Tabs`의 커스텀 tabBar 제약이 있어 `expo-router/ui`로 구성하되,
+ * 아이콘·라벨·강조 색 규칙은 네이티브와 동일하게 렌더한다.
  */
 export default function AppTabs() {
   return (
@@ -25,14 +24,14 @@ export default function AppTabs() {
       <TabSlot style={styles.slot} />
       <TabList asChild>
         <TabBar>
-          <TabTrigger name="map" href="/" asChild>
-            <TabButton>지도</TabButton>
-          </TabTrigger>
           <TabTrigger name="saved" href="/saved" asChild>
-            <TabButton>저장</TabButton>
+            <TabButton Icon={Heart}>저장</TabButton>
+          </TabTrigger>
+          <TabTrigger name="map" href="/map" asChild>
+            <TabButton Icon={Map}>지도</TabButton>
           </TabTrigger>
           <TabTrigger name="my" href="/my" asChild>
-            <TabButton>마이</TabButton>
+            <TabButton Icon={UserRound}>마이</TabButton>
           </TabTrigger>
         </TabBar>
       </TabList>
@@ -41,29 +40,36 @@ export default function AppTabs() {
 }
 
 function TabBar({ children, ...props }: { children?: React.ReactNode }) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View {...props} style={styles.tabBarContainer}>
-      <ThemedView type="backgroundElement" style={styles.tabBarInner}>
-        {children}
-      </ThemedView>
+    <View
+      {...props}
+      style={[styles.bar, { paddingBottom: insets.bottom + Spacing.one }]}
+    >
+      {children}
     </View>
   );
 }
 
-function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+type TabButtonProps = TabTriggerSlotProps & { Icon: LucideIcon };
+
+function TabButton({ children, isFocused, Icon, ...props }: TabButtonProps) {
+  const color = isFocused ? Palette.main[500] : Palette.gray[400];
+
   return (
-    <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
-      <ThemedView
-        type={isFocused ? "backgroundSelected" : "backgroundElement"}
-        style={styles.tabButton}
+    <Pressable
+      {...props}
+      style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
+    >
+      <Icon size={24} color={color} strokeWidth={isFocused ? 2.4 : 2} />
+      <ThemedText
+        type={isFocused ? "subtitle05" : "label06"}
+        color={color}
+        style={styles.label}
       >
-        <ThemedText
-          type="small"
-          themeColor={isFocused ? "text" : "textSecondary"}
-        >
-          {children}
-        </ThemedText>
-      </ThemedView>
+        {children}
+      </ThemedText>
     </Pressable>
   );
 }
@@ -72,31 +78,29 @@ const styles = StyleSheet.create({
   slot: {
     height: "100%",
   },
-  tabBarContainer: {
+  bar: {
     position: "absolute",
+    left: 0,
+    right: 0,
     bottom: 0,
-    width: "100%",
-    padding: Spacing.three,
-    justifyContent: "center",
-    alignItems: "center",
     flexDirection: "row",
+    paddingTop: Spacing.two,
+    backgroundColor: Palette.background.base,
+    borderTopWidth: 1,
+    borderTopColor: Palette.border.disabled,
   },
-  tabBarInner: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
-    borderRadius: Spacing.five,
-    flexDirection: "row",
+  tab: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: Spacing.two,
-    maxWidth: MaxContentWidth,
-  },
-  tabButton: {
+    gap: Spacing.half,
     paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
   },
-  pressed: {
-    opacity: 0.7,
+  tabPressed: {
+    transform: [{ scale: 0.94 }],
+  },
+  // 선택/비선택 라벨의 lineHeight 차이로 아이콘~글자 간격이 흔들리지 않게 고정
+  label: {
+    lineHeight: 16,
   },
 });

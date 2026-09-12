@@ -1,0 +1,191 @@
+import { useState } from "react";
+
+import { useRouter } from "expo-router";
+import { MapPin, Route, Trash2 } from "lucide-react-native";
+import { FlatList, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { SavedCourseRow } from "@/components/saved/saved-course-row";
+import {
+  SavedPlaceRow,
+  type MenuAnchor,
+} from "@/components/saved/saved-place-row";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/error-state";
+import { LoadingView } from "@/components/ui/loading-view";
+import { PopoverMenu } from "@/components/ui/popover-menu";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Palette, Spacing } from "@/constants/theme";
+import { useDeleteCourseMutation } from "@/hooks/use-delete-course-mutation";
+import { useRenameCourseMutation } from "@/hooks/use-rename-course-mutation";
+import { useSavedCoursesQuery } from "@/hooks/use-saved-courses-query";
+import { useSavedStoresQuery } from "@/hooks/use-saved-stores-query";
+import { useToggleSavedStoreMutation } from "@/hooks/use-toggle-saved-store-mutation";
+import type { SavedCoursePreview } from "@/types/course";
+import type { Place } from "@/types/place";
+
+type Segment = "place" | "course";
+
+type ActiveMenu = { type: Segment; id: string; anchor: MenuAnchor };
+
+const SEGMENTS = [
+  { value: "place" as const, label: "장소", Icon: MapPin },
+  { value: "course" as const, label: "코스", Icon: Route },
+];
+
+export default function SavedScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  const [segment, setSegment] = useState<Segment>("place");
+  const savedStoresQuery = useSavedStoresQuery();
+  const savedCoursesQuery = useSavedCoursesQuery();
+  const toggleSaved = useToggleSavedStoreMutation();
+  const renameCourseMutation = useRenameCourseMutation();
+  const deleteCourseMutation = useDeleteCourseMutation();
+  const places = savedStoresQuery.data ?? [];
+  const courses = savedCoursesQuery.data ?? [];
+  const [menu, setMenu] = useState<ActiveMenu | null>(null);
+
+  const openPlace = (place: Place) =>
+    router.push({
+      pathname: "/store/[placeId]",
+      params: { placeId: place.id },
+    });
+
+  const openCourse = (course: SavedCoursePreview) =>
+    router.push({
+      pathname: "/recommend/result",
+      params: { courseId: course.id },
+    });
+
+  const deleteActive = () => {
+    if (!menu) {
+      return;
+    }
+    if (menu.type === "place") {
+      // 저장 해제 — 목록 캐시는 뮤테이션이 낙관적으로 갱신한다.
+      toggleSaved.mutate({ storeId: menu.id, nextSaved: false });
+    } else {
+      deleteCourseMutation.mutate(menu.id);
+    }
+    setMenu(null);
+  };
+
+  const renameCourse = (course: SavedCoursePreview, title: string) =>
+    renameCourseMutation.mutate({ courseId: course.id, title });
+
+  return (
+    <View style={[styles.root, { paddingTop: insets.top + Spacing.three }]}>
+      <View style={styles.header}>
+        <SegmentedControl
+          options={SEGMENTS}
+          value={segment}
+          onChange={setSegment}
+        />
+      </View>
+
+      {segment === "place" ? (
+        savedStoresQuery.isLoading ? (
+          <LoadingView />
+        ) : savedStoresQuery.isError ? (
+          <ErrorState
+            message="저장한 장소를 불러오지 못했어요"
+            onRetry={() => savedStoresQuery.refetch()}
+          />
+        ) : places.length > 0 ? (
+          <FlatList
+            data={places}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContent}
+            ItemSeparatorComponent={Separator}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <SavedPlaceRow
+                place={item}
+                onPress={openPlace}
+                onMenu={(place, anchor) =>
+                  setMenu({ type: "place", id: place.id, anchor })
+                }
+              />
+            )}
+          />
+        ) : (
+          <EmptyState
+            Icon={MapPin}
+            title="저장한 장소가 없어요"
+            subtitle="지도에서 마음에 드는 곳을 저장해보세요"
+          />
+        )
+      ) : savedCoursesQuery.isLoading ? (
+        <LoadingView />
+      ) : savedCoursesQuery.isError ? (
+        <ErrorState
+          message="저장한 코스를 불러오지 못했어요"
+          onRetry={() => savedCoursesQuery.refetch()}
+        />
+      ) : courses.length > 0 ? (
+        <FlatList
+          data={courses}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          ItemSeparatorComponent={Separator}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <SavedCourseRow
+              course={item}
+              onPress={openCourse}
+              onRename={renameCourse}
+              onMenu={(course, anchor) =>
+                setMenu({ type: "course", id: course.id, anchor })
+              }
+            />
+          )}
+        />
+      ) : (
+        <EmptyState
+          Icon={Route}
+          title="저장한 코스가 없어요"
+          subtitle="추천받기로 코스를 만들어 저장해보세요"
+        />
+      )}
+
+      <PopoverMenu
+        anchor={menu?.anchor ?? null}
+        onClose={() => setMenu(null)}
+        items={[
+          {
+            label: "삭제",
+            Icon: Trash2,
+            onPress: deleteActive,
+            destructive: true,
+          },
+        ]}
+      />
+    </View>
+  );
+}
+
+function Separator() {
+  return <View style={styles.separator} />;
+}
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: Palette.background.base,
+  },
+  header: {
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingBottom: Spacing.three,
+  },
+  listContent: {
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.one,
+    paddingBottom: Spacing.five,
+  },
+  separator: {
+    height: Spacing.three,
+  },
+});

@@ -5,22 +5,21 @@
 
 export type SizeKey = "smallMedium" | "large";
 export type PlaceStatus = "allowed" | "denied" | "unknown";
-export type Category = "park" | "cafe" | "restaurant";
+// 가게 type(cafe/restaurant/shopping/park)과 코스 nearby type(park/festival/attraction)을
+// 한 enum으로 합쳐 mapCategory 하나로 매핑한다.
+export type Category =
+  "park" | "cafe" | "restaurant" | "shopping" | "festival" | "attraction";
 
 export interface Place {
   id: string;
   name: string;
   category: Category;
+  /** 도로명주소. 백엔드 `location` 필드(가게 상세·검색 응답). */
+  location: string;
   latitude: number;
   longitude: number;
   sizeStatus: Record<SizeKey, PlaceStatus>;
-  reviewCount: number;
-  lastVerifiedAt: string | null;
-}
-
-export interface Course {
-  places: Place[];
-  path: { latitude: number; longitude: number }[] | null; // null이면 직선 폴백
-  totalDistance: number;
-  totalTime: number;
+  /** 카드(목록·검색) 응답엔 없다 — 상세(StoreDetail)에서만 채운다. */
+  reviewCount?: number;
+  lastVerifiedAt?: string | null;
 }

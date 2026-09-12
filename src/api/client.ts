@@ -1,5 +1,7 @@
-import axios from "axios";
+import axios, { type InternalAxiosRequestConfig } from "axios";
 import * as SecureStore from "expo-secure-store";
+
+import { toApiHttpError } from "@/api/http-error";
 
 /**
  * [환경변수 함정] RN에는 process.env가 없다.
@@ -12,6 +14,7 @@ import * as SecureStore from "expo-secure-store";
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? "";
 
 export const ACCESS_TOKEN_KEY = "walwang.accessToken";
+export const REFRESH_TOKEN_KEY = "walwang.refreshToken";
 
 // axios는 default export에 create를 노출하는데, import/no-named-as-default-member가
 // 이를 오탐으로 잡는다. axios.create는 정식 사용법이라 이 줄만 규칙을 끈다.
@@ -39,8 +42,88 @@ apiClient.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // dev 전용 요청 로깅. adb logcat -s ReactNativeJS:V 로 확인. 프로덕션 번들엔 포함되지 않음.
+  if (__DEV__) {
+    console.info(`[API →] ${config.method?.toUpperCase()} ${config.url}`);
+  }
+
   return config;
 });
+
+/**
+ * refreshToken으로 access를 재발급한다(POST /user/reissue).
+ * 인터셉터 재귀를 피하려고 raw axios를 쓴다. 새 access=응답 헤더, 새 refresh=바디(14일 슬라이딩).
+ */
+async function reissueTokens() {
+  const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+  if (!refreshToken) {
+    throw new Error("refreshToken 없음");
+  }
+  const res = await axios.post(
+    `${API_BASE_URL}/user/reissue`,
+    { refreshToken },
+    { headers: { "Content-Type": "application/json" } },
+  );
+  const auth = res.headers.authorization ?? res.headers.Authorization;
+  const access =
+    typeof auth === "string" ? auth.replace(/^Bearer\s+/i, "") : null;
+  const newRefresh = (res.data as { refreshToken?: string })?.refreshToken;
+
+  // 서버가 refresh를 회전하므로 access·refresh 둘 다 온 경우만 성공 처리(옛 토큰 유지 방지).
+  if (!access || !newRefresh) {
+    throw new Error("재발급 응답에 토큰이 없음");
+  }
+
+  await setAccessToken(access);
+  await setRefreshToken(newRefresh);
+}
+
+// 동시 401이 여러 번 재발급을 부르지 않도록 진행 중 Promise를 공유(single-flight).
+let refreshPromise: Promise<void> | null = null;
+
+/**
+ * 응답 인터셉터: 401이면 refreshToken으로 1회 재발급 후 원 요청을 재시도한다.
+ * 재발급 실패 시 토큰을 정리하고 에러를 던진다(화면에서 로그인으로 유도).
+ * 그 외 에러는 공통 ApiHttpError로 정규화한다.
+ */
+apiClient.interceptors.response.use(
+  (response) => {
+    // dev 전용 응답 로깅.
+    if (__DEV__) {
+      console.info(`[API ←] ${response.status} ${response.config.url}`);
+    }
+    return response;
+  },
+  async (error) => {
+    const config = error?.config as
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const status = error?.response?.status;
+    const url = config?.url ?? "";
+
+    // dev 전용 에러 로깅(status·경로·서버 메시지).
+    if (__DEV__) {
+      const body = error?.response?.data as { message?: string } | undefined;
+      console.info(`[API ✗] ${status ?? "-"} ${url}`, body?.message ?? "");
+    }
+
+    const skip = url.includes("/user/reissue") || url.includes("/user/login");
+
+    if (status === 401 && config && !config._retry && !skip) {
+      config._retry = true;
+      try {
+        refreshPromise = refreshPromise ?? reissueTokens();
+        await refreshPromise;
+        refreshPromise = null;
+        return apiClient(config);
+      } catch {
+        refreshPromise = null;
+        await clearTokens();
+      }
+    }
+
+    return Promise.reject(toApiHttpError(error));
+  },
+);
 
 export async function setAccessToken(token: string) {
   await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, token);
@@ -48,4 +131,21 @@ export async function setAccessToken(token: string) {
 
 export async function clearAccessToken() {
   await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+}
+
+export async function getRefreshToken() {
+  return SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+}
+
+export async function setRefreshToken(token: string) {
+  await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token);
+}
+
+export async function clearRefreshToken() {
+  await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+}
+
+/** 로그인/로그아웃/탈퇴에서 두 토큰을 함께 정리할 때 사용. */
+export async function clearTokens() {
+  await Promise.all([clearAccessToken(), clearRefreshToken()]);
 }
