@@ -60,7 +60,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     // version("1.0.0")은 사용자에게 보이는 표기, versionCode는 스토어 내부 정수 버전.
     versionCode: 1,
     adaptiveIcon: {
-      backgroundColor: Palette.main[400],
+      // 로그인/회원가입 로고(logo.png, 배경 #FC8571)와 색을 맞춘다.
+      backgroundColor: "#FC8571",
       // 안드로이드는 이 이미지를 제조사별 마스크(원·스퀘어클·물방울)로 잘라내고
       // 가운데 약 66%만 보이는 걸 보장한다. 그래서 여기엔 logo.png를 그대로 쓰면 안 된다.
       // logo-foreground.png = 배경을 투명하게 걷어내고 강아지를 66% 안으로 축소한 버전.
