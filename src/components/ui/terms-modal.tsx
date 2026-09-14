@@ -89,7 +89,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   bodyScroll: {
+    // 본문이 짧을 땐 콘텐츠만큼만 차지하고(hug), 길 땐 sheet의 maxHeight(80%)
+    // 안에서 줄어들어 스크롤 영역이 생기도록 flexShrink를 켠다. RN은 flex 자식의
+    // flexShrink 기본값이 0이라 이게 없으면 ScrollView가 콘텐츠 전체 높이로 커져
+    // 스크롤이 안 잡힌다.
     flexGrow: 0,
+    flexShrink: 1,
   },
   bodyContent: {
     paddingBottom: Spacing.two,

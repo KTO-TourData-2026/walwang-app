@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "expo-router";
 import { ChevronRight } from "lucide-react-native";
@@ -17,7 +17,9 @@ import { ProfileSummaryCard } from "@/components/my/profile-summary-card";
 import { ThemedText } from "@/components/themed-text";
 import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
+import { TermsModal } from "@/components/ui/terms-modal";
 import { DATA_SOURCE_TITLE, DATA_SOURCES } from "@/constants/attribution";
+import { TERMS, type TermContentCode } from "@/constants/terms";
 import { BottomTabInset, Palette, Spacing } from "@/constants/theme";
 import { useDeleteAccountMutation } from "@/hooks/use-delete-account-mutation";
 import { useLogoutMutation } from "@/hooks/use-logout-mutation";
@@ -32,6 +34,7 @@ export default function MyScreen() {
   const deleteAccountMutation = useDeleteAccountMutation();
   const profileQuery = useMyProfileQuery();
   const passportQuery = usePassportQuery();
+  const [termModal, setTermModal] = useState<TermContentCode | null>(null);
   const {
     hasNextPage,
     isFetchingNextPage,
@@ -118,99 +121,121 @@ export default function MyScreen() {
   }
 
   return (
-    <ScrollView
-      style={styles.root}
-      contentContainerStyle={[
-        styles.content,
-        { paddingTop: insets.top + Spacing.three },
-      ]}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* 에러는 프로필·여권 원인이 서로 달라(재시도도 별도) 섹션별로 유지한다. */}
-      {profileQuery.isError || !profileQuery.data ? (
-        <ErrorState
-          message="프로필을 불러오지 못했어요"
-          onRetry={() => profileQuery.refetch()}
-          style={styles.profileState}
-        />
-      ) : (
-        <ProfileSummaryCard
-          user={profileQuery.data}
-          onPressReviews={openReviews}
-          onOpenSettings={openSettings}
-        />
-      )}
-
-      <View style={styles.passportSection}>
-        <ThemedText type="subtitle02" color={Palette.gray[700]}>
-          나의 여권
-        </ThemedText>
-        {passportQuery.isError ? (
+    <>
+      <ScrollView
+        style={styles.root}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: insets.top + Spacing.three },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 에러는 프로필·여권 원인이 서로 달라(재시도도 별도) 섹션별로 유지한다. */}
+        {profileQuery.isError || !profileQuery.data ? (
           <ErrorState
-            message="여권을 불러오지 못했어요"
-            onRetry={() => passportQuery.refetch()}
-            style={styles.passportState}
+            message="프로필을 불러오지 못했어요"
+            onRetry={() => profileQuery.refetch()}
+            style={styles.profileState}
           />
         ) : (
-          <Passport stamps={stamps} onSelectStamp={openStamp} />
+          <ProfileSummaryCard
+            user={profileQuery.data}
+            onPressReviews={openReviews}
+            onOpenSettings={openSettings}
+          />
         )}
-      </View>
 
-      <View style={styles.accountActions}>
-        <Pressable onPress={logout} hitSlop={8} accessibilityRole="button">
-          <ThemedText
-            type="label05"
-            color={Palette.gray[400]}
-            style={styles.accountActionText}
-          >
-            로그아웃
+        <View style={styles.passportSection}>
+          <ThemedText type="subtitle02" color={Palette.gray[700]}>
+            나의 여권
           </ThemedText>
-        </Pressable>
-        <View style={styles.accountActionsDivider} />
-        <Pressable
-          onPress={deleteAccount}
-          hitSlop={8}
-          accessibilityRole="button"
-        >
-          <ThemedText
-            type="label05"
-            color={Palette.gray[400]}
-            style={styles.accountActionText}
-          >
-            회원 탈퇴
-          </ThemedText>
-        </Pressable>
-      </View>
-
-      <View style={styles.footer}>
-        <ThemedText type="label06" color={Palette.gray[500]}>
-          {DATA_SOURCE_TITLE}
-        </ThemedText>
-        <View style={styles.footerSources}>
-          {DATA_SOURCES.map((item) => (
-            <ThemedText
-              key={item.label}
-              type="label06"
-              color={Palette.gray[400]}
-            >
-              {item.label} — {item.source}
-            </ThemedText>
-          ))}
+          {passportQuery.isError ? (
+            <ErrorState
+              message="여권을 불러오지 못했어요"
+              onRetry={() => passportQuery.refetch()}
+              style={styles.passportState}
+            />
+          ) : (
+            <Passport stamps={stamps} onSelectStamp={openStamp} />
+          )}
         </View>
 
-        <Pressable
-          onPress={() => router.push("/my/licenses")}
-          hitSlop={8}
-          accessibilityRole="button"
-          style={styles.licenseLink}
-        >
-          <ThemedText type="label05" color={Palette.gray[500]}>
-            오픈소스 라이선스
+        <View style={styles.accountActions}>
+          <Pressable onPress={logout} hitSlop={8} accessibilityRole="button">
+            <ThemedText
+              type="label05"
+              color={Palette.gray[400]}
+              style={styles.accountActionText}
+            >
+              로그아웃
+            </ThemedText>
+          </Pressable>
+          <View style={styles.accountActionsDivider} />
+          <Pressable
+            onPress={deleteAccount}
+            hitSlop={8}
+            accessibilityRole="button"
+          >
+            <ThemedText
+              type="label05"
+              color={Palette.gray[400]}
+              style={styles.accountActionText}
+            >
+              회원 탈퇴
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        <View style={styles.footer}>
+          <ThemedText type="label06" color={Palette.gray[500]}>
+            {DATA_SOURCE_TITLE}
           </ThemedText>
-          <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
-        </Pressable>
-      </View>
-    </ScrollView>
+          <View style={styles.footerSources}>
+            {DATA_SOURCES.map((item) => (
+              <ThemedText
+                key={item.label}
+                type="label06"
+                color={Palette.gray[400]}
+              >
+                {item.label} — {item.source}
+              </ThemedText>
+            ))}
+          </View>
+
+          <Pressable
+            onPress={() => router.push("/my/licenses")}
+            hitSlop={8}
+            accessibilityRole="button"
+            style={styles.licenseLink}
+          >
+            <ThemedText type="label05" color={Palette.gray[500]}>
+              오픈소스 라이선스
+            </ThemedText>
+            <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
+          </Pressable>
+
+          <Pressable
+            onPress={() => setTermModal("PRIVACY_POLICY")}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="개인정보 처리방침 보기"
+            style={styles.licenseLink}
+          >
+            <ThemedText type="label05" color={Palette.gray[500]}>
+              개인정보 처리방침
+            </ThemedText>
+            <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      <TermsModal
+        visible={termModal !== null}
+        title={termModal ? TERMS[termModal].title : ""}
+        body={termModal ? TERMS[termModal].body : ""}
+        onClose={() => setTermModal(null)}
+      />
+    </>
   );
 }
 
