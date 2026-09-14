@@ -37,8 +37,7 @@ export function TermsModal({
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={onClose}
-          accessibilityRole="button"
-          accessibilityLabel="닫기"
+          accessible={false}
         />
         <View style={styles.sheet}>
           <View style={styles.header}>
