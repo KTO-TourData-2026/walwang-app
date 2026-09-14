@@ -1,4 +1,4 @@
-## 🚀 Release vX.Y.Z (develop → main)
+## 🚀 Release vX.Y.Z
 
 > 릴리즈 흐름은 [docs/convention.md §6](../../docs/convention.md) 참고.
 
