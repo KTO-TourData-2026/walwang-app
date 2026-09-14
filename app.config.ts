@@ -29,7 +29,7 @@ if (!NAVER_MAP_CLIENT_ID) {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "walwang",
+  name: "TripPaw",
   slug: "walwang",
   // EAS 프로젝트 소유 계정(조직). 동적 config라 eas init이 자동으로 못 넣어 직접 적는다.
   owner: "nyoengs-team",
