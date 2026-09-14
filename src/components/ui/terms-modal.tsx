@@ -27,8 +27,19 @@ export function TermsModal({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={() => {}}>
+      {/*
+        backdrop 탭(닫기) 타겟을 sheet 뒤 형제 레이어로 둔다. sheet를 Pressable로
+        감싸면 그 조상 터치러블이 Android에서 ScrollView의 드래그 responder를 가끔
+        가로채 스크롤이 "됐다 안 됐다" 한다. sheet는 일반 View라 스크롤 제스처를 방해
+        하지 않고, sheet 밖(=뒤 Pressable 노출 영역)을 탭할 때만 닫힌다.
+      */}
+      <View style={styles.backdrop}>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onClose}
+          accessible={false}
+        />
+        <View style={styles.sheet}>
           <View style={styles.header}>
             <ThemedText
               type="subtitle02"
@@ -58,8 +69,8 @@ export function TermsModal({
           </ScrollView>
 
           <Button label="닫기" variant="main" onPress={onClose} />
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }

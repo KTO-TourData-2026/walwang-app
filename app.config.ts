@@ -29,11 +29,11 @@ if (!NAVER_MAP_CLIENT_ID) {
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: "walwang",
+  name: "TripPaw",
   slug: "walwang",
   // EAS 프로젝트 소유 계정(조직). 동적 config라 eas init이 자동으로 못 넣어 직접 적는다.
   owner: "nyoengs-team",
-  version: "1.1.0",
+  version: "1.1.1",
   orientation: "portrait",
   icon: "./assets/images/logo.png",
   scheme: "walwang",
@@ -58,7 +58,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     package: "com.walwang.android",
     // 스토어 업로드마다 1씩 올려야 한다(같은 값으로 재업로드 불가).
     // version("1.0.0")은 사용자에게 보이는 표기, versionCode는 스토어 내부 정수 버전.
-    versionCode: 2,
+    versionCode: 3,
     adaptiveIcon: {
       // 로그인/회원가입 로고(logo.png, 배경 #FC8571)와 색을 맞춘다.
       backgroundColor: "#FC8571",
