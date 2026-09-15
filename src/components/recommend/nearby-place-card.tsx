@@ -1,4 +1,5 @@
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image } from "expo-image";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { CATEGORY_LABEL } from "@/constants/category";
@@ -24,7 +25,8 @@ export function NearbyPlaceCard({
         <Image
           source={{ uri: place.imageUrl }}
           style={styles.thumb}
-          resizeMode="cover"
+          contentFit="cover"
+          cachePolicy="memory-disk"
         />
       ) : (
         <View style={[styles.thumb, styles.thumbEmpty]} />
