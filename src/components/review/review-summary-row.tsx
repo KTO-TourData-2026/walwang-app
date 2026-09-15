@@ -29,6 +29,7 @@ export function ReviewSummaryRow({ review }: { review: Review }) {
             source={{ uri: review.thumbnailUrl }}
             style={styles.thumb}
             contentFit="cover"
+            cachePolicy="memory-disk"
             transition={120}
             accessibilityLabel="리뷰 사진"
             onError={() => setThumbFailed(true)}

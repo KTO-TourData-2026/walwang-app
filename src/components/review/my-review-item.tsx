@@ -42,6 +42,7 @@ export function MyReviewItem({
           source={{ uri: thumbnail }}
           style={styles.thumbnail}
           contentFit="cover"
+          cachePolicy="memory-disk"
           transition={150}
           accessibilityLabel={`${review.storeName} 리뷰 사진`}
         />

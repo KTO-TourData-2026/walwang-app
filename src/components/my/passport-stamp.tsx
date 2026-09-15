@@ -52,6 +52,7 @@ export function PassportStampView({
             source={{ uri: stamp.stampUrl as string }}
             style={styles.image}
             contentFit="cover"
+            cachePolicy="memory-disk"
             transition={120}
             accessibilityLabel="도장"
             onError={() => setImageFailed(true)}

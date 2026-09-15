@@ -93,6 +93,7 @@ export function ReviewCard({
             source={{ uri: review.photoUrl }}
             style={styles.photo}
             contentFit="cover"
+            cachePolicy="memory-disk"
             transition={150}
             accessibilityLabel="반려견 인증 사진"
             onError={() => setPhotoFailed(true)}
