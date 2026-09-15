@@ -1,5 +1,10 @@
 import { File, Paths } from "expo-file-system";
-import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import {
+  ImageManipulator,
+  SaveFormat,
+  type ImageManipulatorContext,
+  type ImageRef,
+} from "expo-image-manipulator";
 
 import { apiClient } from "@/api/client";
 import { getDemoMode } from "@/api/demo";
@@ -152,14 +157,16 @@ const REVIEW_PHOTO_COMPRESS = 0.7;
 // 리뷰 사진 전용 리사이즈(장변 1080·JPEG 0.7). 영수증(verifyReceipt·OCR)과 공용 카메라
 // (camera-capture.tsx)는 원본을 유지해야 하므로 리뷰 경로에서만 적용한다. 실패 시 원본으로 폴백.
 async function resizeReviewPhoto(uri: string): Promise<string> {
+  let source: ImageManipulatorContext | undefined;
+  let context: ImageManipulatorContext | undefined;
+  let original: ImageRef | undefined;
+  let rendered: ImageRef | undefined;
   try {
-    const source = ImageManipulator.manipulate(uri);
-    const original = await source.renderAsync();
+    source = ImageManipulator.manipulate(uri);
+    original = await source.renderAsync();
     const { width, height } = original;
-    original.release();
-    source.release();
 
-    const context = ImageManipulator.manipulate(uri);
+    context = ImageManipulator.manipulate(uri);
     if (Math.max(width, height) > REVIEW_PHOTO_MAX_EDGE) {
       context.resize(
         width >= height
@@ -167,16 +174,19 @@ async function resizeReviewPhoto(uri: string): Promise<string> {
           : { height: REVIEW_PHOTO_MAX_EDGE },
       );
     }
-    const rendered = await context.renderAsync();
+    rendered = await context.renderAsync();
     const result = await rendered.saveAsync({
       format: SaveFormat.JPEG,
       compress: REVIEW_PHOTO_COMPRESS,
     });
-    rendered.release();
-    context.release();
     return result.uri;
   } catch {
     return uri;
+  } finally {
+    source?.release();
+    original?.release();
+    context?.release();
+    rendered?.release();
   }
 }
 
