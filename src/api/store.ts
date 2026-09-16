@@ -191,8 +191,8 @@ function mapReview(res: ReviewResponse, storeId: string): Review {
 }
 
 // 거절 완료(S-12) 대체 장소. 응답은 코스 지점과 동일 DTO(CourseStoreResponse[])라
-// mapCategory·STATUS_MAP를 재사용한다. DTO에 주소가 없어 location은 비운다(카드에서 숨김).
-// 서버는 요청한 size 기준으로 status를 주므로 해당 크기에만 상태를 채운다.
+// mapCategory·STATUS_MAP를 재사용한다. 서버는 요청한 size 기준으로 status를 주므로
+// 해당 크기에만 상태를 채운다.
 function mapAlternative(res: CourseStoreResponse, size: SizeKey): Place {
   const sizeStatus: Record<SizeKey, PlaceStatus> = {
     smallMedium: "unknown",
@@ -203,7 +203,7 @@ function mapAlternative(res: CourseStoreResponse, size: SizeKey): Place {
     id: String(res.storeId),
     name: res.name,
     category: mapCategory(res.type),
-    location: "",
+    location: res.address ?? "",
     latitude: res.lat ?? 0,
     longitude: res.lng ?? 0,
     sizeStatus,
