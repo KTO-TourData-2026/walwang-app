@@ -166,32 +166,34 @@ export default function ReviewDoneScreen() {
                   인근에 이런 곳은 어때요?
                 </ThemedText>
 
-                {alternativesQuery.isLoading ? (
-                  <LoadingView style={styles.altLoading} />
-                ) : alternativesQuery.isError ? (
-                  <ErrorState
-                    message="추천 장소를 불러오지 못했어요"
-                    onRetry={() => alternativesQuery.refetch()}
-                    style={styles.altLoading}
-                  />
-                ) : alternatives.length > 0 ? (
-                  <View style={styles.cardList}>
-                    {alternatives.map((alt) => (
-                      <AlternativePlaceCard
-                        key={alt.id}
-                        place={alt}
-                        size={altSize}
-                        onPress={openStore}
-                      />
-                    ))}
-                  </View>
-                ) : (
-                  <View style={styles.emptyBox}>
-                    <ThemedText type="label04" color={Palette.gray[400]}>
-                      근처에 추천할 만한 곳을 아직 못 찾았어요
-                    </ThemedText>
-                  </View>
-                )}
+                <View style={styles.altBody}>
+                  {alternativesQuery.isLoading ? (
+                    <LoadingView style={styles.altLoading} />
+                  ) : alternativesQuery.isError ? (
+                    <ErrorState
+                      message="추천 장소를 불러오지 못했어요"
+                      onRetry={() => alternativesQuery.refetch()}
+                      style={styles.altLoading}
+                    />
+                  ) : alternatives.length > 0 ? (
+                    <View style={styles.cardList}>
+                      {alternatives.map((alt) => (
+                        <AlternativePlaceCard
+                          key={alt.id}
+                          place={alt}
+                          size={altSize}
+                          onPress={openStore}
+                        />
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={styles.emptyBox}>
+                      <ThemedText type="label04" color={Palette.gray[400]}>
+                        근처에 추천할 만한 곳을 아직 못 찾았어요
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
               </>
             ) : null}
           </View>
@@ -263,11 +265,15 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   deniedGroup: {
+    flex: 1,
     gap: Spacing.four,
   },
   divider: {
     height: 1,
     backgroundColor: Palette.border.disabled,
+  },
+  altBody: {
+    flex: 1,
   },
   cardList: {
     gap: Spacing.three,
@@ -276,8 +282,9 @@ const styles = StyleSheet.create({
     minHeight: 120,
   },
   emptyBox: {
+    flex: 1,
     alignItems: "center",
-    paddingVertical: Spacing.five,
+    justifyContent: "center",
   },
   footer: {
     paddingHorizontal: Spacing.four,

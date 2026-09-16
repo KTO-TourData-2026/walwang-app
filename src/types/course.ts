@@ -21,6 +21,7 @@ export interface CourseStoreResponse {
   type: string;
   lat: number;
   lng: number;
+  address: string;
   /** 방문 순서(1부터). 정렬·순번 핀에 쓴다. */
   arrivalOrder: number;
   status: ServerStatus;

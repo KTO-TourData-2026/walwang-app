@@ -15,6 +15,7 @@ export function AlternativePlaceCard({
   size: SizeKey;
   onPress: (placeId: string) => void;
 }) {
+  const status = place.sizeStatus[size];
   return (
     <Pressable
       onPress={() => onPress(place.id)}
@@ -25,23 +26,16 @@ export function AlternativePlaceCard({
       <ThemedText type="subtitle03" color={Palette.gray[700]}>
         {place.name}
       </ThemedText>
-      {place.location ? (
-        <ThemedText type="label05" color={Palette.gray[400]}>
-          {place.location}
-        </ThemedText>
-      ) : null}
+      <ThemedText type="label05" color={Palette.gray[400]} numberOfLines={1}>
+        {CATEGORY_LABEL[place.category]}
+        {place.location ? ` · ${place.location}` : ""}
+      </ThemedText>
       <View style={styles.metaRow}>
-        <ThemedText type="label04" color={Palette.gray[500]}>
-          {CATEGORY_LABEL[place.category]}
-        </ThemedText>
-        <ThemedText type="label04" color={Palette.gray[300]}>
-          ·
-        </ThemedText>
         <ThemedText type="label04" color={Palette.gray[500]}>
           {SIZE_LABEL[size]}
         </ThemedText>
-        <ThemedText type="subtitle04" color={Palette.status.allowed[300]}>
-          {STATUS_LABEL.allowed}
+        <ThemedText type="subtitle04" color={Palette.status[status][300]}>
+          {STATUS_LABEL[status]}
         </ThemedText>
       </View>
     </Pressable>
@@ -65,6 +59,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.one,
-    marginTop: Spacing.half,
   },
 });
