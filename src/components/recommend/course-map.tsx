@@ -70,6 +70,13 @@ export default function CourseMap({
     walkPath ??
     waypoints.map((w) => ({ latitude: w.latitude, longitude: w.longitude }));
 
+  // 출발 위치(isStart)는 순번에서 빼고, 실제 가게만 1부터 번호를 매긴다.
+  let stepCounter = 0;
+  const markers = waypoints.map((waypoint) => ({
+    waypoint,
+    stepNumber: waypoint.isStart ? null : ++stepCounter,
+  }));
+
   return (
     <NaverMapView
       style={styles.map}
@@ -101,7 +108,7 @@ export default function CourseMap({
         />
       ) : null}
 
-      {waypoints.map((waypoint, index) => (
+      {markers.map(({ waypoint, stepNumber }, index) => (
         <NaverMapMarkerOverlay
           key={`${waypoint.placeId}-${index}`}
           latitude={waypoint.latitude}
@@ -109,16 +116,25 @@ export default function CourseMap({
           anchor={{ x: 0.5, y: 0.5 }}
           width={MARKER_SIZE}
           height={MARKER_SIZE}
-          onTap={() => onSelectWaypoint(waypoint.placeId)}
+          // 출발 위치는 상세가 없어 탭을 무시한다.
+          onTap={
+            waypoint.isStart
+              ? undefined
+              : () => onSelectWaypoint(waypoint.placeId)
+          }
         >
           <View
             key={`waypoint-${index}`}
             collapsable={false}
             style={styles.marker}
           >
-            <ThemedText type="subtitle04" color={Palette.white}>
-              {index + 1}
-            </ThemedText>
+            {waypoint.isStart ? (
+              <View style={styles.startDot} />
+            ) : (
+              <ThemedText type="subtitle04" color={Palette.white}>
+                {stepNumber}
+              </ThemedText>
+            )}
           </View>
         </NaverMapMarkerOverlay>
       ))}
@@ -139,5 +155,11 @@ const styles = StyleSheet.create({
     backgroundColor: Palette.main[500],
     borderWidth: 2,
     borderColor: Palette.white,
+  },
+  startDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: Palette.white,
   },
 });
