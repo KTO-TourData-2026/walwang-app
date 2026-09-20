@@ -2,26 +2,27 @@ import { apiClient } from "@/api/client";
 import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { mapCategory } from "@/api/store";
-import type {
-  Coordinate,
-  Course,
-  CourseCreateResponse,
-  CourseDuration,
-  CourseLegResponse,
-  CoursePurpose,
-  CourseRecommendRequest,
-  CourseRecommendRequestBody,
-  CourseResponse,
-  CourseSaveRequestBody,
-  CourseStoreResponse,
-  CourseWaypoint,
-  NearbyPlace,
-  NearbyPlaceResponse,
-  SavedCoursePreview,
-  SavedCourseListResponse,
-  SavedCourseSummaryResponse,
-  ServerDuration,
-  ServerPurpose,
+import {
+  STARTING_POINT_ID,
+  type Coordinate,
+  type Course,
+  type CourseCreateResponse,
+  type CourseDuration,
+  type CourseLegResponse,
+  type CoursePurpose,
+  type CourseRecommendRequest,
+  type CourseRecommendRequestBody,
+  type CourseResponse,
+  type CourseSaveRequestBody,
+  type CourseStoreResponse,
+  type CourseWaypoint,
+  type NearbyPlace,
+  type NearbyPlaceResponse,
+  type SavedCoursePreview,
+  type SavedCourseListResponse,
+  type SavedCourseSummaryResponse,
+  type ServerDuration,
+  type ServerPurpose,
 } from "@/types/course";
 import type { SizeKey } from "@/types/place";
 import type { ServerSize } from "@/types/store";
@@ -85,6 +86,7 @@ function mapWaypoint(
     category: mapCategory(store.type),
     latitude: toNum(store.lat),
     longitude: toNum(store.lng),
+    isStart: String(store.storeId) === STARTING_POINT_ID,
     legToNext: leg
       ? { distance: toNum(leg.distance), duration: toNum(leg.duration) }
       : null,
@@ -188,7 +190,10 @@ function toSaveBody(course: Course): CourseSaveRequestBody {
     purposes: course.purposes.map((purpose) => PURPOSE_TO_SERVER[purpose]),
     duration: DURATION_TO_SERVER[course.duration],
     ...(course.description ? { description: course.description } : {}),
-    storeIds: course.waypoints.map((waypoint) => waypoint.placeId),
+    // 출발 위치(더미 storeId)는 진짜 가게가 아니므로 저장 대상에서 제외한다.
+    storeIds: course.waypoints
+      .filter((waypoint) => !waypoint.isStart)
+      .map((waypoint) => waypoint.placeId),
   };
 }
 

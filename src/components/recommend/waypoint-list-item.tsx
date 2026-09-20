@@ -9,40 +9,51 @@ import { formatDistance, formatWalkTime } from "@/utils/format";
 
 export function WaypointListItem({
   waypoint,
-  index,
+  stepNumber,
   isLast,
   onPress,
 }: {
   waypoint: CourseWaypoint;
-  index: number;
+  /** 실제 가게 순번(1부터). 출발 위치면 null(번호 없음). */
+  stepNumber: number | null;
   isLast: boolean;
   onPress: (placeId: string) => void;
 }) {
   const leg = waypoint.legToNext;
+  const { isStart } = waypoint;
 
   return (
     <Pressable
-      onPress={() => onPress(waypoint.placeId)}
-      accessibilityRole="button"
-      accessibilityLabel={`${index + 1}번 지점 ${waypoint.name}`}
+      onPress={isStart ? undefined : () => onPress(waypoint.placeId)}
+      disabled={isStart}
+      accessibilityRole={isStart ? "text" : "button"}
+      accessibilityLabel={
+        isStart ? "출발 위치" : `${stepNumber}번 지점 ${waypoint.name}`
+      }
       style={styles.row}
     >
       <View style={styles.timeline}>
         <View style={styles.badge}>
-          <ThemedText type="subtitle05" color={Palette.white}>
-            {index + 1}
-          </ThemedText>
+          {isStart ? (
+            <View style={styles.startDot} />
+          ) : (
+            <ThemedText type="subtitle05" color={Palette.white}>
+              {stepNumber}
+            </ThemedText>
+          )}
         </View>
         {!isLast ? <View style={styles.connector} /> : null}
       </View>
 
       <View style={[styles.content, isLast && styles.contentLast]}>
         <ThemedText type="subtitle03" color={Palette.gray[700]}>
-          {waypoint.name}
+          {isStart ? "출발 위치" : waypoint.name}
         </ThemedText>
-        <ThemedText type="label05" color={Palette.gray[400]}>
-          {CATEGORY_LABEL[waypoint.category]}
-        </ThemedText>
+        {isStart ? null : (
+          <ThemedText type="label05" color={Palette.gray[400]}>
+            {CATEGORY_LABEL[waypoint.category]}
+          </ThemedText>
+        )}
 
         {leg ? (
           <View style={styles.leg}>
@@ -77,6 +88,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Palette.main[500],
+  },
+  startDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Palette.white,
   },
   connector: {
     flex: 1,
