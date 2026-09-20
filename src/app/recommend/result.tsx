@@ -25,12 +25,13 @@ import { useCourseDetailQuery } from "@/hooks/use-course-detail-query";
 import { useRecommendCourseQuery } from "@/hooks/use-recommend-course-query";
 import { useSaveCourseMutation } from "@/hooks/use-save-course-mutation";
 import { useSavedCoursesQuery } from "@/hooks/use-saved-courses-query";
-import type {
-  Course,
-  CourseDuration,
-  CoursePurpose,
-  CourseRecommendRequest,
-  NearbyPlace,
+import {
+  STARTING_POINT_ID,
+  type Course,
+  type CourseDuration,
+  type CoursePurpose,
+  type CourseRecommendRequest,
+  type NearbyPlace,
 } from "@/types/course";
 import type { SizeKey } from "@/types/place";
 import { formatDistance, formatWalkTime } from "@/utils/format";
@@ -124,8 +125,13 @@ export default function RecommendResultScreen() {
     router.navigate("/saved");
   };
 
-  const goStore = (placeId: string) =>
+  const goStore = (placeId: string) => {
+    // 출발 위치(더미 storeId)는 진짜 가게가 아니므로 상세로 이동하지 않는다.
+    if (placeId === STARTING_POINT_ID) {
+      return;
+    }
     router.push({ pathname: "/store/[placeId]", params: { placeId } });
+  };
 
   // 인근 장소: storeId가 생기면 실제 가게 상세로, 아직 없으면 가진 정보만으로 프리뷰를 연다.
   const goNearby = (place: NearbyPlace) => {
@@ -182,6 +188,17 @@ export default function RecommendResultScreen() {
     : undefined;
   const title = savedTitle || course.title || buildTitle(params, course);
 
+  // 출발 위치(isStart)는 진짜 가게가 아니므로 지점 수·순번에서 제외한다.
+  const storeCount = course.waypoints.filter(
+    (waypoint) => !waypoint.isStart,
+  ).length;
+  // 리스트 순번: 출발 위치는 번호를 붙이지 않고, 실제 가게만 1부터 센다.
+  let stepCounter = 0;
+  const waypointRows = course.waypoints.map((waypoint) => ({
+    waypoint,
+    stepNumber: waypoint.isStart ? null : ++stepCounter,
+  }));
+
   return (
     <View style={styles.root}>
       <View style={styles.mapWrap}>
@@ -203,8 +220,7 @@ export default function RecommendResultScreen() {
           </ThemedText>
           <View style={styles.metaRow}>
             <ThemedText type="label04" color={Palette.gray[500]}>
-              {course.waypoints.length}지점 · 총{" "}
-              {formatDistance(course.totalDistance)}
+              {storeCount}지점 · 총 {formatDistance(course.totalDistance)}
             </ThemedText>
             <View style={styles.walkMeta}>
               <Footprints size={14} color={Palette.gray[500]} strokeWidth={2} />
@@ -237,12 +253,12 @@ export default function RecommendResultScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         >
-          {course.waypoints.map((waypoint, index) => (
+          {waypointRows.map(({ waypoint, stepNumber }, index) => (
             <WaypointListItem
               key={`${waypoint.placeId}-${index}`}
               waypoint={waypoint}
-              index={index}
-              isLast={index === course.waypoints.length - 1}
+              stepNumber={stepNumber}
+              isLast={index === waypointRows.length - 1}
               onPress={goStore}
             />
           ))}
@@ -421,7 +437,7 @@ const styles = StyleSheet.create({
   nearbySection: {
     gap: Spacing.two,
     paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.two,
+    paddingTop: Spacing.three,
   },
   nearbyTitle: {
     marginBottom: Spacing.one,

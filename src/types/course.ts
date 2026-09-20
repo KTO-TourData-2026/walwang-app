@@ -14,16 +14,21 @@ export type ServerDuration = "SHORT" | "HALF_DAY" | "FULL_DAY";
 
 // ── 서버 응답 DTO ──────────────────────────────────────────
 
-/** 코스를 이루는 지점 하나(`CourseResponse.stores[]`). 지점별 leg 정보는 없다. */
+/**
+ * 코스를 이루는 지점 하나(`CourseResponse.stores[]`). 지점별 leg 정보는 없다.
+ * stores[0]은 출발 위치로, storeId가 STARTING_POINT_ID(더미)이고
+ * type·address·status가 null로 온다(진짜 가게가 아님).
+ */
 export interface CourseStoreResponse {
   storeId: string;
   name: string;
-  type: string;
+  type: string | null;
   lat: number;
   lng: number;
-  /** 방문 순서(1부터). 정렬·순번 핀에 쓴다. */
+  address: string | null;
+  /** 방문 순서(0=출발 위치, 가게는 1부터). 정렬·순번 핀에 쓴다. */
   arrivalOrder: number;
-  status: ServerStatus;
+  status: ServerStatus | null;
   reviewCount: number;
   tags: string[];
 }
@@ -119,6 +124,12 @@ export interface SavedCourseListResponse {
 
 // ── 앱 타입 ────────────────────────────────────────────────
 
+/**
+ * 서버가 코스 시작 지점을 가게 형태로 stores[0]에 끼워 보낼 때 쓰는 고정 storeId(더미).
+ * 진짜 가게가 아니므로 상세 이동 대상이 아니고, 번호·지점 수·저장 storeIds에서 제외한다.
+ */
+export const STARTING_POINT_ID = "00000000-0000-0000-0000-000000000000";
+
 /** 코스 목적. 서버 enum과 1:1(경계에서 매핑). */
 export type CoursePurpose = "walk" | "meal" | "cafe" | "shopping" | "play";
 
@@ -154,6 +165,8 @@ export interface CourseWaypoint {
   category: Category;
   latitude: number;
   longitude: number;
+  /** 서버가 끼워 준 출발 위치면 true(placeId === STARTING_POINT_ID). 번호·상세이동·저장에서 제외한다. */
+  isStart: boolean;
   // 이 지점 → 다음 지점 이동(코스 legs에서 매핑). 마지막 지점은 null.
   legToNext: {
     distance: number;

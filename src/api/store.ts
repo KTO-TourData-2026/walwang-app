@@ -31,13 +31,14 @@ const TYPE_TO_CATEGORY: Record<string, Category> = {
 const warnedTypes = new Set<string>();
 
 // 서버 store type → 앱 Category. review 도메인(마이 리뷰)에서도 재사용한다.
-export function mapCategory(type: string): Category {
-  const category = TYPE_TO_CATEGORY[type?.toUpperCase?.() ?? ""];
+export function mapCategory(type: string | null | undefined): Category {
+  const key = type?.toUpperCase?.() ?? "";
+  const category = TYPE_TO_CATEGORY[key];
   if (category) {
     return category;
   }
-  if (__DEV__ && !warnedTypes.has(type)) {
-    warnedTypes.add(type);
+  if (__DEV__ && !warnedTypes.has(key)) {
+    warnedTypes.add(key);
     console.warn(`[store] 알 수 없는 type "${type}" → cafe 폴백`);
   }
   return "cafe";
@@ -191,19 +192,20 @@ function mapReview(res: ReviewResponse, storeId: string): Review {
 }
 
 // 거절 완료(S-12) 대체 장소. 응답은 코스 지점과 동일 DTO(CourseStoreResponse[])라
-// mapCategory·STATUS_MAP를 재사용한다. DTO에 주소가 없어 location은 비운다(카드에서 숨김).
-// 서버는 요청한 size 기준으로 status를 주므로 해당 크기에만 상태를 채운다.
+// mapCategory·STATUS_MAP를 재사용한다. 서버는 요청한 size 기준으로 status를 주므로
+// 해당 크기에만 상태를 채운다.
 function mapAlternative(res: CourseStoreResponse, size: SizeKey): Place {
   const sizeStatus: Record<SizeKey, PlaceStatus> = {
     smallMedium: "unknown",
     large: "unknown",
   };
-  sizeStatus[size] = STATUS_MAP[res.status] ?? "unknown";
+  sizeStatus[size] =
+    (res.status ? STATUS_MAP[res.status] : undefined) ?? "unknown";
   return {
     id: String(res.storeId),
     name: res.name,
     category: mapCategory(res.type),
-    location: "",
+    location: res.address ?? "",
     latitude: res.lat ?? 0,
     longitude: res.lng ?? 0,
     sizeStatus,
