@@ -372,12 +372,12 @@ walwang-app/
 
 <div align="center">
 
-| <img src="https://github.com/GITHUB_ID_1.png" width="120" /> | <img src="https://github.com/GITHUB_ID_2.png" width="120" /> | <img src="https://github.com/GITHUB_ID_3.png" width="120" /> |
-| :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|                           **이름**                           |                           **이름**                           |                           **이름**                           |
-|                           Frontend                           |                           Backend                            |                              AI                              |
-|        [@GITHUB_ID_1](https://github.com/GITHUB_ID_1)        |        [@GITHUB_ID_2](https://github.com/GITHUB_ID_2)        |        [@GITHUB_ID_3](https://github.com/GITHUB_ID_3)        |
-|                          담당 내용                           |                          담당 내용                           |                          담당 내용                           |
+| <img src="https://github.com/nyoeng.png" width="120" /> | <img src="https://github.com/getOffWork102.png" width="120" /> | <img src="https://github.com/min212.png" width="120" /> |
+| :-----------------------------------------------------: | :------------------------------------------------------------: | :-----------------------------------------------------: |
+|                       경북대학교 컴퓨터학부                     |                 경북대학교 컴퓨터학부                          |               경북대학교 컴퓨터학부                       |
+|                        **한나영**                         |                            **노현경**                            |                        **진유민**                         |
+|                        Frontend                         |                            Backend                             |                           AI                            |
+|          [@nyoeng](https://github.com/nyoeng)           |       [@getOffWork102](https://github.com/getOffWork102)       |          [@min212](https://github.com/min212)           |
 
 </div>
 
