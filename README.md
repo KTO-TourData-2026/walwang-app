@@ -4,8 +4,9 @@
 
 # TripPaw: 나만의 반려견 산책코스 🦮
 
-**"우리 아이, 여기 들어갈 수 있을까?"**
-실제 방문자의 인증 리뷰로 쌓아 올린 **견종 크기별** 반려견 동반 정보
+### **"우리 아이, 여기 들어갈 수 있을까?"**
+
+실제 방문자의 인증 리뷰로 쌓아 올린 견종 크기별** 반려견 동반 정보
 
 <br />
 
@@ -43,8 +44,8 @@
 | 신뢰성      | 검증 없는 후기·광고성 리뷰        | **영수증 OCR(방문) + 반려견 사진(동반)** 이중 인증              |
 | 판정 단위   | 동반 가능 / 불가                  | **소·중형견 / 대형견** 크기별 `가능 · 미확인 · 불가`            |
 | 최신성      | 한 번 등록된 정보가 그대로 고착   | **시간 가중치**로 최근 리뷰를 더 크게 반영                      |
-| 정보의 깊이 | 출입 가능 여부까지                | 리뷰 텍스트 + **약 20종 해시태그** (테라스 한정, 전용 메뉴 등)  |
-| 참여 동기   | 리뷰 작성은 의무·귀찮은 일        | 내 반려견 사진이 **AI 도장**이 되어 **여권**에 모이는 수집 경험 |
+| 정보의 깊이 | 출입 가능 여부만               | 리뷰 텍스트 + **약 20종 해시태그** (테라스 한정, 전용 메뉴 등)  |
+| 참여 동기   | 리뷰 작성은 의무·귀찮은 일        | 내 반려견 사진이 **하나뿐인 도장**이 되어 **여권**에 모이는 수집 경험 |
 
 <br />
 
@@ -65,13 +66,13 @@
 
 ## ✨ 주요 기능
 
-### 🗺 `#동반가능매장조회` — 지도 기반 매장 탐색 및 크기별 동반 가능 여부 확인
+### 🗺 #동반가능매장조회 - 지도 기반 매장 탐색 및 크기별 동반 가능 여부 확인
 
 <div align="center">
 
-| <img src="docs/images/readme/01-map-1.png" width="180" /> |  <img src="docs/images/readme/01-map-2.png" width="180" />   | <img src="docs/images/readme/01-map-3.png" width="180" /> | <img src="docs/images/readme/01-map-4.png" width="180" /> |
-| :-------------------------------------------------------: | :----------------------------------------------------------: | :-------------------------------------------------------: | :-------------------------------------------------------: |
-|      지도 기반 매장 조회<br/>(크기 필터 · 매장 검색)      | 매장 상세<br/>(크기별 가능 여부 · 인기 해시태그 · 최근 리뷰) |              리뷰 전체보기<br/>(들어갔어요)               |             리뷰 전체보기<br/>(거절당했어요)              |
+|                 지도 기반 매장 조회             |            매장 상세         |               리뷰 전체보기<br/>(들어갔어요)               |               리뷰 전체보기<br/>(거절당했어요)               |
+| :---: | :---: | :---: | :---: |
+| <img width="1080" height="2400" alt="screen_20260921_053305" src="https://github.com/user-attachments/assets/c6d99258-14f2-49a3-887b-39af04719a2d" /> | <img width="900" height="2000" alt="image" src="https://github.com/user-attachments/assets/10aa495a-f39e-48b2-873c-c7ca421a66f3" /> | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/1e2cc021-0a99-40c9-9d1d-15e3c1ed2bbe" /> | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/ec0910cd-c4f6-44db-94e1-d28c389a8d12" /> |
 
 </div>
 
@@ -80,14 +81,29 @@
 - 매장 상세에서 크기별 `가능 / 미확인 / 불가` 상태, 인기 해시태그, 최근 리뷰를 확인합니다.
 - 각 상태는 인증 리뷰의 누적 비율과 시간 가중치로 **자동 산정**됩니다. → [판정 로직](#1-크기별-동반-가능-판정)
 
-### 🧾 `#리뷰_들어갔어요` — 영수증 OCR 인증 기반 리뷰 작성
+### 🧾 #리뷰_들어갔어요 — 영수증 OCR 인증 기반 리뷰 작성
 
 <div align="center">
 
-| <img src="docs/images/readme/02-review-entered-1.png" width="180" /> | <img src="docs/images/readme/02-review-entered-2.png" width="180" /> | <img src="docs/images/readme/02-review-entered-3.png" width="180" /> | <img src="docs/images/readme/02-review-entered-4.png" width="180" /> |
-| :------------------------------------------------------------------: | :------------------------------------------------------------------: | :------------------------------------------------------------------: | :------------------------------------------------------------------: |
-|                    영수증 촬영<br/>OCR 인증 완료                     |                    반려견 사진 촬영<br/>미리보기                     |   '들어갔어요' 리뷰 작성<br/>(사진 · 크기 · 해시태그 · 10자 이상)    |                리뷰 작성 완료<br/>(도장 실시간 지급)                 |
-
+<table>
+  <thead>
+    <tr>
+      <th align="center">영수증 촬영<br/>OCR 인증 완료</th>
+      <th align="center">반려견 사진 촬영<br/>미리보기</th>
+      <th align="center" colspan="2">'들어갔어요' 리뷰 작성<br/>(사진 · 크기 · 해시태그 · 10자 이상)</th>
+      <th align="center">리뷰 작성 완료<br/>(도장 실시간 지급)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img width="180" alt="screen_20260921_070342" src="https://github.com/user-attachments/assets/dba58434-af99-4f61-bdc0-f33a04e5a9b0" /></td>
+      <td align="center"><img width="180" alt="screen_20260921_070422" src="https://github.com/user-attachments/assets/a7165226-e325-4321-8786-2962e040b7d1" /></td>
+      <td align="center"><img width="180" alt="screen_20260921_065745" src="https://github.com/user-attachments/assets/e521c02c-d63c-44e9-93f5-6cb16f642e75" /></td>
+      <td align="center"><img width="180" alt="screen_20260921_065824" src="https://github.com/user-attachments/assets/b5ed6d37-2fdf-4450-ac63-b64e7cb742b1" /></td>
+      <td align="center"><img width="180" alt="screen_20260921_062857" src="https://github.com/user-attachments/assets/875ea3fe-2f9e-4d34-b4f3-310016eb056f" /></td>
+    </tr>
+  </tbody>
+</table>
 </div>
 
 - 방문 후 **[들어갔어요]** 를 선택하면 영수증을 촬영해 **OCR로 상호명을 대조**, 실제 방문을 인증합니다.
@@ -95,13 +111,13 @@
 - 입력한 해시태그와 리뷰 텍스트는 **코스 추천 데이터**로 활용됩니다.
 - 리뷰 등록과 동시에 반려견 사진으로 만든 **도장을 실시간으로 지급**합니다.
 
-### 🚫 `#리뷰_거절당했어요` — 거절 매장 인근의 동반 가능 매장 추천
+### 🚫 #리뷰_거절당했어요 — 거절 매장 인근의 동반 가능 매장 추천
 
 <div align="center">
 
-| <img src="docs/images/readme/03-review-rejected-1.png" width="180" /> | <img src="docs/images/readme/03-review-rejected-2.png" width="180" /> | <img src="docs/images/readme/03-review-rejected-3.png" width="180" /> | <img src="docs/images/readme/03-review-rejected-4.png" width="180" /> |
-| :-------------------------------------------------------------------: | :-------------------------------------------------------------------: | :-------------------------------------------------------------------: | :-------------------------------------------------------------------: |
-|            방문 결과 선택<br/>(들어갔어요 / 거절당했어요)             |             '거절당했어요' 리뷰 작성<br/>(허위 리뷰 경고)             |             리뷰 작성 완료<br/>(인근 동반 가능 매장 추천)             |                     리뷰 신고<br/>(허위 · 도배성)                     |
+| '거절당했어요' 리뷰 작성<br/>(허위 리뷰 경고) | 리뷰 작성 완료<br/>(인근 동반 가능 매장 추천) | 리뷰 신고<br/>(허위 · 도배성) |
+| :---: | :---: | :---: |
+| <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/85247a53-f704-4793-b398-f5fd0c86e93c" /> | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/54727d6a-68c8-40e8-b25d-20ee277fda8a" /> | <img width="1080" height="2400" alt="왈왕_4_신고모달" src="https://github.com/user-attachments/assets/15ea50ee-61c4-438d-8db6-e9c8f031001b" /> |
 
 </div>
 
@@ -109,28 +125,37 @@
 - 대신 **허위 리뷰 작성 시 계정 정지 가능성**을 명시하고, **리뷰 신고**(허위·도배성) 기능으로 악용을 막습니다.
 - 작성을 마치면 해당 매장 **인근의 같은 크기 반려견이 이용 가능한 매장**을 즉시 추천해, 헛걸음을 대체 방문으로 전환합니다.
 
-### 🐶 `#강아지도장` — AI 기반 반려견 사진 인식 도장 생성
+### 🐶 #강아지도장 — AI 기반 반려견 사진 인식 도장 생성
 
-<div align="center">
-
-| <img src="docs/images/readme/04-stamp-1.png" width="180" /> | <img src="docs/images/readme/04-stamp-2.png" width="180" /> | <img src="docs/images/readme/04-stamp-3.png" width="180" /> | <img src="docs/images/readme/04-stamp-4.png" width="180" /> |
-| :---------------------------------------------------------: | :---------------------------------------------------------: | :---------------------------------------------------------: | :---------------------------------------------------------: |
-|            리뷰 작성 완료<br/>(도장 실시간 지급)            |              마이페이지 여권<br/>(도장 · 날짜)              |          도장 상세<br/>(원본 저장 · 리뷰 바로가기)          |                          해당 리뷰                          |
-
-</div>
+<table width="100%">
+  <thead>
+    <tr>
+      <th align="center" width="33%">리뷰 작성 완료<br/>(도장 실시간 지급)</th>
+      <th align="center" width="33%">마이페이지 여권<br/>(도장 · 날짜)</th>
+      <th align="center" width="33%">도장 상세<br/>(원본 저장 · 리뷰 바로가기)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img width="90%" alt="screen_20260921_062857" src="https://github.com/user-attachments/assets/875ea3fe-2f9e-4d34-b4f3-310016eb056f" /></td>
+      <td align="center"><img width="90%" alt="walwang-passport" src="https://github.com/user-attachments/assets/8e1b15f9-3f76-45e5-beae-df163d785919" /></td>
+      <td align="center"><img width="90%" alt="screen_20260921_063532" src="https://github.com/user-attachments/assets/5115cd19-85b8-4bec-8794-aa5b1ae31917" /></td>
+    </tr>
+  </tbody>
+</table>
 
 - 업로드한 반려견 사진에서 **AI가 반려견 영역만 분리**해 세상에 하나뿐인 도장을 만듭니다.
 - 마이페이지 **여권** 화면에 날짜와 함께 도장이 수집됩니다.
 - 도장을 선택하면 **원본 사진을 저장**하거나 **해당 리뷰로 바로 이동**할 수 있습니다.
 - 반려견 인식에 실패하면 발바닥 아이콘 도장을 대신 지급합니다.
 
-### 🧭 `#맞춤코스추천` — 사용자 입력값 기반 맞춤 산책 코스 추천
+### 🧭 #맞춤코스추천 — 사용자 입력값 기반 맞춤 산책 코스 추천
 
 <div align="center">
 
-| <img src="docs/images/readme/05-course-1.png" width="180" /> | <img src="docs/images/readme/05-course-2.png" width="180" /> | <img src="docs/images/readme/05-course-3.png" width="180" /> | <img src="docs/images/readme/05-course-4.png" width="180" /> |
-| :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: | :----------------------------------------------------------: |
-|                    코스 추천 입력값 선택                     |                         출발지 선택                          |      코스 추천 결과<br/>(거리 · 도보 시간 · 인근 명소)       |                        코스 저장 완료                        |
+| 코스 추천 입력값 선택 | 코스 추천 결과<br/>(거리 · 도보 시간 · 인근 명소) |
+| :---: | :---: |
+| <img width="1080" height="2400" alt="screen_20260921_064256" src="https://github.com/user-attachments/assets/50a6470e-2027-4bf7-b5ee-e189c18cba4c" /> | <img width="1080" height="2400" alt="emulatorscreen-edited" src="https://github.com/user-attachments/assets/a71223f8-627d-40ae-9b38-07cd0e4b697e" /> |
 
 </div>
 
@@ -139,13 +164,13 @@
 - 장소 간 **도보 경로·거리·소요 시간**을 지도에 표시합니다.
 - 코스 인근의 **반려동물 동반 가능 공원·관광지**(한국관광공사)를 함께 제안합니다.
 
-### 🔖 `#코스장소저장` — 코스/장소 저장
+### 🔖 #코스장소저장 — 코스/장소 저장
 
 <div align="center">
 
-| <img src="docs/images/readme/06-saved-1.png" width="180" /> | <img src="docs/images/readme/06-saved-2.png" width="180" /> | <img src="docs/images/readme/06-saved-3.png" width="180" /> | <img src="docs/images/readme/06-saved-4.png" width="180" /> |
-| :---------------------------------------------------------: | :---------------------------------------------------------: | :---------------------------------------------------------: | :---------------------------------------------------------: |
-|                     장소/코스 저장 완료                     |                  저장 탭<br/>(장소 · 코스)                  |                       코스 이름 수정                        |                       저장 코스 상세                        |
+| 장소 저장 탭 | 코스 저장  |
+| :---: | :---: |
+| <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/08a2b81a-72bd-4915-8e61-43830cf6dd0d" /> | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/a56d9b18-6878-401f-bc91-55f08616d666" /> |
 
 </div>
 
@@ -159,19 +184,8 @@
 
 지도에서 매장을 확인하고, 방문한 뒤 리뷰를 남기면, 그 결과가 다시 지도에 반영되고 도장이 쌓이는 **데이터 선순환 구조**입니다.
 
-```mermaid
-flowchart LR
-    A["🗺 지도에서 매장 확인<br/>(크기별 가능 여부)"] --> B["🚶 매장 방문"]
-    B --> C{"방문 결과"}
-    C -->|들어갔어요| D["🧾 영수증 OCR 인증<br/>+ 반려견 사진"]
-    C -->|거절당했어요| E["✍️ 거절 리뷰<br/>(신고 기능으로 관리)"]
-    D --> F["🐶 AI 도장 지급<br/>→ 여권에 수집"]
-    E --> G["📍 인근 동반 가능<br/>매장 추천"]
-    D --> H["📊 크기별 판정 갱신"]
-    E --> H
-    H --> A
-    G --> B
-```
+<img width="1640" height="880" alt="핵심 사용자 흐름@1x" src="https://github.com/user-attachments/assets/b7928698-7944-4208-a1b5-0a993253dec1" />
+
 
 <br />
 
@@ -243,27 +257,8 @@ flowchart LR
 
 ## 🏗 시스템 아키텍처
 
-```mermaid
-flowchart LR
-    subgraph Client
-        APP["📱 walwang-app<br/>Expo · React Native"]
-    end
-    subgraph Server
-        BE["🗄 walwang-be<br/>Spring Boot · AWS EC2"]
-        AI["🤖 walwang-ai<br/>FastAPI · AWS EC2"]
-        DB[("Supabase Postgres<br/>PostGIS · pgvector")]
-        REDIS[("Redis")]
-    end
-    APP -->|REST| BE
-    BE -->|OCR · 도장 · 임베딩 요청| AI
-    BE -->|공간 쿼리 · 벡터 검색 · 랭킹| DB
-    BE --> REDIS
-    APP -.-> NAVER["네이버 지도"]
-    BE -.-> KTO["한국관광공사<br/>KorPetTourService2"]
-    BE -.-> TMAP["TMAP 보행자 경로"]
-    AI -.-> VISION["Google Cloud Vision"]
-    AI -.-> OPENAI["OpenAI<br/>text-embedding-3-small"]
-```
+<img width="1640" height="880" alt="시스템 아키텍처@1x" src="https://github.com/user-attachments/assets/f91f3465-b000-4973-a938-5486666b1ca1" />
+
 
 - [**`walwang-app`**](https://github.com/KTO-TourData-2026/walwang-app) — Android 앱. 지도·리뷰·도장·코스 추천 UI.
 - **`walwang-be`** _(private)_ — Spring Boot REST API. 매장·리뷰·동반 판정·코스 추천, 공간 쿼리와 벡터 검색, 외부 API 연동, 관리자 콘솔.
