@@ -4,7 +4,7 @@
 
 # TripPaw: 나만의 반려견 산책코스 🦮
 
-**"우리 개, 여기 들어갈 수 있을까?"**
+**"우리 아이, 여기 들어갈 수 있을까?"**
 실제 방문자의 인증 리뷰로 쌓아 올린 **견종 크기별** 반려견 동반 정보
 
 <br />
@@ -32,14 +32,8 @@
 
 **TripPaw**는 한국관광공사 OpenAPI의 공식 관광정보에서 출발해, **영수증과 반려견 사진으로 이중 인증한 실제 방문자 리뷰**를 누적하여 공식 데이터가 채우지 못하는 영역을 사용자가 직접 완성해 나가는 서비스입니다.
 
-| 항목        | 내용                                                              |
-| ----------- | ----------------------------------------------------------------- |
-| 공모전      | 2026 관광데이터 활용 공모전 · **지정과제 6**                      |
-| 팀          | 왈왕 (WalWang)                                                    |
-| 서비스      | TripPaw: 나만의 반려견 산책코스 (Android 앱)                      |
-| 개발 기간   | 2026.08 ~ 2026.09                                                 |
-| 서비스 지역 | 서울 성동구 (MVP)                                                 |
-| 타깃        | 반려견 동반 여행·나들이를 계획하지만 사전 확인 수단이 없는 반려인 |
+> **2026 관광데이터 활용 공모전 · 지정과제 6** — 팀 **왈왕(WalWang)** · 2026.08 ~ 2026.09 · Android 앱 · 서울 성동구 MVP
+> 반려견 동반 여행·나들이를 계획하지만 사전 확인 수단이 없는 반려인을 위해 만들었습니다.
 
 ### 🐾 기존 서비스 vs TripPaw
 
@@ -63,7 +57,7 @@
 - [🌐 활용 공공데이터 · API](#-활용-공공데이터--api)
 - [🏗 시스템 아키텍처](#-시스템-아키텍처)
 - [🛠 기술 스택](#-기술-스택)
-- [📁 프로젝트 구조](#-프로젝트-구조)
+- [📁 FE 프로젝트 구조](#-fe-프로젝트-구조)
 - [🚀 발전 계획](#-발전-계획)
 - [👥 팀 소개](#-팀-소개)
 
@@ -187,19 +181,11 @@ flowchart LR
 
 리뷰는 **소·중형견 / 대형견** 구간별로 따로 집계되며, 각 구간의 상태는 아래 규칙으로 산정됩니다.
 
-| 상태      | 조건                                                   |
-| --------- | ------------------------------------------------------ |
-| ✅ 가능   | 동반 입장 리뷰 **4건 이상** 이면서 전체의 **70% 이상** |
-| ⛔ 불가   | 거절 리뷰 **3건 이상** 이면서 전체의 **55% 이상**      |
-| ❔ 미확인 | 위 조건을 모두 충족하지 않는 경우                      |
+- ✅ **가능** — 동반 입장 리뷰가 **4건 이상**이면서 전체의 **70% 이상**
+- ⛔ **불가** — 거절 리뷰가 **3건 이상**이면서 전체의 **55% 이상**
+- ❔ **미확인** — 위 조건을 모두 충족하지 않는 경우
 
-**시간 가중치 (지수 감쇠)**
-
-- 리뷰 작성일로부터 **90일마다 가중치가 절반**으로 줄어듭니다.
-- 리뷰가 적은 매장에서 오래된 리뷰가 지나치게 무력화되지 않도록 **최소 가중치(바닥값)** 를 둡니다.
-- 과거에 '가능'이었던 매장도 최근 반대 리뷰가 쌓이면 **빠르게 상태가 바뀌어**, 정보가 고착되지 않습니다.
-
-<!-- (선택) 가중치 수식: w(t) = max(0.5^(t/90), w_min) -->
+집계에는 **시간 가중치(지수 감쇠)** 가 적용됩니다. 리뷰 작성일로부터 **90일마다 가중치가 절반**으로 줄어들되, 리뷰가 적은 매장에서 오래된 리뷰가 지나치게 무력화되지 않도록 **최소 가중치(바닥값)** 를 둡니다. 덕분에 과거에 '가능'이었던 매장도 최근 반대 리뷰가 쌓이면 **빠르게 상태가 바뀌어**, 정보가 고착되지 않습니다.
 
 ### 2. 영수증 OCR 방문 인증
 
@@ -214,7 +200,7 @@ flowchart LR
                      └─ 인식 실패 시 → 🐾 발바닥 기본 도장
 ```
 
-- 세그멘테이션은 메모리를 많이 쓰는 작업이라, `asyncio.Semaphore` + `asyncio.to_thread`로 요청을 **직렬화**해 메모리 제한 환경(EC2)에서의 OOM을 방지합니다.
+세그멘테이션은 메모리를 많이 쓰는 작업이라, `asyncio.Semaphore` + `asyncio.to_thread`로 요청을 **직렬화**해 메모리 제한 환경(EC2)에서의 OOM을 방지합니다.
 
 ### 4. 맞춤 코스 추천
 
@@ -235,14 +221,12 @@ flowchart LR
 
 ## 🌐 활용 공공데이터 · API
 
-### 한국관광공사 OpenAPI
+### 한국관광공사 반려동물 동반여행 서비스 (`KorPetTourService2`)
 
-| API                                                                    | 활용                                                                                     |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **반려동물 동반여행 서비스** (`KorPetTourService2`) · `areaBasedList2` | 반려동물 동반 가능 여행지 실시간 조회 → 매장 매칭, 코스 추천 후보, 인근 공원·관광지 추천 |
+`areaBasedList2`로 반려동물 동반 가능 여행지 정보를 실시간 조회합니다.
 
 - **조회 기준 전환** — 실측 결과 전국 9,685건 중 `areaCode`가 채워진 건은 542건(**6%**)에 불과해 지역 기준 조회가 불가능했습니다. 법정동 코드(`lDongRegnCd` · `lDongSignguCd`)로 전환해 **커버리지 99.9%** 를 확보했습니다. 분류 역시 `cat1~3`이 대부분 공백이어서 `lclsSystm1~3`을 사용했습니다.
-- **매장 매칭** — 조회된 장소를 **상호명 유사도 + 좌표 거리** 기준의 단계별 규칙으로 서비스 매장과 매칭합니다. 매칭된 매장은 리뷰가 쌓이기 전 단계에서 동반 가능 여부의 **보조 근거**로 표시되고, 코스 추천 후보에도 포함됩니다.
+- **매장 매칭** — 조회된 장소를 **상호명 유사도 + 좌표 거리** 기준의 단계별 규칙으로 서비스 매장과 매칭합니다. 매칭된 매장은 리뷰가 쌓이기 전 단계에서 동반 가능 여부의 **보조 근거**로 표시되고, 코스 추천 후보에도 포함됩니다. 분류 코드로 선별한 공원·관광지는 코스 인근 추천에 활용합니다.
 - **처리 방식** — 응답은 요청 처리 시점에만 사용하며 데이터베이스에 저장하지 않습니다.
 
 ### 기타 API · 파일데이터
@@ -259,21 +243,21 @@ flowchart LR
 
 ## 🏗 시스템 아키텍처
 
-<!-- 아키텍처 다이어그램 이미지 -->
-
 ```mermaid
 flowchart LR
     subgraph Client
         APP["📱 walwang-app<br/>Expo · React Native"]
     end
     subgraph Server
-        BE["🗄 walwang-be<br/>Backend API"]
+        BE["🗄 walwang-be<br/>Spring Boot · AWS EC2"]
         AI["🤖 walwang-ai<br/>FastAPI · AWS EC2"]
-        DB[("Supabase Postgres<br/>+ pgvector")]
+        DB[("Supabase Postgres<br/>PostGIS · pgvector")]
+        REDIS[("Redis")]
     end
     APP -->|REST| BE
     BE -->|OCR · 도장 · 임베딩 요청| AI
-    BE -->|벡터 검색 · 랭킹| DB
+    BE -->|공간 쿼리 · 벡터 검색 · 랭킹| DB
+    BE --> REDIS
     APP -.-> NAVER["네이버 지도"]
     BE -.-> KTO["한국관광공사<br/>KorPetTourService2"]
     BE -.-> TMAP["TMAP 보행자 경로"]
@@ -281,11 +265,9 @@ flowchart LR
     AI -.-> OPENAI["OpenAI<br/>text-embedding-3-small"]
 ```
 
-| 레포                                                              | 역할                                                                                              |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| [`walwang-app`](https://github.com/KTO-TourData-2026/walwang-app) | Android 앱 (지도·리뷰·도장·코스 추천 UI)                                                          |
-| `walwang-be` _(private)_                                          | <!-- TODO --> 매장·리뷰·판정·코스 API, 벡터 검색·랭킹, 외부 API 연동                              |
-| `walwang-ai` _(private)_                                          | FastAPI 단일 마이크로서비스 — 영수증 OCR, 반려견 탐지·배경 제거(도장 생성), 태그·리뷰 임베딩 생성 |
+- [**`walwang-app`**](https://github.com/KTO-TourData-2026/walwang-app) — Android 앱. 지도·리뷰·도장·코스 추천 UI.
+- **`walwang-be`** _(private)_ — Spring Boot REST API. 매장·리뷰·동반 판정·코스 추천, 공간 쿼리와 벡터 검색, 외부 API 연동, 관리자 콘솔.
+- **`walwang-ai`** _(private)_ — FastAPI 단일 마이크로서비스. 영수증 OCR, 반려견 탐지·배경 제거(도장 생성), 태그·리뷰 임베딩 생성.
 
 <br />
 
@@ -306,31 +288,27 @@ flowchart LR
 
 ### 🗄 Backend
 
-| 분류             | 스택                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | 용도                                          |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Language · Build | ![Java 17](https://img.shields.io/badge/Java_17-007396?style=flat-square&logo=openjdk&logoColor=white) ![Gradle](https://img.shields.io/badge/Gradle-02303A?style=flat-square&logo=gradle&logoColor=white)                                                                                                                                                                                                                                                                                            |                                               |
-| Framework        | ![Spring Boot 4.1.0](https://img.shields.io/badge/Spring_Boot_4.1.0-6DB33F?style=flat-square&logo=springboot&logoColor=white) ![Spring Web MVC](https://img.shields.io/badge/Spring_Web_MVC-6DB33F?style=flat-square&logo=spring&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white) ![Bean Validation](https://img.shields.io/badge/Bean_Validation-6DB33F?style=flat-square&logo=spring&logoColor=white) | REST API · 인증/인가 · 요청 검증              |
-| Admin Console    | ![Mustache](https://img.shields.io/badge/Mustache-E34F26?style=flat-square&logo=mustache&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                                             | 관리자 콘솔 (리뷰 신고 검토 등)               |
-| ORM              | ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat-square&logo=spring&logoColor=white) ![Hibernate](https://img.shields.io/badge/Hibernate-59666C?style=flat-square&logo=hibernate&logoColor=white) ![Hibernate Spatial](https://img.shields.io/badge/Hibernate_Spatial-59666C?style=flat-square&logo=hibernate&logoColor=white)                                                                                                                                       | PostGIS 공간 쿼리 (좌표·거리 기반 검색)       |
-| Database · Cache | ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white) ![PostGIS](https://img.shields.io/badge/PostGIS-336791?style=flat-square&logo=postgresql&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white)                                                                  |                                               |
-| Auth · Security  | ![JWT (jjwt)](https://img.shields.io/badge/JWT_%28jjwt%29-000000?style=flat-square&logo=jsonwebtokens&logoColor=white) ![BCrypt](https://img.shields.io/badge/BCrypt-338033?style=flat-square) ![TOTP](https://img.shields.io/badge/TOTP-5C6BC0?style=flat-square)                                                                                                                                                                                                                                    | 토큰 인증 · 비밀번호 해시 · 관리자 2단계 인증 |
-| Image            | ![Thumbnailator](https://img.shields.io/badge/Thumbnailator-FF8A3D?style=flat-square)                                                                                                                                                                                                                                                                                                                                                                                                                 | 이미지 리사이징 · 썸네일                      |
-| API Docs         | ![SpringDoc OpenAPI](https://img.shields.io/badge/SpringDoc_OpenAPI-85EA2D?style=flat-square&logo=swagger&logoColor=black)                                                                                                                                                                                                                                                                                                                                                                            | Swagger UI                                    |
-| Test             | ![JUnit 5](https://img.shields.io/badge/JUnit_5-25A162?style=flat-square&logo=junit5&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                                                 |                                               |
-| Infra · CI/CD    | ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat-square&logo=amazonec2&logoColor=white) ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)                                                                                                                                                                  | 배포 · 리버스 프록시 · 자동 배포              |
+| 분류             | 스택                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language · Build | ![Java 17](https://img.shields.io/badge/Java_17-007396?style=flat-square&logo=openjdk&logoColor=white) ![Gradle](https://img.shields.io/badge/Gradle-02303A?style=flat-square&logo=gradle&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                    |
+| Framework        | ![Spring Boot 4.1.0](https://img.shields.io/badge/Spring_Boot_4.1.0-6DB33F?style=flat-square&logo=springboot&logoColor=white) ![Spring Web MVC](https://img.shields.io/badge/Spring_Web_MVC-6DB33F?style=flat-square&logo=spring&logoColor=white) ![Spring Security](https://img.shields.io/badge/Spring_Security-6DB33F?style=flat-square&logo=springsecurity&logoColor=white) ![Bean Validation](https://img.shields.io/badge/Bean_Validation-6DB33F?style=flat-square&logo=spring&logoColor=white)                                                                         |
+| ORM · Database   | ![Spring Data JPA](https://img.shields.io/badge/Spring_Data_JPA-6DB33F?style=flat-square&logo=spring&logoColor=white) ![Hibernate Spatial](https://img.shields.io/badge/Hibernate_Spatial-59666C?style=flat-square&logo=hibernate&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white) ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white) ![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis&logoColor=white) |
+| Auth · Security  | ![JWT (jjwt)](https://img.shields.io/badge/JWT_%28jjwt%29-000000?style=flat-square&logo=jsonwebtokens&logoColor=white) ![BCrypt](https://img.shields.io/badge/BCrypt-338033?style=flat-square) ![TOTP](https://img.shields.io/badge/TOTP-5C6BC0?style=flat-square)                                                                                                                                                                                                                                                                                                            |
+| View · Docs      | ![Mustache](https://img.shields.io/badge/Mustache-E34F26?style=flat-square&logo=mustache&logoColor=white) ![SpringDoc OpenAPI](https://img.shields.io/badge/SpringDoc_OpenAPI-85EA2D?style=flat-square&logo=swagger&logoColor=black)                                                                                                                                                                                                                                                                                                                                          |
+| Image · Test     | ![Thumbnailator](https://img.shields.io/badge/Thumbnailator-FF8A3D?style=flat-square) ![JUnit 5](https://img.shields.io/badge/JUnit_5-25A162?style=flat-square&logo=junit5&logoColor=white)                                                                                                                                                                                                                                                                                                                                                                                   |
+| Infra · CI/CD    | ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat-square&logo=amazonec2&logoColor=white) ![Nginx](https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white) ![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)                                                                                                                                                                                                                                          |
+
+Hibernate Spatial로 PostGIS 공간 쿼리(좌표·거리 기반 매장 검색)를 처리하고, 관리자 콘솔은 Mustache로 렌더링합니다.
 
 ### 🤖 AI
 
-| 분류        | 스택                                                                                                                                                                                                                  | 용도                                                 |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| Language    | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)                                                                                                                   |                                                      |
-| Framework   | ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)                                                                                                                | 단일 마이크로서비스                                  |
-| Vision      | ![YOLOv8n](https://img.shields.io/badge/YOLOv8n-111F68?style=flat-square&logo=ultralytics&logoColor=white) ![rembg](https://img.shields.io/badge/rembg_%28U2Net%29-FF6F00?style=flat-square)                          | 반려견 영역 탐지(COCO class 16) · 배경 제거 → 도장   |
-| OCR         | ![Google Cloud Vision](https://img.shields.io/badge/Google_Cloud_Vision-4285F4?style=flat-square&logo=googlecloud&logoColor=white)                                                                                    | 방문 인증용 영수증 OCR                               |
-| Embedding   | ![OpenAI](https://img.shields.io/badge/OpenAI_text--embedding--3--small-412991?style=flat-square&logo=openai&logoColor=white)                                                                                         | 매장(태그+리뷰) 임베딩, 검색 시 태그 쿼리 임베딩     |
-| Vector DB   | ![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white) ![pgvector](https://img.shields.io/badge/pgvector-4169E1?style=flat-square&logo=postgresql&logoColor=white) | 임베딩 저장, 코사인 유사도 벡터 검색                 |
-| Infra       | ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat-square&logo=amazonec2&logoColor=white)                                                                                                              | 배포                                                 |
-| Concurrency | `asyncio.Semaphore` · `asyncio.to_thread`                                                                                                                                                                             | 세그멘테이션 요청 직렬화로 메모리 제한 환경 OOM 방지 |
+| 분류      | 스택                                                                                                                                                                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language  | ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)                                |
+| Vision    | ![YOLOv8n](https://img.shields.io/badge/YOLOv8n-111F68?style=flat-square&logo=ultralytics&logoColor=white) ![rembg](https://img.shields.io/badge/rembg_%28U2Net%29-FF6F00?style=flat-square)                                              |
+| OCR       | ![Google Cloud Vision](https://img.shields.io/badge/Google_Cloud_Vision-4285F4?style=flat-square&logo=googlecloud&logoColor=white)                                                                                                        |
+| Embedding | ![OpenAI](https://img.shields.io/badge/OpenAI_text--embedding--3--small-412991?style=flat-square&logo=openai&logoColor=white) ![pgvector](https://img.shields.io/badge/pgvector-4169E1?style=flat-square&logo=postgresql&logoColor=white) |
+| Infra     | ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=flat-square&logo=amazonec2&logoColor=white)                                                                                                                                  |
 
 <br />
 
@@ -364,12 +342,13 @@ walwang-app/
 
 ## 🚀 발전 계획
 
-| 구분   | 계획                           | 내용                                                                                                                                                                                             |
-| ------ | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 확장성 | **커버리지 확장**              | 한국관광공사 OpenAPI의 전국 데이터를 그대로 수용하는 구조로, 별도 변경 없이 지역 확장이 가능합니다. 반려견 동반 여행 수요가 높은 강원·제주·부산부터 확장해 여행지 단위 정보 인프라로 성장합니다. |
-| 확장성 | **자연어 기반 코스 추천**      | 누적된 해시태그와 리뷰를 LLM으로 파싱해 _"대형견과 갈 수 있는 한적한 야외 카페 코스"_ 같은 자연어 질의에 대응합니다.                                                                             |
-| 지속성 | **인증 체계 고도화**           | 사진 위치 정보(EXIF)와 매장 위치를 대조해 **방문·동반·위치 삼중 검증**을 완성하고, 실내 촬영 여부까지 확인합니다.                                                                                |
-| 지속성 | **지역 연계 및 데이터 역제공** | 지자체·지역관광기구(RTO)·상권과 제휴한 권역별 스탬프 투어를 운영하고, 누적 리뷰·해시태그를 비식별 통계로 가공해 지자체와 매장에 제공합니다.                                                      |
+**[확장성] 커버리지 확장** — 한국관광공사 OpenAPI의 전국 데이터를 그대로 수용하는 구조로, 별도 변경 없이 지역 확장이 가능합니다. 반려견 동반 여행 수요가 높은 강원·제주·부산부터 확장해 여행지 단위 정보 인프라로 성장합니다.
+
+**[확장성] 자연어 기반 코스 추천** — 누적된 해시태그와 리뷰를 LLM으로 파싱해 _"대형견과 갈 수 있는 한적한 야외 카페 코스"_ 같은 자연어 질의에 대응합니다.
+
+**[지속성] 인증 체계 고도화** — 사진 위치 정보(EXIF)와 매장 위치를 대조해 **방문·동반·위치 삼중 검증**을 완성하고, 실내 촬영 여부까지 확인합니다.
+
+**[지속성] 지역 연계 및 데이터 역제공** — 지자체·지역관광기구(RTO)·상권과 제휴한 권역별 스탬프 투어를 운영하고, 누적 리뷰·해시태그를 비식별 통계로 가공해 지자체와 매장에 제공합니다.
 
 <br />
 
@@ -379,8 +358,8 @@ walwang-app/
 
 | <img src="https://github.com/nyoeng.png" width="120" /> | <img src="https://github.com/getOffWork102.png" width="120" /> | <img src="https://github.com/min212.png" width="120" /> |
 | :-----------------------------------------------------: | :------------------------------------------------------------: | :-----------------------------------------------------: |
-|                       경북대학교 컴퓨터학부                     |                 경북대학교 컴퓨터학부                          |               경북대학교 컴퓨터학부                       |
-|                        **한나영**                         |                            **노현경**                            |                        **진유민**                         |
+|                  경북대학교 컴퓨터학부                  |                     경북대학교 컴퓨터학부                      |                  경북대학교 컴퓨터학부                  |
+|                       **한나영**                        |                           **노현경**                           |                       **진유민**                        |
 |                        Frontend                         |                            Backend                             |                           AI                            |
 |          [@nyoeng](https://github.com/nyoeng)           |       [@getOffWork102](https://github.com/getOffWork102)       |          [@min212](https://github.com/min212)           |
 
