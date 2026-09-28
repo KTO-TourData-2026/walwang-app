@@ -75,7 +75,14 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={colors.text} />
       ) : (
-        <ThemedText type="subtitle03" color={colors.text}>
+        <ThemedText
+          type="subtitle03"
+          color={colors.text}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.85}
+          maxFontSizeMultiplier={1.3}
+        >
           {label}
         </ThemedText>
       )}

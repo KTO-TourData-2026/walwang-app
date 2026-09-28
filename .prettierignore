@@ -13,3 +13,6 @@ expo-env.d.ts
 
 # 락파일
 package-lock.json
+
+# GitHub 웹에서 직접 편집하는 문서 (표 정렬이 깨져도 렌더링은 동일)
+README.md

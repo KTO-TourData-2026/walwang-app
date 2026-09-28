@@ -126,5 +126,6 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+    paddingHorizontal: Spacing.two,
   },
 });

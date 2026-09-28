@@ -91,10 +91,7 @@ export default function MapScreen() {
         {isSearching ? (
           <Pressable style={styles.backdrop} onPress={closeSearch} />
         ) : (
-          <View
-            style={[styles.fabWrap, { paddingBottom: insets.bottom }]}
-            pointerEvents="box-none"
-          >
+          <View style={styles.fabWrap} pointerEvents="box-none">
             <RecommendFab onPress={() => router.push("/recommend/keywords")} />
           </View>
         )}
