@@ -88,9 +88,9 @@
 <table>
   <thead>
     <tr>
-      <th align="center">영수증 촬영<br/>OCR 인증 완료</th>
-      <th align="center">반려견 사진 촬영<br/>미리보기</th>
-      <th align="center" colspan="2">'들어갔어요' 리뷰 작성<br/>(사진 · 크기 · 해시태그 · 10자 이상)</th>
+      <th align="center">영수증 촬영-OCR 인증</th>
+      <th align="center">반려견 사진 촬영</th>
+      <th align="center" colspan="2">'들어갔어요' 리뷰 작성<br/>(사진 · 크기 · 해시태그 · 텍스트 10자 이상 입력)</th>
       <th align="center">리뷰 작성 완료<br/>(도장 실시간 지급)</th>
     </tr>
   </thead>
@@ -115,7 +115,7 @@
 
 <div align="center">
 
-| '거절당했어요' 리뷰 작성<br/>(허위 리뷰 경고) | 리뷰 작성 완료<br/>(인근 동반 가능 매장 추천) | 리뷰 신고<br/>(허위 · 도배성) |
+| '거절당했어요' 리뷰 작성<br/>(허위 리뷰 경고) | 리뷰 작성 완료<br/>(인근 동반 가능 매장 추천) | 리뷰 신고 |
 | :---: | :---: | :---: |
 | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/85247a53-f704-4793-b398-f5fd0c86e93c" /> | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/54727d6a-68c8-40e8-b25d-20ee277fda8a" /> | <img width="1080" height="2400" alt="왈왕_4_신고모달" src="https://github.com/user-attachments/assets/15ea50ee-61c4-438d-8db6-e9c8f031001b" /> |
 
@@ -168,7 +168,7 @@
 
 <div align="center">
 
-| 장소 저장 탭 | 코스 저장  |
+| 장소 저장 | 코스 저장  |
 | :---: | :---: |
 | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/08a2b81a-72bd-4915-8e61-43830cf6dd0d" /> | <img width="1080" height="2400" alt="image" src="https://github.com/user-attachments/assets/a56d9b18-6878-401f-bc91-55f08616d666" /> |
 
