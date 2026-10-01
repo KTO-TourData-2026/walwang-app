@@ -17,7 +17,7 @@
 
 <br />
 
-[📲 원스토어에서 받기](https://m.onestore.co.kr/v2/ko-kr/app/0001008911) · [📦 최신 릴리즈 (v1.2.0 APK)](https://github.com/KTO-TourData-2026/walwang-app/releases/tag/v1.2.0)
+[📲 원스토어에서 받기](https://m.onestore.co.kr/v2/ko-kr/app/0001008911) · [📦 최신 릴리즈 (v1.2.1 APK)](https://github.com/KTO-TourData-2026/walwang-app/releases/tag/v1.2.1)
 
 <br />
 
