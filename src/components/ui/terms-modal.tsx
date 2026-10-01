@@ -1,9 +1,15 @@
-import { X } from "lucide-react-native";
+import { ChevronRight, X } from "lucide-react-native";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Palette, Radius, Spacing } from "@/constants/theme";
+
+export type TermsModalBanner = {
+  title: string;
+  caption: string;
+  onPress: () => void;
+};
 
 /**
  * 약관 전문 모달 — 제목 + 스크롤 본문 + [닫기].
@@ -13,11 +19,13 @@ export function TermsModal({
   visible,
   title,
   body,
+  banner,
   onClose,
 }: {
   visible: boolean;
   title: string;
   body: string;
+  banner?: TermsModalBanner;
   onClose: () => void;
 }) {
   return (
@@ -57,6 +65,32 @@ export function TermsModal({
               <X size={22} color={Palette.gray[500]} />
             </Pressable>
           </View>
+
+          {banner && (
+            <Pressable
+              onPress={banner.onPress}
+              accessibilityRole="button"
+              accessibilityLabel={`${banner.title} ${banner.caption}`}
+              style={({ pressed }) => [
+                styles.banner,
+                pressed && styles.bannerPressed,
+              ]}
+            >
+              <View style={styles.bannerText}>
+                <ThemedText type="subtitle05" color={Palette.gray[700]}>
+                  {banner.title}
+                </ThemedText>
+                <ThemedText type="label06" color={Palette.gray[500]}>
+                  {banner.caption}
+                </ThemedText>
+              </View>
+              <ChevronRight
+                size={18}
+                color={Palette.gray[400]}
+                strokeWidth={2}
+              />
+            </Pressable>
+          )}
 
           <ScrollView
             style={styles.bodyScroll}
@@ -98,6 +132,23 @@ const styles = StyleSheet.create({
   // 제목이 길어 줄바꿈돼도 X 아이콘을 밀지 않도록 가용 폭 안에서 접히게 한다.
   headerTitle: {
     flex: 1,
+  },
+  banner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    borderWidth: 1,
+    borderColor: Palette.border.disabled,
+    backgroundColor: Palette.white,
+  },
+  bannerPressed: {
+    opacity: 0.6,
+  },
+  bannerText: {
+    flex: 1,
+    gap: Spacing.half,
   },
   bodyScroll: {
     // 본문이 짧을 땐 콘텐츠만큼만 차지하고(hug), 길 땐 sheet의 maxHeight(80%)

@@ -97,6 +97,10 @@ export default function RootLayout() {
                 options={{ title: "오픈소스 라이선스" }}
               />
               <Stack.Screen
+                name="privacy-notice"
+                options={{ title: "개정 안내" }}
+              />
+              <Stack.Screen
                 name="my/stamp/[stampId]"
                 options={{
                   headerShown: false,
