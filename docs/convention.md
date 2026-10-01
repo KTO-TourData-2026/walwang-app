@@ -173,8 +173,32 @@ develop  ──▶  release/vX.Y.Z  ──▶  main  (머지 후 vX.Y.Z 태그)
 
 ### 6-2. 버전 규칙 (SemVer)
 
-`vMAJOR.MINOR.PATCH` — 각각 호환 깨짐 / 기능 추가 / 버그 수정. `package.json`의 `version`도 함께 올린다.
+`vMAJOR.MINOR.PATCH` — 각각 호환 깨짐 / 기능 추가 / 버그 수정.
 
 - 공모전 MVP 기간엔 `minor`(기능 추가)·`patch`(버그 수정) 위주로 올린다.
+
+### 6-3. 버전 갱신 체크리스트
+
+release 브랜치에서 아래를 **한 커밋**(`chore: vX.Y.Z & versionCode N으로 갱신`)으로 올린다. 하나라도 빠지면 스토어 업로드가 막히거나 버전 표기가 어긋난다.
+
+| 대상                            | 갱신 내용                         | 비고                                                                                          |
+| ------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------- |
+| `app.config.ts` → `version`     | `X.Y.Z`                           | 사용자에게 보이는 버전                                                                        |
+| `app.config.ts` → `versionCode` | 직전 값 **+1** (정수)             | ⚠️ 가장 자주 빠뜨린다. `eas.json`이 `appVersionSource: "local"`이라 자동으로 올라가지 않는다. |
+| `package.json` → `version`      | `X.Y.Z`                           | 아래 명령으로 lock과 함께 갱신                                                                |
+| `package-lock.json` → `version` | `X.Y.Z` (최상단 + `packages[""]`) | 손으로 고치지 말고 아래 명령 사용                                                             |
+
+```bash
+npm version X.Y.Z --no-git-tag-version   # package.json + package-lock.json 동시 갱신 (커밋·태그는 만들지 않음)
+```
+
+- `versionCode`는 `version`을 patch만 올려도 **무조건 +1** 한다. 같은 값으로는 스토어에 재업로드할 수 없다.
+- 직전 값은 `git show origin/main:app.config.ts`로 확인한다.
+
+**머지·태그 이후** (릴리즈 페이지가 생긴 뒤에 해야 링크가 깨지지 않는다)
+
+- GitHub Release 생성 + APK 첨부
+- `README.md`의 "최신 릴리즈 (vX.Y.Z APK)" 표기·링크 갱신
+- `main` → `develop` back-merge (§6-1의 6번)
 
 > 앱스토어에 실제로 올리는 경우의 추가 점검(기본 모드 실사용 고정, 목 리뷰 정리 등)은 [demo-mode.md §9](demo-mode.md)의 배포 체크리스트를 따른다.
