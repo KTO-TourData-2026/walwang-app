@@ -20,9 +20,9 @@ import { ApiHttpError } from "@/api/http-error";
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { TermsModal } from "@/components/ui/terms-modal";
+import { TermContentModal } from "@/components/ui/term-content-modal";
 import { TextField } from "@/components/ui/text-field";
-import { TERMS, type TermContentCode } from "@/constants/terms";
+import type { TermContentCode } from "@/constants/terms";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 import { useCheckEmailMutation } from "@/hooks/use-check-email-mutation";
 import { useCheckNicknameMutation } from "@/hooks/use-check-nickname-mutation";
@@ -400,12 +400,7 @@ export default function SignupScreen() {
         </Pressable>
       </ScrollView>
 
-      <TermsModal
-        visible={termModal !== null}
-        title={termModal ? TERMS[termModal].title : ""}
-        body={termModal ? TERMS[termModal].body : ""}
-        onClose={() => setTermModal(null)}
-      />
+      <TermContentModal code={termModal} onClose={() => setTermModal(null)} />
     </SafeAreaView>
   );
 }

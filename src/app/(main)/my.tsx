@@ -17,9 +17,9 @@ import { ProfileSummaryCard } from "@/components/my/profile-summary-card";
 import { ThemedText } from "@/components/themed-text";
 import { ErrorState } from "@/components/ui/error-state";
 import { LoadingView } from "@/components/ui/loading-view";
-import { TermsModal } from "@/components/ui/terms-modal";
+import { TermContentModal } from "@/components/ui/term-content-modal";
 import { DATA_SOURCE_TITLE, DATA_SOURCES } from "@/constants/attribution";
-import { TERMS, type TermContentCode } from "@/constants/terms";
+import type { TermContentCode } from "@/constants/terms";
 import { BottomTabInset, Palette, Spacing } from "@/constants/theme";
 import { useDeleteAccountMutation } from "@/hooks/use-delete-account-mutation";
 import { useLogoutMutation } from "@/hooks/use-logout-mutation";
@@ -226,15 +226,23 @@ export default function MyScreen() {
             </ThemedText>
             <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
           </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/privacy-notice")}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="개인정보 처리방침 개정 안내 보기"
+            style={styles.licenseLink}
+          >
+            <ThemedText type="label05" color={Palette.gray[500]}>
+              개인정보 처리방침 개정 안내
+            </ThemedText>
+            <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
+          </Pressable>
         </View>
       </ScrollView>
 
-      <TermsModal
-        visible={termModal !== null}
-        title={termModal ? TERMS[termModal].title : ""}
-        body={termModal ? TERMS[termModal].body : ""}
-        onClose={() => setTermModal(null)}
-      />
+      <TermContentModal code={termModal} onClose={() => setTermModal(null)} />
     </>
   );
 }
