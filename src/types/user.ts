@@ -21,12 +21,30 @@ export interface AgreementRequest {
   agreed: boolean;
 }
 
+// 이메일 인증번호 발송 요청(swagger EmailVerificationSendRequest). 성공 시 바디 없음(200).
+export interface EmailVerificationSendRequest {
+  email: string;
+}
+
+// 이메일 인증번호 확인 요청(swagger EmailVerificationConfirmRequest). code는 6자리 숫자(`\d{6}`).
+export interface EmailVerificationConfirmRequest {
+  email: string;
+  code: string;
+}
+
+// 이메일 인증번호 확인 응답(swagger EmailVerificationConfirmResponse). 토큰을 회원가입에 그대로 동봉한다.
+export interface EmailVerificationConfirmResponse {
+  verificationToken: string;
+}
+
 // 회원가입 요청(swagger SignUpRequest). 성공 시 바디·토큰 없음(200) → 이어서 login 호출.
+// verificationToken은 이메일 인증 확인 응답에서 받은 값(최대 64자, 필수).
 export interface UserSignUpRequest {
   email: string;
   nickname: string;
   password: string;
   agreements: AgreementRequest[];
+  verificationToken: string;
 }
 
 // 프로필 수정 요청(swagger UserPatchRequest). nickname은 항상 필수(비번만 바꿔도 함께 보낸다).

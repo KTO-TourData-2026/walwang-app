@@ -1,5 +1,5 @@
 // 도메인별 API 엔드포인트. path 파라미터가 있으면 함수로 둔다.
-// 명세(08.28판) 기준. baseURL은 apiClient에서 붙으므로 여기선 경로만.
+// 명세(11.01판, 이메일 인증 추가) 기준. baseURL은 apiClient에서 붙으므로 여기선 경로만.
 export const API_ENDPOINTS = {
   user: {
     signUp: "/user/signUp",
@@ -8,7 +8,9 @@ export const API_ENDPOINTS = {
     reissue: "/user/reissue", // refreshToken으로 access 재발급(14일 슬라이딩)
     me: "/user/me", // GET(내 정보) · PATCH(수정) · DELETE(탈퇴)
     myReviews: "/user/me/reviews", // 본인 리뷰 목록(page,size)
-    checkEmail: "/user/check-email",
+    // 이메일은 중복 확인 API 대신 인증번호 발송→확인으로 검증한다(확인 응답의 verificationToken을 signUp에 동봉).
+    emailVerificationSend: "/user/email-verification/send",
+    emailVerificationConfirm: "/user/email-verification/confirm",
     checkNickname: "/user/check-nickname",
     savedStores: "/user/store",
     savedCourses: "/user/me/saved-courses",
