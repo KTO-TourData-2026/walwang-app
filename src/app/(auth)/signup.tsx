@@ -24,8 +24,9 @@ import { TermContentModal } from "@/components/ui/term-content-modal";
 import { TextField } from "@/components/ui/text-field";
 import type { TermContentCode } from "@/constants/terms";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
-import { useCheckEmailMutation } from "@/hooks/use-check-email-mutation";
 import { useCheckNicknameMutation } from "@/hooks/use-check-nickname-mutation";
+import { useConfirmEmailVerificationMutation } from "@/hooks/use-confirm-email-verification-mutation";
+import { useSendEmailVerificationMutation } from "@/hooks/use-send-email-verification-mutation";
 import { useSignupMutation } from "@/hooks/use-signup-mutation";
 
 const AGREEMENTS = [
@@ -35,6 +36,10 @@ const AGREEMENTS = [
 ] as const;
 
 type AgreementCode = (typeof AGREEMENTS)[number]["code"];
+
+// 서버 스펙(EmailVerificationConfirmRequest.code = `\d{6}`)과 동일.
+const VERIFICATION_CODE_LENGTH = 6;
+const VERIFICATION_CODE_PATTERN = /^\d{6}$/;
 
 const signupSchema = z
   .object({
@@ -61,12 +66,22 @@ const signupSchema = z
 
 type SignupForm = z.infer<typeof signupSchema>;
 
+// 인증 확인을 통과한 이메일과 그때 받은 토큰. 이메일을 바꾸면 현재 값과 달라져 다시 인증해야 한다.
+type EmailVerification = { email: string; token: string };
+
 const LOGO = require("@/assets/images/logo.png");
 
 function errorMessage(error: unknown): string {
   return error instanceof ApiHttpError
     ? error.message
     : "네트워크 상태를 확인한 뒤 다시 시도해주세요.";
+}
+
+// 4xx는 서버가 사용자용 메시지를 담아준다(명세 공통 규약) → 인라인으로 보여줄 수 있다.
+function isClientError(error: unknown): error is ApiHttpError {
+  return (
+    error instanceof ApiHttpError && error.status >= 400 && error.status < 500
+  );
 }
 
 export default function SignupScreen() {
@@ -84,11 +99,19 @@ export default function SignupScreen() {
   // 전문 보기 모달에 띄울 약관 코드(없으면 닫힘).
   const [termModal, setTermModal] = useState<TermContentCode | null>(null);
 
-  // 마지막으로 "사용 가능"을 확인한 값. 입력을 바꾸면 현재 값과 달라져 재확인이 필요해진다.
-  const [checkedEmail, setCheckedEmail] = useState<string | null>(null);
+  // [이메일 인증] 인증번호를 보낸 이메일 → 그 이메일에 대해서만 코드 입력란을 보인다.
+  const [codeSentEmail, setCodeSentEmail] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [verification, setVerification] = useState<EmailVerification | null>(
+    null,
+  );
+
+  // 마지막으로 "사용 가능"을 확인한 닉네임. 입력을 바꾸면 현재 값과 달라져 재확인이 필요해진다.
   const [checkedNickname, setCheckedNickname] = useState<string | null>(null);
 
-  const checkEmailMutation = useCheckEmailMutation();
+  const sendCodeMutation = useSendEmailVerificationMutation();
+  const confirmCodeMutation = useConfirmEmailVerificationMutation();
   const checkNicknameMutation = useCheckNicknameMutation();
   const signupMutation = useSignupMutation();
 
@@ -113,26 +136,68 @@ export default function SignupScreen() {
   // useWatch는 watch()와 달리 메모이제이션에 안전(React Compiler 경고 없음).
   const emailValue = useWatch({ control, name: "email" }).trim();
   const nicknameValue = useWatch({ control, name: "nickname" }).trim();
-  const emailChecked = checkedEmail !== null && checkedEmail === emailValue;
+  const codeSent = codeSentEmail !== null && codeSentEmail === emailValue;
+  const emailVerified =
+    verification !== null && verification.email === emailValue;
   const nicknameChecked =
     checkedNickname !== null && checkedNickname === nicknameValue;
 
-  // [중복 확인] 이메일: 형식 검증 통과 후 조회. 409면 인라인 에러, 200이면 확인 상태로.
-  const handleCheckEmail = async () => {
+  // 인증 상태 초기화. 이메일 중복(409) 등으로 다시 인증해야 할 때 쓴다.
+  const resetEmailVerification = () => {
+    setCodeSentEmail(null);
+    setCode("");
+    setCodeError(null);
+    setVerification(null);
+  };
+
+  // [인증하기/재전송] 형식 검증 통과 후 발송. 200이면 코드 입력란을 열고, 4xx(중복 등)는 인라인 에러.
+  const handleSendCode = async () => {
     if (!(await trigger("email"))) {
       return;
     }
     try {
-      const available = await checkEmailMutation.mutateAsync(emailValue);
-      if (available) {
-        clearErrors("email");
-        setCheckedEmail(emailValue);
-      } else {
-        setError("email", { message: "이미 사용 중인 이메일이에요." });
-        setCheckedEmail(null);
-      }
+      await sendCodeMutation.mutateAsync(emailValue);
+      clearErrors("email");
+      setCodeSentEmail(emailValue);
+      setCode("");
+      setCodeError(null);
+      setVerification(null);
+      ToastAndroid.show("인증번호를 보냈어요.", ToastAndroid.SHORT);
     } catch (error) {
-      Alert.alert("확인 실패", errorMessage(error));
+      if (error instanceof ApiHttpError && error.status === 409) {
+        setError("email", { message: "이미 사용 중인 이메일이에요." });
+        return;
+      }
+      if (isClientError(error)) {
+        setError("email", { message: error.message });
+        return;
+      }
+      Alert.alert("인증번호 발송 실패", errorMessage(error));
+    }
+  };
+
+  // [확인] 6자리 숫자인지 먼저 보고 서버 확인. 성공 시 토큰을 보관(가입 요청에 동봉), 실패는 인라인 에러 한 문장.
+  const handleConfirmCode = async () => {
+    if (!VERIFICATION_CODE_PATTERN.test(code)) {
+      setCodeError("6자리 숫자 인증번호를 입력해주세요.");
+      return;
+    }
+    try {
+      const token = await confirmCodeMutation.mutateAsync({
+        email: emailValue,
+        code,
+      });
+      setCodeError(null);
+      clearErrors("email");
+      setVerification({ email: emailValue, token });
+      nicknameRef.current?.focus();
+    } catch (error) {
+      if (isClientError(error)) {
+        // 불일치·만료·소진(4xx)은 서버 메시지 대신 한 문장으로 통일한다(남은 횟수 등 노출 안 함).
+        setCodeError("유효하지 않은 인증코드입니다.");
+        return;
+      }
+      Alert.alert("인증 실패", errorMessage(error));
     }
   };
 
@@ -156,10 +221,10 @@ export default function SignupScreen() {
 
   const allAgreed = Object.values(agreements).every(Boolean);
 
-  // 가입 → 자동 로그인 → 지도. 가입 직전 사이에 선점되면 409 → 이메일 재확인 유도.
+  // 가입 → 자동 로그인 → 지도. 가입 직전 사이에 선점되면 409, 인증 토큰이 만료·무효면 403 → 이메일 재인증 유도.
   const onSubmit = handleSubmit(async (values) => {
-    // 키보드 '완료'는 버튼 disabled를 거치지 않으므로, 약관·중복확인·진행중 상태를 여기서 재확인한다.
-    if (!allAgreed || !emailChecked || !nicknameChecked) {
+    // 키보드 '완료'는 버튼 disabled를 거치지 않으므로, 약관·인증·중복확인·진행중 상태를 여기서 재확인한다.
+    if (!allAgreed || !emailVerified || !nicknameChecked) {
       return;
     }
     if (signupMutation.isPending) {
@@ -174,20 +239,29 @@ export default function SignupScreen() {
           termCode: item.code,
           agreed: agreements[item.code],
         })),
+        verificationToken: verification.token,
       });
       ToastAndroid.show("회원가입이 완료됐어요!", ToastAndroid.SHORT);
       router.replace("/map");
     } catch (error) {
       if (error instanceof ApiHttpError && error.status === 409) {
         setError("email", { message: "이미 사용 중인 이메일이에요." });
-        setCheckedEmail(null);
+        resetEmailVerification();
+        return;
+      }
+      if (error instanceof ApiHttpError && error.status === 403) {
+        setError("email", {
+          message:
+            error.message || "이메일 인증이 만료됐어요. 다시 인증해주세요.",
+        });
+        resetEmailVerification();
         return;
       }
       Alert.alert("회원가입 실패", errorMessage(error));
     }
   });
 
-  const canSubmit = isValid && allAgreed && emailChecked && nicknameChecked;
+  const canSubmit = isValid && allAgreed && emailVerified && nicknameChecked;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -223,23 +297,73 @@ export default function SignupScreen() {
                   submitBehavior="submit"
                   rightAccessory={
                     <Button
-                      label="중복 확인"
+                      label={codeSent && !emailVerified ? "재전송" : "인증하기"}
                       variant="main"
-                      onPress={handleCheckEmail}
-                      loading={checkEmailMutation.isPending}
-                      disabled={emailChecked}
-                      style={styles.checkButton}
+                      onPress={handleSendCode}
+                      loading={sendCodeMutation.isPending}
+                      disabled={emailVerified}
+                      size="small"
+                      style={[
+                        styles.checkButton,
+                        codeSent && !emailVerified && styles.checkButtonCompact,
+                      ]}
                     />
                   }
                 />
-                {emailChecked && !errors.email ? (
+                {emailVerified && !errors.email ? (
                   <ThemedText
                     type="label06"
                     color={Palette.success[300]}
                     style={styles.successText}
                   >
-                    사용 가능한 이메일이에요.
+                    이메일 인증이 완료됐어요.
                   </ThemedText>
+                ) : null}
+                {codeSent && !emailVerified ? (
+                  <View style={styles.codeBlock}>
+                    <TextField
+                      label="인증번호"
+                      focusColor={Palette.border.default}
+                      placeholder="메일로 받은 6자리 숫자"
+                      value={code}
+                      onChangeText={(next) => {
+                        // 숫자 외 문자를 여기서 지우면 controlled 값이 안 바뀌어 입력란과 어긋난다 → 버튼 활성화·확인 시 패턴으로 거른다.
+                        setCode(next);
+                        setCodeError(null);
+                      }}
+                      error={codeError ?? undefined}
+                      autoFocus
+                      keyboardType="number-pad"
+                      maxLength={VERIFICATION_CODE_LENGTH}
+                      autoComplete="one-time-code"
+                      returnKeyType="done"
+                      onSubmitEditing={handleConfirmCode}
+                      submitBehavior="submit"
+                      rightAccessory={
+                        <Button
+                          label="확인"
+                          variant="main"
+                          onPress={handleConfirmCode}
+                          loading={confirmCodeMutation.isPending}
+                          disabled={!VERIFICATION_CODE_PATTERN.test(code)}
+                          size="small"
+                          style={[
+                            styles.checkButton,
+                            styles.checkButtonCompact,
+                          ]}
+                        />
+                      }
+                    />
+                    {!codeError ? (
+                      <ThemedText
+                        type="label06"
+                        color={Palette.gray[500]}
+                        style={styles.successText}
+                      >
+                        메일함에서 인증번호를 확인해주세요.
+                      </ThemedText>
+                    ) : null}
+                  </View>
                 ) : null}
               </View>
             )}
@@ -271,6 +395,7 @@ export default function SignupScreen() {
                       onPress={handleCheckNickname}
                       loading={checkNicknameMutation.isPending}
                       disabled={nicknameChecked}
+                      size="small"
                       style={styles.checkButton}
                     />
                   }
@@ -391,7 +516,7 @@ export default function SignupScreen() {
           style={styles.policyLink}
         >
           <ThemedText
-            type="label05"
+            type="subtitle05"
             color={Palette.gray[500]}
             style={styles.policyLinkText}
           >
@@ -434,11 +559,21 @@ const styles = StyleSheet.create({
   },
   checkButton: {
     minHeight: 0,
-    paddingVertical: Spacing.two,
+    borderRadius: 10, // medium(12)과 small(6) 사이값 — 입력란 옆 작은 버튼만
+    // 라벨 길이가 달라도(인증하기·재전송·확인·중복 확인) 입력란 옆 버튼 너비를 같게 맞춘다.
+    minWidth: 70,
+    paddingVertical: 6,
     paddingHorizontal: Spacing.two,
+  },
+  // 재전송·확인은 글자가 짧아 인증하기·중복 확인보다 좁게 둔다(둘끼리는 같은 너비).
+  checkButtonCompact: {
+    minWidth: 58,
   },
   successText: {
     marginTop: Spacing.one,
+  },
+  codeBlock: {
+    marginTop: Spacing.two,
   },
   agreements: {
     gap: Spacing.three,

@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     backgroundColor: Palette.white,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
+    paddingVertical: 12,
     color: Palette.gray[700],
     ...Typography.label02,
     includeFontPadding: false,

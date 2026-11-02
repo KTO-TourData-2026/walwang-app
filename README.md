@@ -12,12 +12,12 @@
 
 ![공모전](https://img.shields.io/badge/2026_관광데이터_활용_공모전-지정과제_6-1E88E5?style=flat-square)
 ![Platform](https://img.shields.io/badge/Platform-Android-3DDC84?style=flat-square&logo=android&logoColor=white)
-![Version](https://img.shields.io/badge/version-v1.2.0-FF8A3D?style=flat-square)
+![Version](https://img.shields.io/badge/version-v1.2.1-FF8A3D?style=flat-square)
 ![KTO OpenAPI](https://img.shields.io/badge/한국관광공사-KorPetTourService2-0055A4?style=flat-square)
 
 <br />
 
-[📲 원스토어에서 받기](https://m.onestore.co.kr/v2/ko-kr/app/0001008911) · [📦 최신 릴리즈 (v1.2.0 APK)](https://github.com/KTO-TourData-2026/walwang-app/releases/tag/v1.2.0)
+[📲 원스토어에서 받기](https://m.onestore.co.kr/v2/ko-kr/app/0001008911) · [📦 최신 릴리즈 (v1.2.1 APK)](https://github.com/KTO-TourData-2026/walwang-app/releases/tag/v1.2.1)
 
 <br />
 

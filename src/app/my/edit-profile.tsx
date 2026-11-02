@@ -255,6 +255,7 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
                     onPress={handleCheckNickname}
                     loading={checkNicknameMutation.isPending}
                     disabled={nicknameUnchanged || nicknameChecked}
+                    size="small"
                     style={styles.checkButton}
                   />
                 }
@@ -385,7 +386,8 @@ const styles = StyleSheet.create({
   },
   checkButton: {
     minHeight: 0,
-    paddingVertical: Spacing.two,
+    borderRadius: 10, // medium(12)과 small(6) 사이값 — 입력란 옆 작은 버튼만
+    paddingVertical: 6,
     paddingHorizontal: Spacing.two,
   },
   successText: {

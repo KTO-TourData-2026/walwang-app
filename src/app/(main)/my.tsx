@@ -221,21 +221,8 @@ export default function MyScreen() {
             accessibilityLabel="개인정보 처리방침 보기"
             style={styles.licenseLink}
           >
-            <ThemedText type="label05" color={Palette.gray[500]}>
+            <ThemedText type="subtitle05" color={Palette.gray[500]}>
               개인정보 처리방침
-            </ThemedText>
-            <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.push("/privacy-notice")}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="개인정보 처리방침 개정 안내 보기"
-            style={styles.licenseLink}
-          >
-            <ThemedText type="label05" color={Palette.gray[500]}>
-              개인정보 처리방침 개정 안내
             </ThemedText>
             <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
           </Pressable>
