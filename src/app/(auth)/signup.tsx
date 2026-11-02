@@ -188,6 +188,7 @@ export default function SignupScreen() {
         code,
       });
       setCodeError(null);
+      clearErrors("email");
       setVerification({ email: emailValue, token });
       nicknameRef.current?.focus();
     } catch (error) {
