@@ -1,31 +1,30 @@
-import { ChevronRight, X } from "lucide-react-native";
+import { X } from "lucide-react-native";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { ThemedText } from "@/components/themed-text";
 import { Button } from "@/components/ui/button";
 import { Palette, Radius, Spacing } from "@/constants/theme";
 
-export type TermsModalBanner = {
-  title: string;
-  caption: string;
+export type TermsModalFooterLink = {
+  label: string;
   onPress: () => void;
 };
 
 /**
- * 약관 전문 모달 — 제목 + 스크롤 본문 + [닫기].
- * 회원가입의 이용약관·개인정보 '보기'에서 재사용한다.
+ * 약관 전문 모달 — 제목 + 스크롤 본문 + (선택) 하단 링크 + [닫기].
+ * 회원가입의 이용약관·개인정보 '보기'와 오픈소스 라이선스에서 재사용한다.
  */
 export function TermsModal({
   visible,
   title,
   body,
-  banner,
+  footerLink,
   onClose,
 }: {
   visible: boolean;
   title: string;
   body: string;
-  banner?: TermsModalBanner;
+  footerLink?: TermsModalFooterLink;
   onClose: () => void;
 }) {
   return (
@@ -66,33 +65,9 @@ export function TermsModal({
             </Pressable>
           </View>
 
-          {banner && (
-            <Pressable
-              onPress={banner.onPress}
-              accessibilityRole="button"
-              accessibilityLabel={`${banner.title} ${banner.caption}`}
-              style={({ pressed }) => [
-                styles.banner,
-                pressed && styles.bannerPressed,
-              ]}
-            >
-              <View style={styles.bannerText}>
-                <ThemedText type="subtitle05" color={Palette.gray[700]}>
-                  {banner.title}
-                </ThemedText>
-                <ThemedText type="label06" color={Palette.gray[500]}>
-                  {banner.caption}
-                </ThemedText>
-              </View>
-              <ChevronRight
-                size={18}
-                color={Palette.gray[400]}
-                strokeWidth={2}
-              />
-            </Pressable>
-          )}
-
+          {/* 본문이 바뀌면(이전 버전 전환 등) 스크롤을 맨 위로 되돌리기 위해 title로 remount한다. */}
           <ScrollView
+            key={title}
             style={styles.bodyScroll}
             contentContainerStyle={styles.bodyContent}
             showsVerticalScrollIndicator={false}
@@ -101,6 +76,23 @@ export function TermsModal({
               {body}
             </ThemedText>
           </ScrollView>
+
+          {footerLink && (
+            <Pressable
+              onPress={footerLink.onPress}
+              hitSlop={8}
+              accessibilityRole="button"
+              style={styles.footerLink}
+            >
+              <ThemedText
+                type="label05"
+                color={Palette.gray[500]}
+                style={styles.footerLinkText}
+              >
+                {footerLink.label}
+              </ThemedText>
+            </Pressable>
+          )}
 
           <Button label="닫기" variant="main" onPress={onClose} />
         </View>
@@ -133,23 +125,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
   },
-  banner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.two,
-    padding: Spacing.three,
-    borderRadius: Radius.medium,
-    borderWidth: 1,
-    borderColor: Palette.border.disabled,
-    backgroundColor: Palette.white,
-  },
-  bannerPressed: {
-    opacity: 0.6,
-  },
-  bannerText: {
-    flex: 1,
-    gap: Spacing.half,
-  },
   bodyScroll: {
     // 본문이 짧을 땐 콘텐츠만큼만 차지하고(hug), 길 땐 sheet의 maxHeight(80%)
     // 안에서 줄어들어 스크롤 영역이 생기도록 flexShrink를 켠다. RN은 flex 자식의
@@ -160,5 +135,11 @@ const styles = StyleSheet.create({
   },
   bodyContent: {
     paddingBottom: Spacing.two,
+  },
+  footerLink: {
+    alignSelf: "flex-start",
+  },
+  footerLinkText: {
+    textDecorationLine: "underline",
   },
 });

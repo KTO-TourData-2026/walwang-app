@@ -9,6 +9,8 @@ import { getDemoMode } from "@/api/demo";
 import { API_ENDPOINTS } from "@/api/endpoints";
 import { ApiHttpError } from "@/api/http-error";
 import type {
+  EmailVerificationConfirmRequest,
+  EmailVerificationConfirmResponse,
   PassportDetailResponse,
   PassportServerStatus,
   PassportStamp,
@@ -33,21 +35,30 @@ const PASSPORT_STATUS_MAP: Record<PassportServerStatus, PassportStatus> = {
 
 // 회원가입: 성공(200) 시 바디·토큰이 없다 → 화면에서 이어서 login을 호출해 자동 로그인한다.
 // 이메일/닉네임이 이미 있으면 409가 온다(경계는 그대로 던지고 화면에서 인라인 처리).
+// verificationToken(이메일 인증 확인 응답)이 없으면 400, 만료·무효·재사용이면 403.
 export async function signUp(body: UserSignUpRequest): Promise<void> {
   await apiClient.post(API_ENDPOINTS.user.signUp, body);
 }
 
-// 이메일 중복 확인: 사용 가능이면 true, 중복(409)이면 false. 그 외 에러는 그대로 던진다.
-export async function checkEmailAvailable(email: string): Promise<boolean> {
-  try {
-    await apiClient.get(API_ENDPOINTS.user.checkEmail, { params: { email } });
-    return true;
-  } catch (error) {
-    if (error instanceof ApiHttpError && error.status === 409) {
-      return false;
-    }
-    throw error;
+// 이메일 인증번호 발송(`POST /user/email-verification/send`). 성공 시 바디 없음(200).
+// 형식 오류 400·이미 가입된 이메일 409·1분 내 재요청 429는 ApiHttpError로 그대로 던진다(화면에서 인라인 처리).
+export async function sendEmailVerification(email: string): Promise<void> {
+  await apiClient.post(API_ENDPOINTS.user.emailVerificationSend, { email });
+}
+
+// 이메일 인증번호 확인(`POST /user/email-verification/confirm`). 성공 시 verificationToken을 돌려준다.
+// 코드 불일치·만료는 ApiHttpError로 그대로 던진다. 200인데 토큰이 없으면 가입에 쓸 수 없으니 실패 처리.
+export async function confirmEmailVerification(
+  body: EmailVerificationConfirmRequest,
+): Promise<string> {
+  const { data } = await apiClient.post<EmailVerificationConfirmResponse>(
+    API_ENDPOINTS.user.emailVerificationConfirm,
+    body,
+  );
+  if (!data?.verificationToken) {
+    throw new ApiHttpError(0, "이메일 인증 응답에 토큰이 없어요.");
   }
+  return data.verificationToken;
 }
 
 // 닉네임 중복 확인: 사용 가능이면 true, 중복(409)이면 false.

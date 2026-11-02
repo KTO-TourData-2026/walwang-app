@@ -39,6 +39,8 @@ const DISABLED_OPACITY = 0.7;
 export type ButtonProps = Omit<PressableProps, "style" | "children"> & {
   label: string;
   variant?: ButtonVariant;
+  /** small은 입력란 옆 보조 버튼(중복 확인·인증하기)용 — 글자만 한 단계 작다. 높이·너비는 style로 준다. */
+  size?: "medium" | "small";
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
 };
@@ -46,6 +48,7 @@ export type ButtonProps = Omit<PressableProps, "style" | "children"> & {
 export function Button({
   label,
   variant = "primary",
+  size = "medium",
   loading = false,
   disabled = false,
   style,
@@ -76,7 +79,7 @@ export function Button({
         <ActivityIndicator color={colors.text} />
       ) : (
         <ThemedText
-          type="subtitle03"
+          type={size === "small" ? "subtitle04" : "subtitle03"}
           color={colors.text}
           numberOfLines={1}
           adjustsFontSizeToFit

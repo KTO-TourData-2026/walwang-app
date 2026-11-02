@@ -29,6 +29,7 @@ src/mocks/         연동되면 도메인별로 삭제
 
 ## 인증
 
+- **회원가입(이메일 인증)**: `POST /user/email-verification/send`(바디 `{ email }`, 코드 발송) → `POST /user/email-verification/confirm`(바디 `{ email, code }` → `{ verificationToken }`) → `POST /user/signUp`에 `verificationToken` 동봉(필수). 이메일 중복 확인 전용 API(`/user/check-email`)는 폐기됐다 — 중복은 발송 단계의 에러로 받는다.
 - **access token**: 요청 인터셉터가 SecureStore에서 읽어 `Authorization: Bearer`로 자동 주입.
 - **로그인**: access는 응답 **헤더**(`Authorization`), refresh는 **바디**로 온다 → `setAccessToken` / `setRefreshToken`.
 - **로그아웃/탈퇴**: `clearTokens()`로 둘 다 삭제. 로그아웃은 바디에 `refreshToken` 동봉.
