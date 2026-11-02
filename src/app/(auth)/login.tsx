@@ -169,7 +169,7 @@ export default function LoginScreen() {
           style={styles.policyLink}
         >
           <ThemedText
-            type="label05"
+            type="subtitle05"
             color={Palette.gray[500]}
             style={styles.policyLinkText}
           >
