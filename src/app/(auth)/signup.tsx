@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
@@ -6,10 +6,11 @@ import { Link, useRouter } from "expo-router";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   ToastAndroid,
   View,
 } from "react-native";
@@ -86,9 +87,6 @@ function isClientError(error: unknown): error is ApiHttpError {
 
 export default function SignupScreen() {
   const router = useRouter();
-  const nicknameRef = useRef<TextInput>(null);
-  const passwordRef = useRef<TextInput>(null);
-  const passwordConfirmRef = useRef<TextInput>(null);
 
   const [agreements, setAgreements] = useState<Record<AgreementCode, boolean>>({
     TERMS_OF_SERVICE: false,
@@ -190,7 +188,6 @@ export default function SignupScreen() {
       setCodeError(null);
       clearErrors("email");
       setVerification({ email: emailValue, token });
-      nicknameRef.current?.focus();
     } catch (error) {
       if (isClientError(error)) {
         // 불일치·만료·소진(4xx)은 서버 메시지 대신 한 문장으로 통일한다(남은 횟수 등 노출 안 함).
@@ -264,276 +261,286 @@ export default function SignupScreen() {
   const canSubmit = isValid && allAgreed && emailVerified && nicknameChecked;
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Image source={LOGO} style={styles.logo} contentFit="cover" />
-          <ThemedText type="head03">회원가입</ThemedText>
-        </View>
+    <KeyboardAvoidingView style={styles.keyboardAvoider} behavior="padding">
+      {/* 키보드가 올라오면 그 높이만큼 아래 여백을 줘서 입력란이 키보드에 가리지 않게 한다. 화면 최상단에 둬야 높이 계산이 맞다. */}
+      <SafeAreaView style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* 입력란·버튼 밖의 빈 곳을 탭하면 키보드를 내린다. */}
+          <Pressable
+            style={styles.content}
+            onPress={Keyboard.dismiss}
+            accessible={false}
+          >
+            <View style={styles.header}>
+              <Image source={LOGO} style={styles.logo} contentFit="cover" />
+              <ThemedText type="head03">회원가입</ThemedText>
+            </View>
 
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View>
-                <TextField
-                  label="이메일"
-                  focusColor={Palette.border.default}
-                  placeholder="name@email.com"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.email?.message}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  autoComplete="email"
-                  keyboardType="email-address"
-                  returnKeyType="next"
-                  onSubmitEditing={() => nicknameRef.current?.focus()}
-                  submitBehavior="submit"
-                  rightAccessory={
-                    <Button
-                      label={codeSent && !emailVerified ? "재전송" : "인증하기"}
-                      variant="main"
-                      onPress={handleSendCode}
-                      loading={sendCodeMutation.isPending}
-                      disabled={emailVerified}
-                      size="small"
-                      style={[
-                        styles.checkButton,
-                        codeSent && !emailVerified && styles.checkButtonCompact,
-                      ]}
-                    />
-                  }
-                />
-                {emailVerified && !errors.email ? (
-                  <ThemedText
-                    type="label06"
-                    color={Palette.success[300]}
-                    style={styles.successText}
-                  >
-                    이메일 인증이 완료됐어요.
-                  </ThemedText>
-                ) : null}
-                {codeSent && !emailVerified ? (
-                  <View style={styles.codeBlock}>
+            <View style={styles.form}>
+              <Controller
+                control={control}
+                name="email"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View>
                     <TextField
-                      label="인증번호"
-                      focusColor={Palette.border.default}
-                      placeholder="메일로 받은 6자리 숫자"
-                      value={code}
-                      onChangeText={(next) => {
-                        // 숫자 외 문자를 여기서 지우면 controlled 값이 안 바뀌어 입력란과 어긋난다 → 버튼 활성화·확인 시 패턴으로 거른다.
-                        setCode(next);
-                        setCodeError(null);
-                      }}
-                      error={codeError ?? undefined}
-                      autoFocus
-                      keyboardType="number-pad"
-                      maxLength={VERIFICATION_CODE_LENGTH}
-                      autoComplete="one-time-code"
+                      label="이메일"
+                      focusColor={Palette.main[500]}
+                      placeholder="name@email.com"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.email?.message}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="email"
+                      keyboardType="email-address"
                       returnKeyType="done"
-                      onSubmitEditing={handleConfirmCode}
-                      submitBehavior="submit"
                       rightAccessory={
                         <Button
-                          label="확인"
+                          label={
+                            codeSent && !emailVerified ? "재전송" : "인증하기"
+                          }
                           variant="main"
-                          onPress={handleConfirmCode}
-                          loading={confirmCodeMutation.isPending}
-                          disabled={!VERIFICATION_CODE_PATTERN.test(code)}
+                          onPress={handleSendCode}
+                          loading={sendCodeMutation.isPending}
+                          disabled={emailVerified}
                           size="small"
                           style={[
                             styles.checkButton,
-                            styles.checkButtonCompact,
+                            codeSent &&
+                              !emailVerified &&
+                              styles.checkButtonCompact,
                           ]}
                         />
                       }
                     />
-                    {!codeError ? (
+                    {emailVerified && !errors.email ? (
                       <ThemedText
                         type="label06"
-                        color={Palette.gray[500]}
+                        color={Palette.success[300]}
                         style={styles.successText}
                       >
-                        메일함에서 인증번호를 확인해주세요.
+                        이메일 인증이 완료됐어요.
+                      </ThemedText>
+                    ) : null}
+                    {codeSent && !emailVerified ? (
+                      <View style={styles.codeBlock}>
+                        <TextField
+                          label="인증번호"
+                          focusColor={Palette.main[500]}
+                          placeholder="메일로 받은 6자리 숫자"
+                          value={code}
+                          onChangeText={(next) => {
+                            // 숫자 외 문자를 여기서 지우면 controlled 값이 안 바뀌어 입력란과 어긋난다 → 버튼 활성화·확인 시 패턴으로 거른다.
+                            setCode(next);
+                            setCodeError(null);
+                          }}
+                          error={codeError ?? undefined}
+                          autoFocus
+                          keyboardType="number-pad"
+                          maxLength={VERIFICATION_CODE_LENGTH}
+                          autoComplete="one-time-code"
+                          returnKeyType="done"
+                          onSubmitEditing={handleConfirmCode}
+                          rightAccessory={
+                            <Button
+                              label="확인"
+                              variant="main"
+                              onPress={handleConfirmCode}
+                              loading={confirmCodeMutation.isPending}
+                              disabled={!VERIFICATION_CODE_PATTERN.test(code)}
+                              size="small"
+                              style={[
+                                styles.checkButton,
+                                styles.checkButtonCompact,
+                              ]}
+                            />
+                          }
+                        />
+                        {!codeError ? (
+                          <ThemedText
+                            type="label06"
+                            color={Palette.gray[500]}
+                            style={styles.successText}
+                          >
+                            메일함에서 인증번호를 확인해주세요.
+                          </ThemedText>
+                        ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="nickname"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <View>
+                    <TextField
+                      label="닉네임"
+                      focusColor={Palette.main[500]}
+                      placeholder="2~10자"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.nickname?.message}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      rightAccessory={
+                        <Button
+                          label="중복 확인"
+                          variant="main"
+                          onPress={handleCheckNickname}
+                          loading={checkNicknameMutation.isPending}
+                          disabled={nicknameChecked}
+                          size="small"
+                          style={styles.checkButton}
+                        />
+                      }
+                    />
+                    {nicknameChecked && !errors.nickname ? (
+                      <ThemedText
+                        type="label06"
+                        color={Palette.success[300]}
+                        style={styles.successText}
+                      >
+                        사용 가능한 닉네임이에요.
                       </ThemedText>
                     ) : null}
                   </View>
-                ) : null}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="nickname"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <View>
-                <TextField
-                  ref={nicknameRef}
-                  label="닉네임"
-                  focusColor={Palette.border.default}
-                  placeholder="2~10자"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.nickname?.message}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="next"
-                  onSubmitEditing={() => passwordRef.current?.focus()}
-                  submitBehavior="submit"
-                  rightAccessory={
-                    <Button
-                      label="중복 확인"
-                      variant="main"
-                      onPress={handleCheckNickname}
-                      loading={checkNicknameMutation.isPending}
-                      disabled={nicknameChecked}
-                      size="small"
-                      style={styles.checkButton}
-                    />
-                  }
-                />
-                {nicknameChecked && !errors.nickname ? (
-                  <ThemedText
-                    type="label06"
-                    color={Palette.success[300]}
-                    style={styles.successText}
-                  >
-                    사용 가능한 닉네임이에요.
-                  </ThemedText>
-                ) : null}
-              </View>
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextField
-                ref={passwordRef}
-                label="비밀번호"
-                focusColor={Palette.border.default}
-                placeholder="8~64자"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.password?.message}
-                secureToggle
-                autoCapitalize="none"
-                autoComplete="new-password"
-                returnKeyType="next"
-                onSubmitEditing={() => passwordConfirmRef.current?.focus()}
-                submitBehavior="submit"
+                )}
               />
-            )}
-          />
 
-          <Controller
-            control={control}
-            name="passwordConfirm"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextField
-                ref={passwordConfirmRef}
-                label="비밀번호 확인"
-                focusColor={Palette.border.default}
-                placeholder="비밀번호 확인"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.passwordConfirm?.message}
-                secureToggle
-                autoCapitalize="none"
-                autoComplete="new-password"
-                returnKeyType="done"
-                onSubmitEditing={onSubmit}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="비밀번호"
+                    focusColor={Palette.main[500]}
+                    placeholder="8~64자"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.password?.message}
+                    secureToggle
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    returnKeyType="done"
+                  />
+                )}
               />
-            )}
-          />
-        </View>
 
-        <View style={styles.agreements}>
-          {AGREEMENTS.map((item) => (
-            <View key={item.code} style={styles.agreementRow}>
-              <Checkbox
-                label={item.label}
-                checked={agreements[item.code]}
-                onChange={(next) =>
-                  setAgreements((prev) => ({ ...prev, [item.code]: next }))
-                }
-                style={styles.agreementCheckbox}
+              <Controller
+                control={control}
+                name="passwordConfirm"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    label="비밀번호 확인"
+                    focusColor={Palette.main[500]}
+                    placeholder="비밀번호 확인"
+                    value={value}
+                    onChangeText={onChange}
+                    onBlur={onBlur}
+                    error={errors.passwordConfirm?.message}
+                    secureToggle
+                    autoCapitalize="none"
+                    autoComplete="new-password"
+                    returnKeyType="done"
+                    onSubmitEditing={onSubmit}
+                  />
+                )}
               />
-              {item.more ? (
-                <Pressable
-                  onPress={() => setTermModal(item.code as TermContentCode)}
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${item.label} 전문 보기`}
-                >
-                  <ThemedText type="label05" color={Palette.gray[500]}>
-                    상세보기 ›
-                  </ThemedText>
-                </Pressable>
-              ) : null}
             </View>
-          ))}
-        </View>
 
-        <Button
-          label="가입하기"
-          onPress={onSubmit}
-          loading={signupMutation.isPending}
-          disabled={!canSubmit}
-        />
+            <View style={styles.agreements}>
+              {AGREEMENTS.map((item) => (
+                <View key={item.code} style={styles.agreementRow}>
+                  <Checkbox
+                    label={item.label}
+                    checked={agreements[item.code]}
+                    onChange={(next) =>
+                      setAgreements((prev) => ({ ...prev, [item.code]: next }))
+                    }
+                    style={styles.agreementCheckbox}
+                  />
+                  {item.more ? (
+                    <Pressable
+                      onPress={() => setTermModal(item.code as TermContentCode)}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${item.label} 전문 보기`}
+                    >
+                      <ThemedText type="label05" color={Palette.gray[500]}>
+                        상세보기 ›
+                      </ThemedText>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ))}
+            </View>
 
-        <View style={styles.loginRow}>
-          <ThemedText type="label04" color={Palette.gray[500]}>
-            이미 계정이 있으신가요?
-          </ThemedText>
-          <Link href="/login" asChild>
-            <ThemedText
-              type="label03"
-              color={Palette.main[500]}
-              style={styles.loginLink}
+            <Button
+              label="가입하기"
+              onPress={onSubmit}
+              loading={signupMutation.isPending}
+              disabled={!canSubmit}
+            />
+
+            <View style={styles.loginRow}>
+              <ThemedText type="label04" color={Palette.gray[500]}>
+                이미 계정이 있으신가요?
+              </ThemedText>
+              <Link href="/login" asChild>
+                <ThemedText
+                  type="label03"
+                  color={Palette.main[500]}
+                  style={styles.loginLink}
+                >
+                  로그인
+                </ThemedText>
+              </Link>
+            </View>
+
+            <Pressable
+              onPress={() => setTermModal("PRIVACY_POLICY")}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="개인정보 처리방침 보기"
+              style={styles.policyLink}
             >
-              로그인
-            </ThemedText>
-          </Link>
-        </View>
+              <ThemedText
+                type="subtitle05"
+                color={Palette.gray[500]}
+                style={styles.policyLinkText}
+              >
+                개인정보 처리방침
+              </ThemedText>
+            </Pressable>
+          </Pressable>
+        </ScrollView>
 
-        <Pressable
-          onPress={() => setTermModal("PRIVACY_POLICY")}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="개인정보 처리방침 보기"
-          style={styles.policyLink}
-        >
-          <ThemedText
-            type="subtitle05"
-            color={Palette.gray[500]}
-            style={styles.policyLinkText}
-          >
-            개인정보 처리방침
-          </ThemedText>
-        </Pressable>
-      </ScrollView>
-
-      <TermContentModal code={termModal} onClose={() => setTermModal(null)} />
-    </SafeAreaView>
+        <TermContentModal code={termModal} onClose={() => setTermModal(null)} />
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoider: {
+    flex: 1,
+  },
   screen: {
     flex: 1,
     backgroundColor: Palette.background.base,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flexGrow: 1,
