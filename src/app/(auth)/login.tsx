@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
@@ -6,10 +6,11 @@ import { Link, useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import {
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   ToastAndroid,
   View,
 } from "react-native";
@@ -40,7 +41,6 @@ const LOGO = require("@/assets/images/logo.png");
 
 export default function LoginScreen() {
   const router = useRouter();
-  const passwordRef = useRef<TextInput>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const loginMutation = useLoginMutation();
   const [termModal, setTermModal] = useState<TermContentCode | null>(null);
@@ -77,116 +77,131 @@ export default function LoginScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <Image source={LOGO} style={styles.logo} contentFit="cover" />
-          <ThemedText type="head03">로그인</ThemedText>
-        </View>
-
-        <View style={styles.form}>
-          <Controller
-            control={control}
-            name="email"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextField
-                label="이메일"
-                focusColor={Palette.border.default}
-                placeholder="name@email.com"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.email?.message}
-                autoCapitalize="none"
-                autoCorrect={false}
-                autoComplete="email"
-                keyboardType="email-address"
-                returnKeyType="next"
-                onSubmitEditing={() => passwordRef.current?.focus()}
-                submitBehavior="submit"
-              />
-            )}
-          />
-
-          <Controller
-            control={control}
-            name="password"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextField
-                ref={passwordRef}
-                label="비밀번호"
-                focusColor={Palette.border.default}
-                placeholder="비밀번호를 입력해주세요"
-                value={value}
-                onChangeText={onChange}
-                onBlur={onBlur}
-                error={errors.password?.message}
-                secureToggle
-                autoCapitalize="none"
-                autoComplete="current-password"
-                returnKeyType="done"
-                onSubmitEditing={onSubmit}
-              />
-            )}
-          />
-        </View>
-
-        {submitError ? (
-          <ThemedText type="label05" color={Palette.error[300]}>
-            {submitError}
-          </ThemedText>
-        ) : null}
-
-        <Button
-          label="로그인"
-          onPress={onSubmit}
-          loading={loginMutation.isPending}
-        />
-
-        <View style={styles.signupRow}>
-          <ThemedText type="label04" color={Palette.gray[500]}>
-            계정이 없으신가요?
-          </ThemedText>
-          <Link href="/signup" asChild>
-            <ThemedText
-              type="label03"
-              color={Palette.main[500]}
-              style={styles.signupLink}
-            >
-              회원가입
-            </ThemedText>
-          </Link>
-        </View>
-
-        <Pressable
-          onPress={() => setTermModal("PRIVACY_POLICY")}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel="개인정보 처리방침 보기"
-          style={styles.policyLink}
+    <KeyboardAvoidingView style={styles.keyboardAvoider} behavior="padding">
+      {/* 키보드가 올라오면 그 높이만큼 아래 여백을 줘서 입력란이 키보드에 가리지 않게 한다. 화면 최상단에 둬야 높이 계산이 맞다. */}
+      <SafeAreaView style={styles.screen}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <ThemedText
-            type="subtitle05"
-            color={Palette.gray[500]}
-            style={styles.policyLinkText}
+          {/* 입력란·버튼 밖의 빈 곳을 탭하면 키보드를 내린다. */}
+          <Pressable
+            style={styles.content}
+            onPress={Keyboard.dismiss}
+            accessible={false}
           >
-            개인정보 처리방침
-          </ThemedText>
-        </Pressable>
-      </ScrollView>
+            <View style={styles.header}>
+              <Image source={LOGO} style={styles.logo} contentFit="cover" />
+              <ThemedText type="head03">로그인</ThemedText>
+            </View>
 
-      <TermContentModal code={termModal} onClose={() => setTermModal(null)} />
-    </SafeAreaView>
+            <View style={styles.formBlock}>
+              <View style={styles.form}>
+                <Controller
+                  control={control}
+                  name="email"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextField
+                      label="이메일"
+                      focusColor={Palette.main[500]}
+                      placeholder="name@email.com"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.email?.message}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="email"
+                      keyboardType="email-address"
+                      returnKeyType="done"
+                    />
+                  )}
+                />
+
+                <Controller
+                  control={control}
+                  name="password"
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextField
+                      label="비밀번호"
+                      focusColor={Palette.main[500]}
+                      placeholder="비밀번호를 입력해주세요"
+                      value={value}
+                      onChangeText={onChange}
+                      onBlur={onBlur}
+                      error={errors.password?.message}
+                      secureToggle
+                      autoCapitalize="none"
+                      autoComplete="current-password"
+                      returnKeyType="done"
+                      onSubmitEditing={onSubmit}
+                    />
+                  )}
+                />
+              </View>
+
+              {submitError ? (
+                <ThemedText type="label05" color={Palette.error[300]}>
+                  {submitError}
+                </ThemedText>
+              ) : null}
+            </View>
+
+            <Button
+              label="로그인"
+              onPress={onSubmit}
+              loading={loginMutation.isPending}
+            />
+
+            <View style={styles.signupRow}>
+              <ThemedText type="label04" color={Palette.gray[500]}>
+                계정이 없으신가요?
+              </ThemedText>
+              <Link href="/signup" asChild>
+                <ThemedText
+                  type="label03"
+                  color={Palette.main[500]}
+                  style={styles.signupLink}
+                >
+                  회원가입
+                </ThemedText>
+              </Link>
+            </View>
+
+            <Pressable
+              onPress={() => setTermModal("PRIVACY_POLICY")}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="개인정보 처리방침 보기"
+              style={styles.policyLink}
+            >
+              <ThemedText
+                type="subtitle05"
+                color={Palette.gray[500]}
+                style={styles.policyLinkText}
+              >
+                개인정보 처리방침
+              </ThemedText>
+            </Pressable>
+          </Pressable>
+        </ScrollView>
+
+        <TermContentModal code={termModal} onClose={() => setTermModal(null)} />
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoider: {
+    flex: 1,
+  },
   screen: {
     flex: 1,
     backgroundColor: Palette.background.base,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flexGrow: 1,
@@ -205,6 +220,10 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: Radius.large,
+  },
+  // 로그인 실패 문구를 입력창 바로 아래에 붙이기 위해 폼과 함께 묶는다.
+  formBlock: {
+    gap: Spacing.two,
   },
   form: {
     gap: Spacing.three,

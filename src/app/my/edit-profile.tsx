@@ -1,13 +1,15 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import {
   Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Pressable,
   ScrollView,
   StyleSheet,
-  TextInput,
   ToastAndroid,
   View,
 } from "react-native";
@@ -114,9 +116,6 @@ export default function EditProfileScreen() {
 
 function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
   const router = useRouter();
-  const currentPasswordRef = useRef<TextInput>(null);
-  const newPasswordRef = useRef<TextInput>(null);
-  const newPasswordConfirmRef = useRef<TextInput>(null);
 
   // 마지막으로 "사용 가능"을 확인한 닉네임. 입력을 바꾸면 재확인이 필요해진다.
   const [checkedNickname, setCheckedNickname] = useState<string | null>(null);
@@ -218,149 +217,150 @@ function EditProfileFormView({ initialNickname }: { initialNickname: string }) {
 
   const canSubmit = isValid && nicknameChecked && hasChanges;
 
+  // 키보드가 올라오면 그 높이만큼 아래 여백을 줘서 입력란이 키보드에 가리지 않게 한다. 화면 최상단에 둬야 높이 계산이 맞다.
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView style={styles.root} behavior="padding">
       <ScreenHeader title="프로필 편집" />
       <ScrollView
-        contentContainerStyle={styles.content}
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.sectionHeading}>
-          <ThemedText type="subtitle03" color={Palette.gray[700]}>
-            닉네임 변경
-          </ThemedText>
-        </View>
+        {/* 입력란·버튼 밖의 빈 곳을 탭하면 키보드를 내린다. */}
+        <Pressable
+          style={styles.content}
+          onPress={Keyboard.dismiss}
+          accessible={false}
+        >
+          <View style={styles.sectionHeading}>
+            <ThemedText type="subtitle03" color={Palette.gray[700]}>
+              닉네임 변경
+            </ThemedText>
+          </View>
 
-        <Controller
-          control={control}
-          name="nickname"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View>
+          <Controller
+            control={control}
+            name="nickname"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View>
+                <TextField
+                  label="닉네임"
+                  focusColor={Palette.main[500]}
+                  placeholder="2~10자"
+                  value={value}
+                  onChangeText={onChange}
+                  onBlur={onBlur}
+                  error={errors.nickname?.message}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  rightAccessory={
+                    <Button
+                      label="중복 확인"
+                      variant="main"
+                      onPress={handleCheckNickname}
+                      loading={checkNicknameMutation.isPending}
+                      disabled={nicknameUnchanged || nicknameChecked}
+                      size="small"
+                      style={styles.checkButton}
+                    />
+                  }
+                />
+                {nicknameChecked && !nicknameUnchanged && !errors.nickname ? (
+                  <ThemedText
+                    type="label06"
+                    color={Palette.success[300]}
+                    style={styles.successText}
+                  >
+                    사용 가능한 닉네임이에요.
+                  </ThemedText>
+                ) : null}
+              </View>
+            )}
+          />
+
+          <View style={styles.divider} />
+
+          <View style={styles.passwordSection}>
+            <ThemedText type="subtitle03" color={Palette.gray[700]}>
+              비밀번호 변경
+            </ThemedText>
+            <ThemedText type="label05" color={Palette.gray[400]}>
+              바꾸지 않으려면 비워 두세요.
+            </ThemedText>
+          </View>
+
+          <Controller
+            control={control}
+            name="currentPassword"
+            render={({ field: { onChange, onBlur, value } }) => (
               <TextField
-                label="닉네임"
-                focusColor={Palette.border.default}
-                placeholder="2~10자"
+                label="현재 비밀번호"
+                focusColor={Palette.main[500]}
+                placeholder="현재 비밀번호"
                 value={value}
                 onChangeText={onChange}
                 onBlur={onBlur}
-                error={errors.nickname?.message}
+                error={errors.currentPassword?.message}
+                secureToggle
                 autoCapitalize="none"
-                autoCorrect={false}
+                autoComplete="current-password"
                 returnKeyType="done"
-                rightAccessory={
-                  <Button
-                    label="중복 확인"
-                    variant="main"
-                    onPress={handleCheckNickname}
-                    loading={checkNicknameMutation.isPending}
-                    disabled={nicknameUnchanged || nicknameChecked}
-                    size="small"
-                    style={styles.checkButton}
-                  />
-                }
               />
-              {nicknameChecked && !nicknameUnchanged && !errors.nickname ? (
-                <ThemedText
-                  type="label06"
-                  color={Palette.success[300]}
-                  style={styles.successText}
-                >
-                  사용 가능한 닉네임이에요.
-                </ThemedText>
-              ) : null}
-            </View>
-          )}
-        />
+            )}
+          />
 
-        <View style={styles.divider} />
+          <Controller
+            control={control}
+            name="newPassword"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label="새 비밀번호"
+                focusColor={Palette.main[500]}
+                placeholder="8자 이상"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.newPassword?.message}
+                secureToggle
+                autoCapitalize="none"
+                autoComplete="new-password"
+                returnKeyType="done"
+              />
+            )}
+          />
 
-        <View style={styles.passwordSection}>
-          <ThemedText type="subtitle03" color={Palette.gray[700]}>
-            비밀번호 변경
-          </ThemedText>
-          <ThemedText type="label05" color={Palette.gray[400]}>
-            바꾸지 않으려면 비워 두세요.
-          </ThemedText>
-        </View>
+          <Controller
+            control={control}
+            name="newPasswordConfirm"
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextField
+                label="새 비밀번호 확인"
+                focusColor={Palette.main[500]}
+                placeholder="새 비밀번호 확인"
+                value={value}
+                onChangeText={onChange}
+                onBlur={onBlur}
+                error={errors.newPasswordConfirm?.message}
+                secureToggle
+                autoCapitalize="none"
+                autoComplete="new-password"
+                returnKeyType="done"
+                onSubmitEditing={onSubmit}
+              />
+            )}
+          />
 
-        <Controller
-          control={control}
-          name="currentPassword"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextField
-              ref={currentPasswordRef}
-              label="현재 비밀번호"
-              focusColor={Palette.border.default}
-              placeholder="현재 비밀번호"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.currentPassword?.message}
-              secureToggle
-              autoCapitalize="none"
-              autoComplete="current-password"
-              returnKeyType="next"
-              onSubmitEditing={() => newPasswordRef.current?.focus()}
-              submitBehavior="submit"
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="newPassword"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextField
-              ref={newPasswordRef}
-              label="새 비밀번호"
-              focusColor={Palette.border.default}
-              placeholder="8자 이상"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.newPassword?.message}
-              secureToggle
-              autoCapitalize="none"
-              autoComplete="new-password"
-              returnKeyType="next"
-              onSubmitEditing={() => newPasswordConfirmRef.current?.focus()}
-              submitBehavior="submit"
-            />
-          )}
-        />
-
-        <Controller
-          control={control}
-          name="newPasswordConfirm"
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextField
-              ref={newPasswordConfirmRef}
-              label="새 비밀번호 확인"
-              focusColor={Palette.border.default}
-              placeholder="새 비밀번호 확인"
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              error={errors.newPasswordConfirm?.message}
-              secureToggle
-              autoCapitalize="none"
-              autoComplete="new-password"
-              returnKeyType="done"
-              onSubmitEditing={onSubmit}
-            />
-          )}
-        />
-
-        <Button
-          label="저장"
-          onPress={onSubmit}
-          loading={updateProfileMutation.isPending}
-          disabled={!canSubmit}
-          style={styles.submit}
-        />
+          <Button
+            label="저장"
+            onPress={onSubmit}
+            loading={updateProfileMutation.isPending}
+            disabled={!canSubmit}
+            style={styles.submit}
+          />
+        </Pressable>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -375,7 +375,11 @@ const styles = StyleSheet.create({
   errorState: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+  },
   content: {
+    flexGrow: 1,
     gap: Spacing.three,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
