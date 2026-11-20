@@ -122,7 +122,11 @@ export default function PolicyNoticeScreen() {
                     pressed && styles.rowPressed,
                   ]}
                 >
-                  <ThemedText type="subtitle05" color={Palette.gray[700]}>
+                  <ThemedText
+                    type="subtitle05"
+                    color={Palette.gray[700]}
+                    style={styles.rowLabel}
+                  >
                     {section.label}
                   </ThemedText>
                   <Chevron
@@ -208,6 +212,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: Spacing.two,
     paddingVertical: Spacing.three,
+  },
+  rowLabel: {
+    flexShrink: 1,
   },
   rowPressed: {
     opacity: 0.6,
