@@ -226,6 +226,19 @@ export default function MyScreen() {
             </ThemedText>
             <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
           </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/policy-notice")}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="이용약관·개인정보 처리방침 개정 안내 보기"
+            style={styles.licenseLink}
+          >
+            <ThemedText type="subtitle05" color={Palette.gray[500]}>
+              이용약관·개인정보 처리방침 개정 안내
+            </ThemedText>
+            <ChevronRight size={16} color={Palette.gray[400]} strokeWidth={2} />
+          </Pressable>
         </View>
       </ScrollView>
 
